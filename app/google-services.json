@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "175388254194",
+    "project_id": "aroundly-111a8",
+    "storage_bucket": "aroundly-111a8.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:175388254194:android:fff3d03f4958604378556b",
+        "android_client_info": {
+          "package_name": "com.aroudly.aroundly"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBPoPJyRszd_1Tu_-2ryIzDx-4uIsz4E0w"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
