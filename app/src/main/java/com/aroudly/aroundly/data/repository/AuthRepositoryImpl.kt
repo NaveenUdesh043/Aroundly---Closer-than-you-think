@@ -7,9 +7,24 @@ class AuthRepositoryImpl(
     private val service: FirebaseAuthService
 ) : AuthRepository {
 
-    override suspend fun login(email: String, password: String) =
-        runCatching { service.login(email, password) }
+    override suspend fun login(
+        email: String,
+        password: String) =
+        runCatching {
+            service.login(email, password) }
 
-    override suspend fun signup(name: String, email: String, password: String, phoneNumber: String) =
-        runCatching { service.signup(name, email, password, phoneNumber) }
+    override suspend fun signup(
+        firstName: String,
+        lastName: String,
+        email: String,
+        password: String,
+        phoneNumber: String
+    ) = runCatching {
+            service.signup(
+                firstName,
+                lastName,
+                email,
+                password,
+                phoneNumber
+            ) }
 }

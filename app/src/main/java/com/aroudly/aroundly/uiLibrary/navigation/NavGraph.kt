@@ -12,19 +12,31 @@ import com.aroudly.aroundly.uiLibrary.dashboard.DashboardScreen
 fun NavGraph() {
     val navController = rememberNavController()
 
-    NavHost(navController, startDestination = "login") {
+    NavHost(navController = navController, startDestination = "login") {
 
         composable("login") {
             LoginScreen(
-                onLoginSuccess = { navController.navigate("dashboard") },
-                onNavigateToSignup = { navController.navigate("signup") }
+                onLoginSuccess = {
+                    navController.navigate("dashboard") {
+                        popUpTo("login") { inclusive = true }
+                    }
+                },
+                onNavigateToSignup = {
+                    navController.navigate("signup")
+                }
             )
         }
 
         composable("signup") {
             SignupScreen(
-                onSignupSuccess = { navController.navigate("dashboard") },
-                onNavigateToLogin = { navController.popBackStack() }
+                onSignupSuccess = {
+                    navController.navigate("dashboard") {
+                        popUpTo("signup") { inclusive = true }
+                    }
+                },
+                onNavigateToLogin = {
+                    navController.popBackStack()
+                }
             )
         }
 

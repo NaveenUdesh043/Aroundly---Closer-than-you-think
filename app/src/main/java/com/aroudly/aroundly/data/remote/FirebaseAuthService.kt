@@ -11,15 +11,27 @@ class FirebaseAuthService {
     private val firestore = FirebaseFirestore.getInstance()
 
     suspend fun login(email: String, password: String) {
-        auth.signInWithEmailAndPassword(email, password).await()
+        auth.signInWithEmailAndPassword(
+            email,
+            password
+        ).await()
     }
 
-    suspend fun signup(name: String, email: String, password: String, phoneNumber: String) {
-        val result = auth.createUserWithEmailAndPassword(email, password).await()
+    suspend fun signup(
+        firstName: String,
+        lastName: String,
+        email: String,
+        password: String,
+        phoneNumber: String) {
+        val result = auth.createUserWithEmailAndPassword(
+            email,
+            password
+        ).await()
 
         val user = User(
             uid = result.user!!.uid,
-            name = name,
+            firstName = firstName,
+            lastName = lastName,
             email = email,
             phoneNumber = phoneNumber
         )
