@@ -3,10 +3,12 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.google.services)
+    alias(libs.plugins.kotlin.kapt)
+    alias(libs.plugins.hilt.android)
 }
 
 android {
-    namespace = "com.aroudly.aroundly"
+    namespace = "com.aroundly.aroundly"
     compileSdk = 36
 
     defaultConfig {
@@ -41,28 +43,56 @@ android {
 }
 
 dependencies {
-
+    // AndroidX
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
-    implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.graphics)
+    implementation(libs.androidx.compose.ui.tooling)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
-    implementation(platform(libs.firebase.bom))
-    implementation(libs.google.firebase.analytics)
-    implementation(libs.firebase.auth.ktx)
     implementation(libs.androidx.navigation.compose)
+    implementation(libs.androidx.compose.animation.core)
+
+    // Firebase
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.auth.ktx)
     implementation(libs.firebase.firestore.ktx)
     implementation(libs.firebase.storage.ktx)
-    implementation(libs.kotlinx.coroutines.play.services)
     implementation(libs.firebase.analytics)
-    implementation(libs.androidx.compose.animation.core)
+
+    // Coroutines
+    implementation(libs.kotlinx.coroutines.play.services)
+
+    // Location
+    implementation(libs.play.services.location)
+
+    // Coil for image loading
+    implementation(libs.coil.compose)
+
+    implementation(libs.kotlinx.coroutines.play.services)
+    implementation(libs.material.icons.extended)
+
+    implementation(platform(libs.androidx.compose.bom.v20241000))
+
+    // Material 3
+    implementation(libs.material3)
+
+    // 🔥 THIS IS THE KEY ONE 🔥
+    implementation(libs.androidx.material.icons.extended)
+
+
+    // Hilt
+    implementation(libs.hilt.android)
+    implementation(libs.androidx.material3)
+    kapt(libs.hilt.compiler)
+    implementation(libs.hilt.navigation.compose)
+
+    // Testing
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
-    androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
