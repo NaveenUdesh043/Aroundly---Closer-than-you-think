@@ -1,5 +1,7 @@
 package com.aroundly.aroundly.uiLibrary.auth
 
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -7,9 +9,17 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -19,10 +29,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
+import com.aroundly.aroundly.R
 import com.aroundly.aroundly.uiLibrary.common.DottedProgressBar
 import com.aroundly.aroundly.uiLibrary.viewModel.AuthViewModel
 
@@ -41,6 +56,22 @@ fun LoginScreen(
     var error by remember { mutableStateOf("") }
     var isLoading by remember { mutableStateOf(false) }
 
+    val logoGradient = Brush.linearGradient(
+        colors = listOf(
+            Color(0xFF6236FF), // Purple
+            Color(0xFFC042FF), // Magenta
+            Color(0xFF42E8FF)  // Cyan
+        )
+    )
+    val logoGradientButton = Brush.horizontalGradient(
+        colors = listOf(
+            Color(0xFF6236FF), // Deep Purple
+            Color(0xFFC042FF), // Magenta
+            Color(0xFF42E8FF)  // Cyan/Light Blue
+        )
+    )
+
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -48,6 +79,13 @@ fun LoginScreen(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        Image(
+            painter = painterResource(id = R.drawable.logogogog),
+            contentDescription = "App Logo",
+            modifier = Modifier
+                .size(120.dp)
+                .padding(bottom = 16.dp)
+        )
         Text(
             "Login",
             style = MaterialTheme.typography.headlineMedium,
@@ -60,20 +98,46 @@ fun LoginScreen(
         OutlinedTextField(
             value = email,
             onValueChange = { email = it },
-            label = { Text("Email") },
+            label = { Text("Email",
+                color = Color(0xFF1C1C84)
+            ) },
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = Color(0xFF1C1C84),
+                unfocusedBorderColor = Color(0xFF1C1C84),
+                focusedLabelColor = Color(0xFF1C1C84),
+                unfocusedLabelColor = Color(0xFF1C1C84)
+            ),
             singleLine = true,
             modifier = Modifier.fillMaxWidth()
         )
 
         Spacer(Modifier.height(12.dp))
 
+        // Password Field with visibility toggle
         OutlinedTextField(
             value = password,
             onValueChange = { password = it },
-            label = { Text("Password") },
+            label = { Text("Password",
+                color = Color(0xFF1C1C84)) },
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = Color(0xFF1C1C84),
+                unfocusedBorderColor = Color(0xFF1C1C84),
+                focusedLabelColor = Color(0xFF1C1C84),
+                unfocusedLabelColor = Color(0xFF1C1C84)
+            ),
             singleLine = true,
-            visualTransformation = PasswordVisualTransformation(),
-                    modifier = Modifier.fillMaxWidth()
+            visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+            trailingIcon = {
+                val icon = if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff
+                IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = if (passwordVisible) "Hide password" else "Show password",
+                        tint = Color(0XFFAE62ED)
+                    )
+                }
+            },
+            modifier = Modifier.fillMaxWidth()
         )
 
         Spacer(Modifier.height(16.dp))
@@ -95,16 +159,21 @@ fun LoginScreen(
             },
             modifier = Modifier
                 .fillMaxWidth()
-                .height(50.dp),
-            enabled = !isLoading
+                .height(50.dp)
+                .background(brush = logoGradientButton, shape = ButtonDefaults.shape),
+            enabled = !isLoading,
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color.Transparent,
+                disabledContainerColor = Color.Gray.copy(alpha = 0.5f)
+            ),
+            elevation = null
         ) {
             if (isLoading) {
                 DottedProgressBar()
             } else {
-                Text("Login")
+                Text("Login", color = Color.White, fontWeight = FontWeight.Bold)
             }
         }
-
 
         if (error.isNotEmpty()) {
             Spacer(Modifier.height(8.dp))
@@ -112,11 +181,28 @@ fun LoginScreen(
         }
 
         Spacer(Modifier.height(16.dp))
-        TextButton(onClick = onNavigateToSignup) {
-            Text("Don't have an account? Sign up")
+        TextButton(
+            onClick = onNavigateToSignup
+        ) {
+            Text(
+                "Don't have an account? Sign up",
+                style = TextStyle(
+                    brush = logoGradient,
+                    fontWeight = FontWeight.Bold
+                )
+            )
         }
-        TextButton(onClick = onNavigateToManagerSignup) {
-            Text("Register as Business Owner")
+        TextButton(
+            onClick = onNavigateToManagerSignup
+        ) {
+            Text(
+                "Register as Business Owner" ,
+                style = TextStyle(
+                    brush = logoGradient,
+                    fontWeight = FontWeight.Bold
+                )
+            )
+
         }
     }
 }

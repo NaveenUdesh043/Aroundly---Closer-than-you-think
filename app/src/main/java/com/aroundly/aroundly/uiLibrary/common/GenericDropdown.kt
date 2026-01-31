@@ -26,10 +26,11 @@ fun GenericDropdown(
     Box(modifier = Modifier.fillMaxWidth()) {
         Text(
             text = if (selectedOption.isEmpty()) label else selectedOption,
+            color =  Color(0xFF1C1C84),
             modifier = Modifier
                 .fillMaxWidth()
                 .clickable { expanded = true }
-                .border(1.dp, Color.Gray, RoundedCornerShape(8.dp))
+                .border(1.dp, color = Color(0xFF1C1C84), RoundedCornerShape(8.dp))
                 .padding(12.dp)
         )
 
@@ -40,7 +41,9 @@ fun GenericDropdown(
         ) {
             options.forEach { option ->
                 DropdownMenuItem(
-                    text = { Text(option) },
+                    text = { Text(option,
+                        color = Color(0xFF1C1C84)
+                    )},
                     onClick = {
                         onOptionSelected(option)
                         expanded = false

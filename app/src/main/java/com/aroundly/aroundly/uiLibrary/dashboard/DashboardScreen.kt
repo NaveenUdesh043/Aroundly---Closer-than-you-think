@@ -22,11 +22,13 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Hotel
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -112,18 +114,21 @@ fun DashboardScreen(
             TopAppBar(
                 title = {
                     Text(
-                        "Aroundly",
+                        "Welcome to Aroundly",
                         fontWeight = FontWeight.Bold,
                         color = Color.White
                     )
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = PrimaryTeal,
+                    containerColor = Color(0xFF1C1C84),
                     titleContentColor = Color.White
                 ),
                 actions = {
                     IconButton(onClick = onLogout) {
-                        Icon(Icons.Default.Logout, contentDescription = "Logout", tint = Color.White)
+                        Icon(
+                            Icons.Default.Logout,
+                            contentDescription = "Logout",
+                            tint = Color.White)
                     }
                     IconButton(onClick = {
                         if (viewModel.hasLocationPermission()) {
@@ -168,15 +173,18 @@ fun DashboardScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 8.dp),
-                placeholder = { Text("Search cafes, restaurants, hotels...") },
+                placeholder = { Text("Search",
+                    color = Color(0xFF1C1C84)) },
                 leadingIcon = {
-                    Icon(Icons.Default.Search, contentDescription = null, tint = PrimaryTeal)
+                    Icon(Icons.Default.Search,
+                        contentDescription = null,
+                        tint = Color(0xFF1C1C84))
                 },
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = PrimaryTeal,
-                    focusedLeadingIconColor = PrimaryTeal,
-                    cursorColor = PrimaryTeal,
-                    focusedLabelColor = PrimaryTeal
+                    focusedBorderColor = Color(0xFF1C1C84),
+                    unfocusedBorderColor = Color(0xFF1C1C84),
+                    focusedLabelColor = Color(0xFF1C1C84),
+                    unfocusedLabelColor = Color(0xFF1C1C84)
                 ),
                 shape = RoundedCornerShape(12.dp)
             )
@@ -191,7 +199,7 @@ fun DashboardScreen(
                 GenericDropdown(
                     label = "Select City",
                     options = cities.ifEmpty { listOf("All") },
-                    selectedOption = selectedCity.ifEmpty { "All" },
+                    selectedOption = selectedCity.ifEmpty { "Select City" },
                     onOptionSelected = { viewModel.setSelectedCity(it) }
                 )
                 Row(
@@ -202,7 +210,7 @@ fun DashboardScreen(
                         GenericDropdown(
                             label = "Restaurant",
                             options = restTypes.ifEmpty { listOf("All") },
-                            selectedOption = selectedRestType.ifEmpty { "All" },
+                            selectedOption = selectedRestType.ifEmpty { "Cafes" },
                             onOptionSelected = { viewModel.setSelectedRestaurantType(it) }
                         )
                     }
@@ -210,7 +218,7 @@ fun DashboardScreen(
                         GenericDropdown(
                             label = "Hotel",
                             options = hotelTypes.ifEmpty { listOf("All") },
-                            selectedOption = selectedHotelType.ifEmpty { "All" },
+                            selectedOption = selectedHotelType.ifEmpty { "Hotels" },
                             onOptionSelected = { viewModel.setSelectedHotelType(it) }
                         )
                     }
@@ -218,7 +226,7 @@ fun DashboardScreen(
                         GenericDropdown(
                             label = "Rental",
                             options = eqTypes.ifEmpty { listOf("All") },
-                            selectedOption = selectedEqType.ifEmpty { "All" },
+                            selectedOption = selectedEqType.ifEmpty { "Rental" },
                             onOptionSelected = { viewModel.setSelectedEquipmentType(it) }
                         )
                     }
@@ -238,7 +246,7 @@ fun DashboardScreen(
                         onClick = { selectedTab = index },
                         label = { Text(tabs[index]) },
                         colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = PrimaryTeal,
+                            selectedContainerColor = Color(0xFF1C1C84),
                             selectedLabelColor = Color.White,
                             containerColor = MaterialTheme.colorScheme.surfaceVariant,
                             labelColor = MaterialTheme.colorScheme.onSurface
@@ -255,7 +263,7 @@ fun DashboardScreen(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
-                    CircularProgressIndicator(color = PrimaryTeal)
+                    CircularProgressIndicator(color = Color(0xFF1C1C84))
                 }
             } else {
                 LazyColumn(
@@ -269,7 +277,9 @@ fun DashboardScreen(
 
                     if (showRestaurants && restaurants.isNotEmpty()) {
                         item {
-                            SectionHeader("Restaurants & Cafes", Icons.Default.Restaurant)
+                            SectionHeader(
+                                "Restaurants & Cafes",
+                                Icons.Default.Restaurant)
                         }
                         items(restaurants) { r ->
                             PlaceCard(
@@ -283,7 +293,7 @@ fun DashboardScreen(
 
                     if (showHotels && hotels.isNotEmpty()) {
                         item {
-                            SectionHeader("Places to Stay", Icons.Default.Place)
+                            SectionHeader("Places to Stay", Icons.Default.Hotel)
                         }
                         items(hotels) { h ->
                             PlaceCard(
@@ -311,7 +321,7 @@ fun DashboardScreen(
 
                     if (showEquipment && equipment.isNotEmpty()) {
                         item {
-                            SectionHeader("Bikes & Cars", Icons.Default.Place)
+                            SectionHeader("Travel Equipments ", Icons.Default.ShoppingCart)
                         }
                         items(equipment) { e ->
                             PlaceCard(
@@ -346,7 +356,7 @@ fun DashboardScreen(
 }
 
 @Composable
-private fun SectionHeader(title: String, icon: ImageVector) {
+private fun SectionHeader(title: String, icon: ImageVector, ) {
     Row(
         modifier = Modifier.padding(vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -354,7 +364,7 @@ private fun SectionHeader(title: String, icon: ImageVector) {
         Icon(
             icon,
             contentDescription = null,
-            tint = PrimaryTeal,
+            tint = Color(0xFF1C1C84),
             modifier = Modifier.size(24.dp)
         )
         Spacer(Modifier.size(8.dp))
@@ -362,7 +372,7 @@ private fun SectionHeader(title: String, icon: ImageVector) {
             title,
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold,
-            color = PrimaryTealDark
+            color = Color(0xFF1C1C84)
         )
     }
 }
@@ -387,7 +397,7 @@ private fun PlaceCard(
                 .height(140.dp)
                 .background(
                     Brush.linearGradient(
-                        colors = listOf(PrimaryTeal.copy(alpha = 0.3f), PrimaryTealDark.copy(alpha = 0.5f))
+                        colors = listOf(Color(0xFF1C1C84), Color(0xFF1C1C84).copy(alpha = 0.5f))
                     )
                 )
         ) {

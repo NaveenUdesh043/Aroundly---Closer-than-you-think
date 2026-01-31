@@ -113,7 +113,7 @@ fun EquipmentShopDetailsScreen(
         imageUrls = shop.images ?: emptyList(),
         onBack = onBack
     ) {
-        Text(shop.type, style = MaterialTheme.typography.labelLarge, color = PrimaryTeal)
+        Text(shop.type, style = MaterialTheme.typography.labelLarge, color = Color(0xFF1C1C84))
         Spacer(Modifier.height(8.dp))
         shop.description?.let { Text(it, style = MaterialTheme.typography.bodyLarge) }
         Spacer(Modifier.height(16.dp))
@@ -140,7 +140,7 @@ private fun PlaceDetailsScaffold(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = PrimaryTeal,
+                    containerColor = Color(0xFF1C1C84),
                     titleContentColor = Color.White,
                     navigationIconContentColor = Color.White
                 )
@@ -160,8 +160,8 @@ private fun PlaceDetailsScaffold(
                     .background(
                         Brush.verticalGradient(
                             colors = listOf(
-                                PrimaryTeal.copy(alpha = 0.3f),
-                                PrimaryTealDark.copy(alpha = 0.5f)
+                                Color(0xFF1C1C84),
+                                Color(0xFF1C1C84).copy(alpha = 0.5f)
                             )
                         )
                     )
@@ -216,7 +216,7 @@ private fun AddressRow(address: String) {
         Icon(
             Icons.Default.LocationOn,
             contentDescription = null,
-            tint = PrimaryTeal,
+            tint = Color(0xFF1C1C84),
             modifier = Modifier.size(20.dp))
         Spacer(Modifier.size(8.dp))
         Text(address, style = MaterialTheme.typography.bodyMedium)
@@ -231,7 +231,7 @@ private fun PhoneRow(phone: String) {
             .padding(vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(Icons.Default.Call, contentDescription = null, tint = PrimaryTeal, modifier = Modifier.size(20.dp))
+        Icon(Icons.Default.Call, contentDescription = null, tint = Color(0xFF1C1C84), modifier = Modifier.size(20.dp))
         Spacer(Modifier.size(8.dp))
         Text(phone, style = MaterialTheme.typography.bodyMedium)
     }
