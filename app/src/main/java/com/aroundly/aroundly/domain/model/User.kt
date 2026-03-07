@@ -17,7 +17,8 @@ data class Restaurant(
     val description: String? = null,
     val images: List<String>? = null,
     val address: String? = null,
-    val phoneNumber: String? = null
+    val phoneNumber: String? = null,
+    val websiteUrl: String? = null
 )
 
 data class Hotel(
@@ -29,7 +30,8 @@ data class Hotel(
     val description: String? = null,
     val images: List<String>? = null,
     val address: String? = null,
-    val phoneNumber: String? = null
+    val phoneNumber: String? = null,
+    val websiteUrl: String? = null
 )
 
 data class PlaceToVisit(
@@ -39,7 +41,8 @@ data class PlaceToVisit(
     val city: String? = "",
     val description: String? = null,
     val images: List<String>? = null,
-    val address: String? = null
+    val address: String? = null,
+    val websiteUrl: String? = null
 )
 
 data class EquipmentShop(
@@ -51,5 +54,6 @@ data class EquipmentShop(
     val description: String? = null,
     val images: List<String>? = null,
     val address: String? = null,
-    val phoneNumber: String? = null
+    val phoneNumber: String? = null,
+    val websiteUrl: String? = null
 )

@@ -16,6 +16,7 @@ import androidx.navigation.navArgument
 import com.aroundly.aroundly.uiLibrary.admin.AdminDashboardScreen
 import com.aroundly.aroundly.uiLibrary.auth.LoginScreen
 import com.aroundly.aroundly.uiLibrary.auth.SignupScreen
+import com.aroundly.aroundly.uiLibrary.auth.WelcomeScreen
 import com.aroundly.aroundly.uiLibrary.common.EquipmentShopDetailsScreen
 import com.aroundly.aroundly.uiLibrary.common.HotelDetailsScreen
 import com.aroundly.aroundly.uiLibrary.common.PlaceToVisitDetailsScreen
@@ -34,7 +35,23 @@ import com.google.firebase.auth.FirebaseAuth
 fun NavGraph() {
     val navController = rememberNavController()
 
-    NavHost(navController = navController, startDestination = "login") {
+    NavHost(navController = navController, startDestination = "welcome") {
+
+        composable("welcome") {
+            WelcomeScreen(
+                onExplorerClick = {
+                    navController.navigate("signup")
+                },
+                onBusinessOwnerClick = {
+                    navController.navigate("manager_signup")
+                },
+                onSignInClick = {
+                    navController.navigate("login") {
+                        popUpTo("welcome") { inclusive = true }
+                    }
+                }
+            )
+        }
 
         composable("login") {
             LoginScreen(
@@ -53,6 +70,9 @@ fun NavGraph() {
                 },
                 onNavigateToManagerSignup = {
                     navController.navigate("manager_signup")
+                },
+                onBack = {
+                    navController.popBackStack()
                 }
             )
         }

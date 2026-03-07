@@ -36,6 +36,7 @@ class DashboardRepositoryImpl @Inject constructor(
                 address = doc.getString("address"),
                 phoneNumber = doc.getString("phoneNumber"),
                 city = doc.getString("city"),
+                websiteUrl = doc.getString("websiteUrl"),
                 images = imagesList
             )
         }
@@ -63,6 +64,7 @@ class DashboardRepositoryImpl @Inject constructor(
                 address = doc.getString("address"),
                 phoneNumber = doc.getString("phoneNumber"),
                 city = doc.getString("city"),
+                websiteUrl = doc.getString("websiteUrl"),
                 images = imagesList
             )
         }
@@ -87,6 +89,7 @@ class DashboardRepositoryImpl @Inject constructor(
                 description = doc.getString("description"),
                 address = doc.getString("address"),
                 city = doc.getString("city"),
+                websiteUrl = doc.getString("websiteUrl"),
                 images = imagesList
             )
         }
@@ -114,6 +117,7 @@ class DashboardRepositoryImpl @Inject constructor(
                 address = doc.getString("address"),
                 phoneNumber = doc.getString("phoneNumber"),
                 city = doc.getString("city"),
+                websiteUrl = doc.getString("websiteUrl"),
                 images = imagesList
             )
         }
@@ -137,6 +141,7 @@ class DashboardRepositoryImpl @Inject constructor(
             address = doc.getString("address"),
             phoneNumber = doc.getString("phoneNumber"),
             city = doc.getString("city"),
+            websiteUrl = doc.getString("websiteUrl"),
             images = imagesList
         )
     }
@@ -159,6 +164,7 @@ class DashboardRepositoryImpl @Inject constructor(
             address = doc.getString("address"),
             phoneNumber = doc.getString("phoneNumber"),
             city = doc.getString("city"),
+            websiteUrl = doc.getString("websiteUrl"),
             images = imagesList
         )
     }
@@ -179,6 +185,7 @@ class DashboardRepositoryImpl @Inject constructor(
             description = doc.getString("description"),
             address = doc.getString("address"),
             city = doc.getString("city"),
+            websiteUrl = doc.getString("websiteUrl"),
             images = imagesList
         )
     }
@@ -201,6 +208,7 @@ class DashboardRepositoryImpl @Inject constructor(
             address = doc.getString("address"),
             phoneNumber = doc.getString("phoneNumber"),
             city = doc.getString("city"),
+            websiteUrl = doc.getString("websiteUrl"),
             images = imagesList
         )
     }
@@ -264,6 +272,7 @@ class DashboardRepositoryImpl @Inject constructor(
                 address = doc.getString("address"),
                 phoneNumber = doc.getString("phoneNumber"),
                 city = doc.getString("city"),
+                websiteUrl = doc.getString("websiteUrl"),
                 images = imagesList
             )
         }
@@ -290,6 +299,7 @@ class DashboardRepositoryImpl @Inject constructor(
                 address = doc.getString("address"),
                 phoneNumber = doc.getString("phoneNumber"),
                 city = doc.getString("city"),
+                websiteUrl = doc.getString("websiteUrl"),
                 images = imagesList
             )
         }
@@ -314,6 +324,7 @@ class DashboardRepositoryImpl @Inject constructor(
                 description = doc.getString("description"),
                 address = doc.getString("address"),
                 city = doc.getString("city"),
+                websiteUrl = doc.getString("websiteUrl"),
                 images = imagesList
             )
         }
@@ -340,6 +351,7 @@ class DashboardRepositoryImpl @Inject constructor(
                 address = doc.getString("address"),
                 phoneNumber = doc.getString("phoneNumber"),
                 city = doc.getString("city"),
+                websiteUrl = doc.getString("websiteUrl"),
                 images = imagesList
             )
         }
@@ -354,6 +366,7 @@ class DashboardRepositoryImpl @Inject constructor(
                 "description" to (restaurant.description ?: ""),
                 "address" to (restaurant.address ?: ""),
                 "phoneNumber" to (restaurant.phoneNumber ?: ""),
+                "websiteUrl" to (restaurant.websiteUrl ?: ""),
                 "images" to (restaurant.images ?: emptyList())
             )
         ).await()
@@ -368,6 +381,7 @@ class DashboardRepositoryImpl @Inject constructor(
                 "description" to (hotel.description ?: ""),
                 "address" to (hotel.address ?: ""),
                 "phoneNumber" to (hotel.phoneNumber ?: ""),
+                "websiteUrl" to (hotel.websiteUrl ?: ""),
                 "images" to (hotel.images ?: emptyList())
             )
         ).await()
@@ -380,6 +394,7 @@ class DashboardRepositoryImpl @Inject constructor(
                 "city" to place.city,
                 "description" to (place.description ?: ""),
                 "address" to (place.address ?: ""),
+                "websiteUrl" to (place.websiteUrl ?: ""),
                 "images" to (place.images ?: emptyList())
             )
         ).await()
@@ -394,6 +409,7 @@ class DashboardRepositoryImpl @Inject constructor(
                 "description" to (shop.description ?: ""),
                 "address" to (shop.address ?: ""),
                 "phoneNumber" to (shop.phoneNumber ?: ""),
+                "websiteUrl" to (shop.websiteUrl ?: ""),
                 "images" to (shop.images ?: emptyList())
             )
         ).await()

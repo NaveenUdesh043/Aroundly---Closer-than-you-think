@@ -11,6 +11,7 @@ data class PlaceSubmission(
     val description: String = "",
     val address: String = "",
     val phoneNumber: String = "",
+    val websiteUrl: String = "",
     val receiptImageUrl: String = "",
     val placeImages: List<String> = emptyList(),
     val status: SubmissionStatus = SubmissionStatus.PENDING,
@@ -26,6 +27,7 @@ data class PlaceSubmission(
         description = description,
         address = address,
         phoneNumber = phoneNumber,
+        websiteUrl = websiteUrl.ifBlank { null },
         images = placeImages.ifEmpty { null }
     )
 
@@ -37,6 +39,7 @@ data class PlaceSubmission(
         description = description,
         address = address,
         phoneNumber = phoneNumber,
+        websiteUrl = websiteUrl.ifBlank { null },
         images = placeImages.ifEmpty { null }
     )
 
@@ -46,6 +49,7 @@ data class PlaceSubmission(
         city = city,
         description = description,
         address = address,
+        websiteUrl = websiteUrl.ifBlank { null },
         images = placeImages.ifEmpty { null }
     )
 
@@ -57,6 +61,7 @@ data class PlaceSubmission(
         description = description,
         address = address,
         phoneNumber = phoneNumber,
+        websiteUrl = websiteUrl.ifBlank { null },
         images = placeImages.ifEmpty { null }
     )
 }

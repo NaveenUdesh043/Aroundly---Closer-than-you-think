@@ -116,6 +116,7 @@ class ManagerViewModel @Inject constructor(
         description: String,
         address: String,
         phoneNumber: String,
+        websiteUrl: String,
         receiptImageBytes: ByteArray?,
         placeImageBytesList: List<ByteArray>
     ) {
@@ -157,6 +158,7 @@ class ManagerViewModel @Inject constructor(
                 description = description,
                 address = address,
                 phoneNumber = phoneNumber,
+                websiteUrl = websiteUrl,
                 receiptImageUrl = receiptUrl,
                 placeImages = placeImageUrls,
                 status = SubmissionStatus.PENDING,

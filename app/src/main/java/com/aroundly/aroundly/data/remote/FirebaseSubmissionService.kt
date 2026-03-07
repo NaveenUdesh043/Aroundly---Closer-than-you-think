@@ -37,6 +37,7 @@ class FirebaseSubmissionService(
             "description" to submission.description,
             "address" to submission.address,
             "phoneNumber" to submission.phoneNumber,
+            "websiteUrl" to submission.websiteUrl,
             "receiptImageUrl" to submission.receiptImageUrl,
             "placeImages" to submission.placeImages,
             "status" to submission.status.name,
@@ -95,6 +96,7 @@ class FirebaseSubmissionService(
                             "description" to r.description,
                             "address" to r.address,
                             "phoneNumber" to r.phoneNumber,
+                            "websiteUrl" to r.websiteUrl,
                             "images" to (r.images ?: emptyList())
                         )
                     ).await()
@@ -110,6 +112,7 @@ class FirebaseSubmissionService(
                             "description" to h.description,
                             "address" to h.address,
                             "phoneNumber" to h.phoneNumber,
+                            "websiteUrl" to h.websiteUrl,
                             "images" to (h.images ?: emptyList())
                         )
                     ).await()
@@ -123,6 +126,7 @@ class FirebaseSubmissionService(
                             "city" to p.city,
                             "description" to p.description,
                             "address" to p.address,
+                            "websiteUrl" to p.websiteUrl,
                             "images" to (p.images ?: emptyList())
                         )
                     ).await()
@@ -138,6 +142,7 @@ class FirebaseSubmissionService(
                             "description" to e.description,
                             "address" to e.address,
                             "phoneNumber" to e.phoneNumber,
+                            "websiteUrl" to e.websiteUrl,
                             "images" to (e.images ?: emptyList())
                         )
                     ).await()
@@ -165,6 +170,7 @@ class FirebaseSubmissionService(
             description = getString("description") ?: "",
             address = getString("address") ?: "",
             phoneNumber = getString("phoneNumber") ?: "",
+            websiteUrl = getString("websiteUrl") ?: "",
             receiptImageUrl = getString("receiptImageUrl") ?: "",
             placeImages = (get("placeImages") as? List<*>)?.mapNotNull { it as? String } ?: emptyList(),
             status = SubmissionStatus.valueOf(getString("status") ?: "PENDING"),

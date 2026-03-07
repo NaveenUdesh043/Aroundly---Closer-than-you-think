@@ -4,6 +4,7 @@ import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -89,6 +90,7 @@ fun ManagerDashboardScreen(
     var description by remember { mutableStateOf("") }
     var address by remember { mutableStateOf("") }
     var phoneNumber by remember { mutableStateOf("") }
+    var websiteUrl by remember { mutableStateOf("") }
     var receiptUri by remember { mutableStateOf<Uri?>(null) }
     var receiptBytes by remember { mutableStateOf<ByteArray?>(null) }
     var placeImageUris by remember { mutableStateOf<List<Uri>>(emptyList()) }
@@ -162,7 +164,7 @@ fun ManagerDashboardScreen(
                 }
             )
 
-            Spacer(Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
             OutlinedTextField(
                 value = name,
@@ -213,6 +215,8 @@ fun ManagerDashboardScreen(
             )
 
             Spacer(Modifier.height(16.dp))
+            PaymentInfoSection()
+            Spacer(Modifier.height(16.dp))
             Text("Payment Receipt (required)", style = MaterialTheme.typography.labelMedium)
             Spacer(Modifier.height(8.dp))
             Box(
@@ -223,10 +227,10 @@ fun ManagerDashboardScreen(
                     .border(2.dp, Color.Gray, RoundedCornerShape(12.dp))
                     .clickable {
                         receiptPicker.launch(
-                        PickVisualMediaRequest.Builder()
-                            .setMediaType(ActivityResultContracts.PickVisualMedia.ImageOnly)
-                            .build()
-                    )
+                            PickVisualMediaRequest.Builder()
+                                .setMediaType(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                                .build()
+                        )
                     },
                 contentAlignment = Alignment.Center
             ) {
@@ -302,6 +306,7 @@ fun ManagerDashboardScreen(
                             description = description,
                             address = address,
                             phoneNumber = phoneNumber,
+                            websiteUrl = websiteUrl,
                             receiptImageBytes = receiptBytes,
                             placeImageBytesList = placeImageBytesList
                         )
@@ -355,6 +360,132 @@ fun ManagerDashboardScreen(
                 Spacer(Modifier.height(8.dp))
             }
         }
+    }
+}
+
+@Composable
+private fun PaymentInfoSection() {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+    ) {
+        Text(
+            text = "Payment",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold
+        )
+        Spacer(Modifier.height(4.dp))
+        Text(
+            text = "One-time listing fee",
+            style = MaterialTheme.typography.bodySmall,
+            color = Color.Gray
+        )
+
+        Spacer(Modifier.height(12.dp))
+
+        // Listing fee card
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = Color(0xFF151515)
+            )
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text(
+                    text = "LISTING FEE",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = Color(0xFFFFC107)
+                )
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    text = "LKR 5,000",
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFFFFC107)
+                )
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    text = "One-time payment for permanent listing",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color(0xFFE0E0E0)
+                )
+                Spacer(Modifier.height(12.dp))
+
+                PaymentBullet(text = "Listed on Aroundly")
+                PaymentBullet(text = "Priority placement")
+                PaymentBullet(text = "Analytics dashboard")
+                PaymentBullet(text = "Unlimited updates")
+            }
+        }
+
+        Spacer(Modifier.height(16.dp))
+
+        Text(
+            text = "Bank Transfer Details",
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.Bold
+        )
+        Spacer(Modifier.height(8.dp))
+
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(12.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = Color(0xFFFFF6E5)
+            )
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                PaymentInfoRow(label = "Bank", value = "Commercial Bank")
+                PaymentInfoRow(label = "Account Name", value = "R N U SILVA")
+                PaymentInfoRow(label = "Account No.", value = "8000088332")
+                PaymentInfoRow(label = "Branch", value = "Negombo")
+            }
+        }
+    }
+}
+
+@Composable
+private fun PaymentBullet(text: String) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 2.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = "•",
+            color = Color(0xFFFFC107),
+            modifier = Modifier.padding(end = 6.dp)
+        )
+        Text(
+            text = text,
+            style = MaterialTheme.typography.bodySmall,
+            color = Color.White
+        )
+    }
+}
+
+@Composable
+private fun PaymentInfoRow(label: String, value: String) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 2.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodySmall,
+            color = Color(0xFF8D8D8D)
+        )
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.SemiBold,
+            color = PrimaryTealDark
+        )
     }
 }
 
@@ -546,6 +677,35 @@ private fun SubmissionCard(submission: PlaceSubmission) {
                 )
             }
             Text("${submission.placeType.name} • ${submission.city}", style = MaterialTheme.typography.bodySmall)
+        }
+    }
+}
+
+@Composable
+private fun BusinessTypeChip(
+    label: String,
+    isSelected: Boolean,
+    onClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .height(40.dp)
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = if (isSelected) Color(0xFFFFF3DD) else Color.White
+        ),
+        border = if (isSelected) null else BorderStroke(1.dp, Color(0xFFE0D8CC))
+    ) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = label,
+                color = if (isSelected) Color(0xFF5A3E10) else Color(0xFF4A4137),
+                fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
+            )
         }
     }
 }

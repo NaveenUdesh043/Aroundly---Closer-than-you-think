@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -43,8 +44,6 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -97,6 +96,7 @@ fun DashboardScreen(
     val searchQuery by viewModel.searchQuery.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val isLoadingLocation by viewModel.isLoadingLocation.collectAsState()
+    val currentLocation by viewModel.currentLocation.collectAsState()
 
     val locationPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
@@ -109,63 +109,33 @@ fun DashboardScreen(
     var selectedTab by remember { mutableIntStateOf(0) }
     val tabs = listOf("All", "Restaurants", "Hotels", "Places", "Rentals")
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        "Welcome to Aroundly",
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
-                    )
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFF1C1C84),
-                    titleContentColor = Color.White
-                ),
-                actions = {
-                    IconButton(onClick = onLogout) {
-                        Icon(
-                            Icons.Default.Logout,
-                            contentDescription = "Logout",
-                            tint = Color.White)
-                    }
-                    IconButton(onClick = {
-                        if (viewModel.hasLocationPermission()) {
-                            viewModel.detectLocation()
-                        } else {
-                            locationPermissionLauncher.launch(
-                                arrayOf(
-                                    Manifest.permission.ACCESS_FINE_LOCATION,
-                                    Manifest.permission.ACCESS_COARSE_LOCATION
-                                )
-                            )
-                        }
-                    }) {
-                        if (isLoadingLocation) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(24.dp),
-                                color = Color.White,
-                                strokeWidth = 2.dp
-                            )
-                        } else {
-                            Icon(
-                                Icons.Default.LocationOn,
-                                contentDescription = "Use my location",
-                                tint = Color.White
-                            )
-                        }
-                    }
-                }
-            )
-        }
-    ) { padding ->
+    Scaffold { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
                 .background(MaterialTheme.colorScheme.surface)
         ) {
+            DashboardHeader(
+                city = selectedCity,
+                isLoadingLocation = isLoadingLocation,
+                onLogout = onLogout,
+                onLocationClick = {
+                    if (viewModel.hasLocationPermission()) {
+                        viewModel.detectLocation()
+                    } else {
+                        locationPermissionLauncher.launch(
+                            arrayOf(
+                                Manifest.permission.ACCESS_FINE_LOCATION,
+                                Manifest.permission.ACCESS_COARSE_LOCATION
+                            )
+                        )
+                    }
+                }
+            )
+
+            Spacer(Modifier.height(12.dp))
+
             // Search bar
             OutlinedTextField(
                 value = searchQuery,
@@ -234,6 +204,35 @@ fun DashboardScreen(
             }
 
             Spacer(Modifier.height(8.dp))
+
+            AnimatedVisibility(
+                visible = currentLocation?.cityHint != null && selectedCity.isNotEmpty()
+            ) {
+                val cityFromLocation = currentLocation?.cityHint ?: ""
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(Color(0xFFE3F2FD))
+                        .padding(12.dp)
+                ) {
+                    Column {
+                        Text(
+                            text = "Using your location",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = Color(0xFF1565C0),
+                            fontWeight = FontWeight.Bold
+                        )
+                        Spacer(Modifier.height(2.dp))
+                        Text(
+                            text = "Showing places near $cityFromLocation.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color(0xFF1565C0)
+                        )
+                    }
+                }
+            }
 
             // Tab chips
             LazyRow(
@@ -439,6 +438,124 @@ private fun PlaceCard(
                     style = MaterialTheme.typography.bodySmall,
                     color = Color.White.copy(alpha = 0.9f)
                 )
+            }
+        }
+    }
+}
+
+@Composable
+private fun DashboardHeader(
+    city: String,
+    isLoadingLocation: Boolean,
+    onLogout: () -> Unit,
+    onLocationClick: () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(
+                Brush.verticalGradient(
+                    colors = listOf(
+                        Color(0xFFFFF3E0),
+                        Color(0xFFFFFFFF)
+                    )
+                )
+            )
+            .padding(horizontal = 16.dp, vertical = 12.dp)
+    ) {
+        Column {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column {
+                    Text(
+                        text = "Good day,",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color(0xFF8D6E63)
+                    )
+                    Text(
+                        text = "Hey, Explorer",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF3E2723)
+                    )
+                }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(onClick = onLogout) {
+                        Icon(
+                            Icons.Default.Logout,
+                            contentDescription = "Logout",
+                            tint = Color(0xFF3E2723)
+                        )
+                    }
+                }
+            }
+
+            Spacer(Modifier.height(12.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clip(RoundedCornerShape(24.dp))
+                        .background(Color(0xFFFFECB3))
+                        .clickable { onLocationClick() }
+                        .padding(horizontal = 12.dp, vertical = 8.dp)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.LocationOn,
+                            contentDescription = null,
+                            tint = Color(0xFFF4511E),
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Column {
+                            Text(
+                                text = if (city.isNotEmpty()) city else "Use my location",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                color = Color(0xFF5D4037)
+                            )
+                            Text(
+                                text = "Change location",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = Color(0xFF8D6E63)
+                            )
+                        }
+                    }
+                }
+
+                Spacer(Modifier.width(12.dp))
+
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(Color(0xFFFFF8E1)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (isLoadingLocation) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            color = Color(0xFFF57C00),
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Text(
+                            text = "📍",
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                    }
+                }
             }
         }
     }
