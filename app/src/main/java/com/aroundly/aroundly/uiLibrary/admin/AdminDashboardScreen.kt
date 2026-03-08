@@ -1,9 +1,16 @@
 package com.aroundly.aroundly.uiLibrary.admin
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -19,6 +26,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -28,6 +36,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -35,20 +44,34 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.aroundly.aroundly.domain.model.PlaceSubmission
 import com.aroundly.aroundly.ui.theme.PrimaryTeal
 import com.aroundly.aroundly.uiLibrary.viewModel.AdminViewModel
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.aroundly.aroundly.ui.theme.Amber
+import com.aroundly.aroundly.ui.theme.AmberBg
+import com.aroundly.aroundly.ui.theme.Charcoal
+import com.aroundly.aroundly.ui.theme.DarkNavy
+import com.aroundly.aroundly.ui.theme.DeepDark
+import com.aroundly.aroundly.ui.theme.RoseBg
+import com.aroundly.aroundly.ui.theme.SageBg
+import com.aroundly.aroundly.ui.theme.TextMuted
+import com.aroundly.aroundly.ui.theme.WarmWhite
+import com.aroundly.aroundly.ui.theme.White
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -56,59 +79,100 @@ fun AdminDashboardScreen(
     viewModel: AdminViewModel = hiltViewModel(),
     onLogout: () -> Unit
 ) {
+
     val pendingSubmissions by viewModel.pendingSubmissions.collectAsState(initial = emptyList())
     val isLoading by viewModel.isLoading.collectAsState()
     val message by viewModel.message.collectAsState()
 
     LaunchedEffect(Unit) { viewModel.loadPendingSubmissions() }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Admin - Pending Submissions", fontWeight = FontWeight.Bold) },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = PrimaryTeal,
-                    titleContentColor = Color.White
-                ),
-                actions = {
-                    IconButton(onClick = onLogout) {
-                        Icon(Icons.Default.Logout, contentDescription = "Logout", tint = Color.White)
-                    }
-                }
+    var activeTab by remember { mutableStateOf(SubmissionTab.PENDING) }
+
+    val approved = remember { mutableStateListOf<PlaceSubmission>() }
+    val rejected = remember { mutableStateListOf<PlaceSubmission>() }
+
+
+
+    fun approve(item: PlaceSubmission, notes: String) {
+        viewModel.approveSubmission(item, notes)
+        approved.add(item)
+    }
+
+    fun reject(item: PlaceSubmission, notes: String) {
+        viewModel.rejectSubmission(item, notes)
+        rejected.add(item)
+    }
+
+    val currentList = when (activeTab) {
+        SubmissionTab.PENDING -> pendingSubmissions
+        SubmissionTab.APPROVED -> approved
+        SubmissionTab.REJECTED -> rejected
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(WarmWhite)
+    ) {
+
+        AdminHeader(
+            pendingCount = pendingSubmissions.size,
+            approvedCount = approved.size,
+            rejectedCount = rejected.size,
+            onLogout = onLogout
+        )
+
+        AdminTabRow(
+            activeTab = activeTab,
+            pending = pendingSubmissions.size,
+            approved = approved.size,
+            rejected = rejected.size,
+            onTabSelected = { activeTab = it }
+        )
+
+        if (isLoading && pendingSubmissions.isEmpty()) {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator(color = PrimaryTeal)
+            }
+        }
+
+        message?.let {
+            Text(
+                text = it,
+                modifier = Modifier.padding(16.dp),
+                color = PrimaryTeal
             )
         }
-    ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(16.dp)
-        ) {
-            message?.let { msg ->
-                Text(msg, color = PrimaryTeal)
-                Spacer(Modifier.height(8.dp))
-            }
 
-            if (isLoading && pendingSubmissions.isEmpty()) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator(color = PrimaryTeal)
-                }
+        AnimatedContent(
+            targetState = activeTab,
+            transitionSpec = {
+                fadeIn(tween(220)) togetherWith fadeOut(tween(180))
+            },
+            label = ""
+        ) { tab ->
+
+            if (currentList.isEmpty()) {
+                EmptyTabContent(tab)
             } else {
-                Text(
-                    "${pendingSubmissions.size} pending submission(s)",
-                    style = MaterialTheme.typography.titleMedium
-                )
-                Spacer(Modifier.height(16.dp))
 
-                LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    items(pendingSubmissions) { submission ->
-                        PendingSubmissionCard(
-                            submission = submission,
-                            onApprove = { notes -> viewModel.approveSubmission(submission, notes) },
-                            onReject = { notes -> viewModel.rejectSubmission(submission, notes) }
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(20.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+
+                    items(currentList) { submission ->
+
+                        SubmissionCard(
+                            item = submission,
+                            tab = tab,
+                            onApprove = { notes ->
+                                approve(submission, notes)
+                            },
+                            onReject = { notes ->
+                                reject(submission, notes)
+                            }
                         )
                     }
                 }
@@ -118,96 +182,268 @@ fun AdminDashboardScreen(
 }
 
 @Composable
-private fun PendingSubmissionCard(
-    submission: PlaceSubmission,
+fun AdminHeader(
+    pendingCount: Int,
+    approvedCount: Int,
+    rejectedCount: Int,
+    onLogout: () -> Unit
+) {
+    val headerGradient = Brush.verticalGradient(
+        colors = listOf(
+            Color(0xFF131013),
+            Color(0xFF3D3025)
+        )
+    )
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(headerGradient)
+            .clip(RoundedCornerShape(bottomStart = 36.dp, bottomEnd = 36.dp))
+    ) {
+
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(24.dp)
+        ) {
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+
+                Column {
+
+                    Text(
+                        "ADMIN CONTROL",
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = TextMuted
+                    )
+
+                    Text(
+                        "Aroundly Admin",
+                        fontSize = 26.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = White
+                    )
+                }
+
+                IconButton(onClick = onLogout) {
+
+                    Icon(
+                        Icons.Default.ExitToApp,
+                        contentDescription = null,
+                        tint = White
+                    )
+                }
+            }
+
+            Spacer(Modifier.height(20.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+
+                StatCard("⏳", pendingCount.toString(), "Pending", AmberBg, Modifier.weight(1f))
+                StatCard("✅", approvedCount.toString(), "Approved", SageBg, Modifier.weight(1f))
+                StatCard("❌", rejectedCount.toString(), "Rejected", RoseBg, Modifier.weight(1f))
+            }
+        }
+    }
+}
+
+enum class SubmissionTab(val label: String, val icon: String) {
+    PENDING("Pending", "⏳"),
+    APPROVED("Approved", "✅"),
+    REJECTED("Rejected", "❌")
+}
+@Composable
+fun StatCard(
+    icon: String,
+    value: String,
+    label: String,
+    bg: Color,
+    modifier: Modifier = Modifier
+) {
+
+    Column(
+        modifier = modifier
+            .background(bg, RoundedCornerShape(14.dp))
+            .padding(12.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+
+        Text(icon, fontSize = 20.sp)
+
+        Text(
+            value,
+            fontSize = 26.sp,
+            fontWeight = FontWeight.Bold,
+            color = White
+        )
+
+        Text(
+            label,
+            fontSize = 11.sp,
+            color = TextMuted
+        )
+    }
+}
+
+@Composable
+fun AdminTabRow(
+    activeTab: SubmissionTab,
+    pending: Int,
+    approved: Int,
+    rejected: Int,
+    onTabSelected: (SubmissionTab) -> Unit
+) {
+
+    val counts = mapOf(
+        SubmissionTab.PENDING to pending,
+        SubmissionTab.APPROVED to approved,
+        SubmissionTab.REJECTED to rejected
+    )
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(20.dp),
+        horizontalArrangement = Arrangement.spacedBy(6.dp)
+    ) {
+
+        SubmissionTab.entries.forEach { tab ->
+
+            val active = tab == activeTab
+
+            Surface(
+                onClick = { onTabSelected(tab) },
+                shape = RoundedCornerShape(10.dp),
+                color = if (active) Amber else Color.Transparent,
+                modifier = Modifier.weight(1f)
+            ) {
+
+                Text(
+                    "${tab.icon} ${tab.label} (${counts[tab]})",
+                    modifier = Modifier.padding(10.dp),
+                    textAlign = TextAlign.Center,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun SubmissionCard(
+    item: PlaceSubmission,
+    tab: SubmissionTab,
     onApprove: (String) -> Unit,
     onReject: (String) -> Unit
 ) {
-    var adminNotes by remember { mutableStateOf("") }
+
+    var notes by remember { mutableStateOf("") }
 
     Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
-        shape = RoundedCornerShape(12.dp)
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = White)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(
-                submission.name,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
-            )
-            Text("${submission.placeType.name} • ${submission.type} • ${submission.city}")
-            submission.description.takeIf { it.isNotBlank() }?.let {
-                Text(it, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(vertical = 4.dp))
-            }
-            submission.address.takeIf { it.isNotBlank() }?.let {
-                Text("Address: $it", style = MaterialTheme.typography.bodySmall)
-            }
-            submission.phoneNumber.takeIf { it.isNotBlank() }?.let {
-                Text("Phone: $it", style = MaterialTheme.typography.bodySmall)
-            }
-            Text("Owner: ${submission.ownerEmail}", style = MaterialTheme.typography.bodySmall)
 
-            if (submission.placeImages.isNotEmpty()) {
-                Spacer(Modifier.height(8.dp))
-                Text("Place Images:", style = MaterialTheme.typography.labelMedium)
-                Spacer(Modifier.height(4.dp))
+        Column(Modifier.padding(16.dp)) {
+
+            Text(item.name, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+
+            Text("${item.placeType.name} • ${item.city}")
+
+            Text("Owner: ${item.ownerEmail}")
+
+            Spacer(Modifier.height(8.dp))
+
+            if (item.placeImages.isNotEmpty()) {
+
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .horizontalScroll(rememberScrollState()),
+                    Modifier.horizontalScroll(rememberScrollState()),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    submission.placeImages.forEach { url ->
+
+                    item.placeImages.forEach {
+
                         AsyncImage(
-                            model = url,
-                            contentDescription = "Place image",
+                            model = it,
+                            contentDescription = null,
                             modifier = Modifier
-                                .size(100.dp)
+                                .size(90.dp)
                                 .clip(RoundedCornerShape(8.dp))
                         )
                     }
                 }
             }
-            if (submission.receiptImageUrl.isNotBlank()) {
-                Spacer(Modifier.height(8.dp))
-                Text("Payment Receipt:", style = MaterialTheme.typography.labelMedium)
-                Spacer(Modifier.height(4.dp))
-                AsyncImage(
-                    model = submission.receiptImageUrl,
-                    contentDescription = "Receipt",
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(150.dp)
-                )
-            }
 
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(10.dp))
+
             OutlinedTextField(
-                value = adminNotes,
-                onValueChange = { adminNotes = it },
-                label = { Text("Admin notes (optional)") },
-                modifier = Modifier.fillMaxWidth(),
-                minLines = 1
+                value = notes,
+                onValueChange = { notes = it },
+                label = { Text("Admin notes") },
+                modifier = Modifier.fillMaxWidth()
             )
-            Spacer(Modifier.height(12.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Button(
-                    onClick = { onApprove(adminNotes) },
-                    modifier = Modifier.weight(1f)
+
+            if (tab == SubmissionTab.PENDING) {
+
+                Spacer(Modifier.height(10.dp))
+
+                Row(
+                    Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Text("Approve")
-                }
-                OutlinedButton(
-                    onClick = { onReject(adminNotes) },
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Text("Reject", color = Color.Red)
+
+                    OutlinedButton(
+                        onClick = { onReject(notes) },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("Reject", color = Color.Red)
+                    }
+
+                    Button(
+                        onClick = { onApprove(notes) },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("Approve")
+                    }
                 }
             }
         }
+    }
+}
+
+@Composable
+fun EmptyTabContent(tab: SubmissionTab) {
+
+    val message = when (tab) {
+        SubmissionTab.PENDING -> "No pending submissions"
+        SubmissionTab.APPROVED -> "No approved businesses"
+        SubmissionTab.REJECTED -> "No rejected businesses"
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(40.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+
+        Text("📭", fontSize = 50.sp)
+
+        Spacer(Modifier.height(10.dp))
+
+        Text(
+            message,
+            fontSize = 16.sp,
+            color = Charcoal.copy(alpha = 0.4f)
+        )
     }
 }

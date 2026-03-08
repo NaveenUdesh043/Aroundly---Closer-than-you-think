@@ -1,7 +1,12 @@
 package com.aroundly.aroundly.uiLibrary.auth
 
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -10,26 +15,68 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowForward
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
+import androidx.compose.material.icons.filled.Language
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.aroundly.aroundly.ui.theme.Amber
+import com.aroundly.aroundly.ui.theme.AmberBg
+import com.aroundly.aroundly.ui.theme.AmberBgLight
+import com.aroundly.aroundly.ui.theme.AmberBorder
+import com.aroundly.aroundly.ui.theme.AmberDark
+import com.aroundly.aroundly.ui.theme.AmberGlow
+import com.aroundly.aroundly.ui.theme.BgDark
+import com.aroundly.aroundly.ui.theme.BgMid
+import com.aroundly.aroundly.ui.theme.BgWarm
+import com.aroundly.aroundly.ui.theme.BlueGlow
+import com.aroundly.aroundly.ui.theme.SageBg
+import com.aroundly.aroundly.ui.theme.SageBgLight
+import com.aroundly.aroundly.ui.theme.SageBorder
+import com.aroundly.aroundly.ui.theme.SageDark
+import com.aroundly.aroundly.ui.theme.SageGlow
+import com.aroundly.aroundly.ui.theme.SageGreen
+import com.aroundly.aroundly.ui.theme.White
+import com.aroundly.aroundly.ui.theme.White08
+import com.aroundly.aroundly.ui.theme.White10
+import com.aroundly.aroundly.ui.theme.White25
+import com.aroundly.aroundly.ui.theme.White40
+import com.aroundly.aroundly.ui.theme.White45
+import com.aroundly.aroundly.ui.theme.White50
+import com.aroundly.aroundly.ui.theme.White70
+import kotlinx.coroutines.delay
+import com.aroundly.aroundly.R
 
 @Composable
 fun WelcomeScreen(
@@ -37,239 +84,417 @@ fun WelcomeScreen(
     onBusinessOwnerClick: () -> Unit,
     onSignInClick: () -> Unit
 ) {
-    val backgroundGradient = Brush.verticalGradient(
-        colors = listOf(
-            Color(0xFF19141F),
-            Color(0xFF050608)
-        )
-    )
+
+    var animStarted by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        delay(100)
+        animStarted = true
+    }
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(brush = backgroundGradient)
-            .padding(horizontal = 24.dp, vertical = 32.dp)
+            .background(
+                Brush.linearGradient(
+                    colorStops = arrayOf(
+                        0.0f to BgDark,
+                        0.4f to BgMid,
+                        1.0f to BgWarm
+                    ),
+                    start = Offset(0f, 0f),
+                    end = Offset(400f, 900f)
+                )
+            )
     ) {
+
+        GlowBlobs()
+        IconButton(
+            onClick = { /* open language picker */ },
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(top = 30.dp, end = 20.dp)
+        ) {
+            Column (modifier = Modifier
+                .width(32.dp)
+                .height(32.dp)
+            ){
+                Icon(
+                    imageVector = Icons.Default.Language,
+                    contentDescription = "Change Language",
+                    tint = White
+                )
+                Text(
+                    text = "Language",
+                    fontSize = 8.sp)
+            }
+        }
         Column(
             modifier = Modifier
-                .fillMaxSize(),
-            verticalArrangement = Arrangement.SpaceBetween
+                .fillMaxSize()
+                .systemBarsPadding()
         ) {
-            // Top content: brand, description, chips
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.Start
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(72.dp)
-                        .background(
-                            color = Color(0x33FFC857),
-                            shape = RoundedCornerShape(24.dp)
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(46.dp)
-                            .background(
-                                color = Color(0xFFFFC857),
-                                shape = RoundedCornerShape(18.dp)
-                            )
-                    )
-                }
 
-                Spacer(modifier = Modifier.height(24.dp))
-
-                Row {
-                    Text(
-                        text = "Local",
-                        style = MaterialTheme.typography.headlineMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White,
-                        fontSize = 32.sp
-                    )
-                    Text(
-                        text = "Spot",
-                        style = MaterialTheme.typography.headlineMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFFFFC857),
-                        fontSize = 32.sp
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Text(
-                    text = "Discover cafés, restaurants, stays & rentals near you — instantly.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Color(0xFFB0B3C0)
-                )
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    CategoryChip("Cafés")
-                    CategoryChip("Food")
-                    CategoryChip("Visit")
-                }
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    CategoryChip("Stay")
-                    CategoryChip("Rent")
-                }
-            }
-
-            // Middle content: role cards
             Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 24.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                    .weight(1f)
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 32.dp)
+                    .padding(top = 64.dp)
             ) {
-                Text(
-                    text = "JOIN AS",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = Color(0xFF7C7B86)
-                )
+
+                LogoSection(animStarted)
+
+                Spacer(Modifier.height(36.dp))
+
+                FeaturePillsRow(animStarted)
+
+                Spacer(Modifier.height(36.dp))
+
+                JoinAsLabel(animStarted)
+
+                Spacer(Modifier.height(14.dp))
 
                 RoleCard(
+                    icon = R.drawable.tourists,
                     title = "Explorer",
                     subtitle = "Discover & explore places near you",
-                    gradient = Brush.horizontalGradient(
-                        colors = listOf(
-                            Color(0xFF443024),
-                            Color(0xFF6B4725)
-                        )
-                    ),
-                    iconBackgroundColor = Color(0xFFFFC857),
+                    iconBrush = Brush.linearGradient(listOf(Amber, AmberDark)),
+                    iconShadow = AmberGlow,
+                    cardBrush = Brush.linearGradient(listOf(AmberBg, AmberBgLight)),
+                    borderColor = AmberBorder,
+                    visible = animStarted,
+                    delayMs = 300,
                     onClick = onExplorerClick
                 )
 
+                Spacer(Modifier.height(12.dp))
+
                 RoleCard(
+                    icon = R.drawable.manager,
                     title = "Business Owner",
                     subtitle = "List your restaurant, hotel or rental",
-                    gradient = Brush.horizontalGradient(
-                        colors = listOf(
-                            Color(0xFF12333B),
-                            Color(0xFF214A5A)
-                        )
-                    ),
-                    iconBackgroundColor = Color(0xFF5DD0C1),
+                    iconBrush = Brush.linearGradient(listOf(SageGreen, SageDark)),
+                    iconShadow = SageGlow,
+                    cardBrush = Brush.linearGradient(listOf(SageBg, SageBgLight)),
+                    borderColor = SageBorder,
+                    visible = animStarted,
+                    delayMs = 420,
                     onClick = onBusinessOwnerClick
                 )
             }
 
-            // Bottom actions
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Row(
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    Text(
-                        text = "Already have an account? ",
-                        color = Color(0xFF8A8690)
-                    )
-                    Text(
-                        text = "Sign in",
-                        color = Color(0xFFFFC857),
-                        fontWeight = FontWeight.SemiBold,
-                        modifier = Modifier.clickable(onClick = onSignInClick)
-                    )
-                }
-            }
+            BottomSignInRow(
+                visible = animStarted,
+                onLogin = onSignInClick
+            )
         }
     }
 }
 
+
 @Composable
-private fun CategoryChip(
-    label: String
-) {
-    Box(
-        modifier = Modifier
-            .background(
-                color = Color(0x33FFFFFF),
-                shape = RoundedCornerShape(50.dp)
-            )
-            .padding(horizontal = 12.dp, vertical = 6.dp)
-    ) {
-        Text(
-            text = label,
-            color = Color(0xFFE3E0E8),
-            style = MaterialTheme.typography.labelMedium
+fun GlowBlobs() {
+
+    Box(Modifier.fillMaxSize()) {
+
+        Box(
+            Modifier
+                .size(280.dp)
+                .offset(130.dp, (-60).dp)
+                .background(
+                    Brush.radialGradient(
+                        listOf(AmberGlow, Color.Transparent)
+                    ),
+                    CircleShape
+                )
+        )
+
+        Box(
+            Modifier
+                .size(200.dp)
+                .offset((-80).dp, 100.dp)
+                .background(
+                    Brush.radialGradient(
+                        listOf(SageGlow, Color.Transparent)
+                    ),
+                    CircleShape
+                )
+        )
+
+        Box(
+            Modifier
+                .size(160.dp)
+                .align(Alignment.BottomEnd)
+                .offset(40.dp, (-200).dp)
+                .background(
+                    Brush.radialGradient(
+                        listOf(BlueGlow, Color.Transparent)
+                    ),
+                    CircleShape
+                )
         )
     }
 }
 
 @Composable
-private fun RoleCard(
-    title: String,
-    subtitle: String,
-    gradient: Brush,
-    iconBackgroundColor: Color,
-    onClick: () -> Unit
-) {
-    Card(
+fun LogoSection(visible: Boolean) {
+
+    val alpha by animateFloatAsState(
+        if (visible) 1f else 0f,
+        animationSpec = tween(600)
+    )
+
+    val slide by animateDpAsState(
+        if (visible) 0.dp else 24.dp,
+        animationSpec = tween(600)
+    )
+
+    Column(
         modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick),
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = Color.Transparent
-        )
+            .alpha(alpha)
+            .offset(y = slide)
     ) {
+
         Box(
             modifier = Modifier
-                .background(gradient)
-                .padding(horizontal = 16.dp, vertical = 18.dp)
+                .size(72.dp)
+                .shadow(20.dp, RoundedCornerShape(22.dp)),
+//                .background(
+//                    Brush.linearGradient(listOf(Amber, AmberDark)),
+//                    RoundedCornerShape(22.dp)
+//                ),
+            contentAlignment = Alignment.Center
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(44.dp)
-                        .background(
-                            color = iconBackgroundColor,
-                            shape = RoundedCornerShape(16.dp)
-                        )
-                )
+            Image(
+                painter = painterResource(id = R.drawable.aroundly_app_icon),
+                contentDescription = "App Icon",
+                modifier = Modifier.size(72.dp)
+            )
+        }
 
-                Spacer(modifier = Modifier.width(12.dp))
+        Spacer(Modifier.height(20.dp))
 
-                Column(
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Text(
-                        text = title,
-                        color = Color.White,
-                        style = MaterialTheme.typography.bodyLarge,
+        Text(
+            buildAnnotatedString {
+
+                withStyle(
+                    SpanStyle(
+                        color = White,
                         fontWeight = FontWeight.Bold
                     )
-                    Spacer(modifier = Modifier.height(2.dp))
-                    Text(
-                        text = subtitle,
-                        color = Color(0xFFE4E0D9),
-                        style = MaterialTheme.typography.bodySmall
+                ) {
+                    append("Around")
+                }
+
+                withStyle(
+                    SpanStyle(
+                        color = Amber,
+                        fontWeight = FontWeight.Bold
+                    )
+                ) {
+                    append("ly")
+                }
+            },
+            fontSize = 42.sp
+        )
+
+        Spacer(Modifier.height(10.dp))
+
+        Text(
+            "Discover cafés, restaurants, stays\n& rentals near you — instantly.",
+            color = White50,
+            fontSize = 15.sp
+        )
+    }
+}
+
+private val featurePills =
+    listOf("☕ Cafés", "🍽️ Food", "🏛️ Visit",
+        "🏨 Stay", "🚲 Rent")
+
+@Composable
+fun FeaturePillsRow(
+    visible: Boolean
+) {
+    val rows = featurePills.chunked(3)
+
+    Column(
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+
+        rows.forEachIndexed { rowIndex, row ->
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+
+                row.forEach { pill ->
+                    FeaturePill(
+                        text = pill,
+                        visible = visible,
+                        delayMs = 120 + (rowIndex * 120)
                     )
                 }
 
-                Icon(
-                    imageVector = Icons.Default.ArrowForward,
-                    contentDescription = null,
-                    tint = Color(0xFFE4E0D9)
-                )
+                if (row.size < 3) {
+                    repeat(3 - row.size) {
+                        Spacer(modifier = Modifier.weight(1f))
+                    }
+                }
             }
         }
     }
 }
 
+@Composable
+fun FeaturePill(
+    text: String,
+    visible: Boolean,
+    delayMs: Int
+) {
+
+    val alpha by animateFloatAsState(
+        targetValue = if (visible) 1f else 0f,
+        animationSpec = tween(600, delayMillis = delayMs),
+        label = ""
+    )
+
+    Box(
+        modifier = Modifier
+            .alpha(alpha)
+            .background(
+                color = White10,
+                shape = RoundedCornerShape(20.dp)
+            )
+            .padding(horizontal = 14.dp, vertical = 8.dp)
+    ) {
+
+        Text(
+            text = text,
+            color = White70,
+            fontSize = 13.sp
+        )
+    }
+}
+
+@Composable
+fun JoinAsLabel(visible: Boolean) {
+
+    val alpha by animateFloatAsState(
+        if (visible) 1f else 0f,
+        animationSpec = tween(400)
+    )
+
+    Text(
+        "JOIN AS",
+        fontSize = 11.sp,
+        letterSpacing = 1.5.sp,
+        color = White25,
+        modifier = Modifier.alpha(alpha)
+    )
+}
+
+
+@Composable
+fun RoleCard(
+    icon: Int,
+    title: String,
+    subtitle: String,
+    iconBrush: Brush,
+    iconShadow: Color,
+    cardBrush: Brush,
+    borderColor: Color,
+    visible: Boolean,
+    delayMs: Int,
+    onClick: () -> Unit
+) {
+
+    val alpha by animateFloatAsState(
+        if (visible) 1f else 0f,
+        animationSpec = tween(500, delayMillis = delayMs)
+    )
+
+    Row(
+        modifier = Modifier
+            .alpha(alpha)
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(20.dp))
+            .background(cardBrush)
+            .border(1.dp, borderColor, RoundedCornerShape(20.dp))
+            .clickable(onClick = onClick)
+            .padding(20.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+
+        Box(
+            Modifier
+                .size(52.dp)
+                .background(iconBrush, RoundedCornerShape(16.dp)),
+            contentAlignment = Alignment.Center
+        ) {
+            Image(
+                painter = painterResource(id = icon),
+                contentDescription = title,
+                modifier = Modifier.size(36.dp)
+            )
+        }
+
+        Spacer(Modifier.width(16.dp))
+
+        Column(Modifier.weight(1f)) {
+
+            Text(title, color = White, fontWeight = FontWeight.Bold)
+
+            Text(
+                subtitle,
+                color = White45,
+                fontSize = 12.sp
+            )
+        }
+
+        Text("→", color = White25)
+    }
+}
+
+
+@Composable
+fun BottomSignInRow(
+    visible: Boolean,
+    onLogin: () -> Unit
+) {
+
+    val alpha by animateFloatAsState(
+        if (visible) 1f else 0f,
+        animationSpec = tween(500)
+    )
+
+    Column(
+        modifier = Modifier
+            .alpha(alpha)
+            .fillMaxWidth()
+            .padding(32.dp)
+    ) {
+
+        HorizontalDivider(color = White08)
+
+        Spacer(Modifier.height(20.dp))
+
+        Row(horizontalArrangement = Arrangement.Center,
+            modifier = Modifier.fillMaxWidth()) {
+
+            Text(
+                "Already have an account? ",
+                color = White40
+            )
+
+            Text(
+                "Sign in",
+                color = Amber,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.clickable { onLogin() }
+            )
+        }
+    }
+}

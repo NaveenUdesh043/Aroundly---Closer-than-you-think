@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">Aroundly</string>
+    <string name="PENDING">Pending</string>
+    <string name="APPROVED">Approved</string>
+    <string name="REJECTED">Rejected</string>
+    <string name="REJECT">Reject</string>
+    <string name="APPROVE">Approve</string>
 </resources>
