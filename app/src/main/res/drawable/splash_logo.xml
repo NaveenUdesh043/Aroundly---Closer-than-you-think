@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- White background fills the circle -->
+    <item>
+        <color android:color="@color/white" />
+    </item>
+    <!-- Make logo small enough to fit inside the circle without being cropped -->
+    <item
+        android:width="100dp"
+        android:height="50dp"
+        android:gravity="center">
+        <bitmap
+            android:src="@drawable/aroundly_logo_light"
+            android:gravity="center" />
+    </item>
+</layer-list>

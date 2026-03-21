@@ -5,6 +5,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -46,6 +47,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -390,33 +392,55 @@ fun ManagerSignupScreen(
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(8.dp))
 
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .background(backgroundColor)
-                .padding(horizontal = 16.dp, vertical = 16.dp),
+                .padding(horizontal = 8.dp, vertical = 16.dp),
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp), // optional spacing
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Checkbox(
+                    checked = termsAccepted,
+                    onCheckedChange = { termsAccepted = it }
+                )
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Checkbox(
-                checked = termsAccepted,
-                onCheckedChange = { termsAccepted = it }
-            )
-            Column(modifier = Modifier.padding(start = 8.dp)) {
-                Text("I have read and accept the Terms and Conditions")
-                TextButton(onClick = { showTermsDialog = true }) {
-                    Text("View Terms and Conditions")
+                Spacer(modifier = Modifier.width(8.dp))
+
+                Column(
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text(
+                        text = "I have read and accept the Terms and Conditions",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color.Black
+                    )
+
+
                 }
             }
-        }
 
+            TextButton(
+                onClick = { showTermsDialog = true },
+                contentPadding = PaddingValues(0.dp)
+            ) {
+                Text(
+                    text = "View Terms and Conditions",
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        textDecoration = TextDecoration.Underline,
+                        fontWeight = FontWeight.Bold
+                    ),
+                    color = Color(0xFF1C1C1C)
+                )
+            }
 
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -501,16 +525,91 @@ fun ManagerSignupScreen(
                             .verticalScroll(rememberScrollState())
                     ) {
                         Text(
-                            "Dummy Terms and Conditions\n\n" +
-                                    "1. As a business owner, you are responsible for ensuring that all information " +
-                                    "you provide (shop name, address, website, and contact details) is accurate.\n\n" +
-                                    "2. Aroundly may display your shop details, website link, and map location to users " +
-                                    "for discovery and navigation purposes.\n\n" +
-                                    "3. You agree not to upload illegal, offensive, or misleading content.\n\n" +
-                                    "4. Aroundly is not responsible for any loss, disputes, or payments " +
-                                    "between you and your customers.\n\n" +
-                                    "5. These terms can be changed in the future; continued use of the manager " +
-                                    "account implies acceptance of the latest terms."
+                                    "Effective Date: 01/03/2030 \n\n\n" +
+                                    "Welcome to Aroundly,\n\n A mobile application that helps users discover nearby cafés, restaurants, and dining experiences. \n\n" +
+                                    "By downloading, accessing, or using the Aroundly application, you agree to comply with and be bound by the following Terms and Conditions. " +
+                                    "If you do not agree with these terms, please do not use the application.\n\n" +
+                                    "1. About Aroundly \n" +
+                                    "Aroundly is a restaurant and café discovery platform that allows: \n\n" +
+                                    "• Users to explore nearby restaurants and cafés \n\n" +
+                                    "• View restaurant information and images \n\n" +
+                                    "• Rate and review places \n\n" +
+                                    "• Business owners to promote their restaurants through listings \n\n" +
+                                    "The application is intended to connect customers with local dining businesses. \n" +
+                                    "2. Free Access for Users \n\n" +
+                                    "The Aroundly mobile application is free for general users. \n" +
+                                    "Users may: \n\n" +
+                                    "• Search for restaurants \n" +
+                                    "• Discover nearby cafés \n" +
+                                    "• View restaurant details \n" +
+                                    "• Read and submit reviews \n" +
+                                    "Aroundly does not charge normal users to use the basic features of the application. \n" +
+                                    "3. Business Owner / Restaurant Listings \n\n" +
+                                    "Restaurant owners, managers, or businesses may register their restaurants on Aroundly to \n" +
+                                    "promote their services.\n\n" +
+                                    "Business owners may be required to pay a listing or promotional fee in order to: \n\n" +
+                                    "• Publish their restaurant on the platform \n" +
+                                    "• Display restaurant details and images \n" +
+                                    "• Increase visibility to users \n" +
+                                    "Business owners are responsible for providing accurate and truthful information about their \n" +
+                                    "restaurant. \n\n" +
+                                    "4. Payment Policy for Business Owners \n\n" +
+                                    "Payments made by restaurant owners or managers are for listing, promotional, or advertising \n" +
+                                    "services within the Aroundly platform. \n\n" +
+                                    "Before making any payment, the business owner must carefully review:\n" +
+                                    "• Listing details \n" +
+                                    "• Pricing \n" +
+                                    "• Service duration \n" +
+                                    "By completing the payment, the business owner confirms acceptance of these terms. \n\n" +
+                                    "5. No Refund Policy \n\n" +
+                                    "All payments made for restaurant listings, promotions, or advertising services on Aroundly are \n" +
+                                    "f\n" +
+                                    "inal and non-refundable. \n" +
+                                    "Once a payment has been successfully processed: \n\n" +
+                                    "• Refund requests will not be accepted \n" +
+                                    "• Payment cancellations will not be processed \n" +
+                                    "• The service will continue for the agreed duration \n" +
+                                    "Business owners must ensure they fully understand the service before making payment. \n\n" +
+                                    "6. User Reviews and Ratings \n\n" +
+                                    "Users may leave ratings and reviews for restaurants. \n" +
+                                    "However, users must not: \n" +
+                                    "• Post false information \n" +
+                                    "• Post offensive or abusive content \n" +
+                                    "• Damage the reputation of businesses intentionally \n" +
+                                    "Aroundly reserves the right to remove inappropriate reviews. \n\n" +
+                                    "7. Content Accuracy \n\n" +
+                                    "While Aroundly tries to maintain accurate information, we do not guarantee that: \n" +
+                                    "• Restaurant details \n" +
+                                    "• Opening hours \n" +
+                                    "• Menu information \n" +
+                                    "• Prices \n" +
+                                    "are always fully accurate. \n" +
+                                    "Users are encouraged to verify details directly with the restaurant. \n\n" +
+                                    "8. Account Suspension \n\n" +
+                                    "Aroundly reserves the right to suspend or terminate accounts if users or business owners: \n" +
+                                    "• Provide false information \n" +
+                                    "• Misuse the platform \n" +
+                                    "• Violate these Terms & Conditions \n" +
+                                    "• Attempt fraud or abuse payment systems \n\n" +
+                                    "9. Limitation of Liability \n\n" +
+                                    "Aroundly is a platform that connects users with restaurants. \n" +
+                                    "We are not responsible for: \n" +
+                                    "• Food quality \n" +
+                                    "• Restaurant services \n" +
+                                    "• Pricing disputes \n" +
+                                    "• Customer experience at restaurants \n" +
+                                    "Any issues must be resolved directly with the restaurant. \n\n" +
+                                    "10. Changes to Terms \n\n" +
+                                    "Aroundly may update these Terms & Conditions at any time. \n" +
+                                    "Updates may be communicated through: \n" +
+                                    "• App notifications \n" +
+                                    "• Website updates \n" +
+                                    "• Application updates \n" +
+                                    "Continued use of the app means acceptance of the updated terms. \n\n" +
+                                    "11. Contact Information \n\n" +
+                                    "If you have any questions regarding these Terms & Conditions, please contact: \n\n" +
+                                    "Application Name: Aroundly \n\n" +
+                                    "Email: naveenudesh043@gmail.com"
                         )
                     }
                 }
@@ -519,29 +618,3 @@ fun ManagerSignupScreen(
             }
     }
 }
-
-@Composable
-private fun StepCircle(
-    step: String,
-    isActive: Boolean,
-    isCompleted: Boolean
-) {
-    val background = when {
-        isCompleted -> Color(0xFFFFC857)
-        isActive -> Color(0xFFFFC857)
-        else -> Color(0xFF3A3029)
-    }
-    val contentColor = if (isCompleted || isActive) Color.Black else Color.White
-
-    Box(
-        modifier = Modifier
-            .height(24.dp)
-            .width(24.dp)
-            .background(color = background, shape = androidx.compose.foundation.shape.CircleShape),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(text = step, color = contentColor, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-    }
-}
-
-
