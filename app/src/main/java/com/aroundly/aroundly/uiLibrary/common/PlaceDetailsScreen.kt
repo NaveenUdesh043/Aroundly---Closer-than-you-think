@@ -1,5 +1,6 @@
 package com.aroundly.aroundly.uiLibrary.common
 
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.background
@@ -13,6 +14,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -20,83 +22,130 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Call
-import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Public
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.aroundly.aroundly.domain.model.EquipmentShop
 import com.aroundly.aroundly.domain.model.Hotel
+import com.aroundly.aroundly.domain.model.OpeningHoursDay
+import com.aroundly.aroundly.domain.model.PlaceReview
 import com.aroundly.aroundly.domain.model.PlaceToVisit
 import com.aroundly.aroundly.domain.model.Restaurant
 import com.aroundly.aroundly.ui.theme.PrimaryTealDark
-import androidx.compose.ui.platform.LocalContext
+import com.aroundly.aroundly.uiLibrary.viewModel.EquipmentDetailsViewModel
+import com.aroundly.aroundly.uiLibrary.viewModel.HotelDetailsViewModel
+import com.aroundly.aroundly.uiLibrary.viewModel.PlaceDetailsViewModel
+import com.aroundly.aroundly.uiLibrary.viewModel.RestaurantDetailsViewModel
+import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RestaurantDetailsScreen(
-    restaurant: Restaurant,
+    viewModel: RestaurantDetailsViewModel = hiltViewModel(),
     onBack: () -> Unit
 ) {
+    val restaurant by viewModel.restaurant.collectAsState()
+    val reviews by viewModel.reviews.collectAsState()
+    val averageRating by viewModel.averageRating.collectAsState()
+    val distanceKm by viewModel.distanceKm.collectAsState()
+    val reviewRating by viewModel.reviewRating.collectAsState()
+    val reviewComment by viewModel.reviewComment.collectAsState()
+    val reviewMessage by viewModel.reviewMessage.collectAsState()
+    val submittingReview by viewModel.submittingReview.collectAsState()
+
+    LaunchedEffect(Unit) {
+        viewModel.refreshDistance()
+    }
+
+    if (restaurant == null) {
+        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator()
+        }
+        return
+    }
+    val r = restaurant!!
+
     PlaceDetailsScaffold(
-        title = restaurant.name,
-        imageUrls = restaurant.images ?: emptyList(),
+        title = r.name,
+        subtitle = r.address,
+        imageUrls = r.images ?: emptyList(),
         onBack = onBack
     ) {
-        StatRow()
+        StatRow(averageRating = averageRating, distanceKm = distanceKm)
         Spacer(Modifier.height(16.dp))
 
-        TagChipsRow(
-            tags = buildList {
-                add(restaurant.type.ifBlank { "Restaurant" })
-                add("Cozy")
-                add("Free WiFi")
-                add("Outdoor")
-            }
-        )
+        val tags = if (r.tags.isNotEmpty()) r.tags else listOfNotNull(r.type.takeIf { it.isNotBlank() })
+        TagChipsRow(tags = if (tags.isEmpty()) listOf("Place") else tags)
 
         Spacer(Modifier.height(20.dp))
 
         Text("About", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
         Spacer(Modifier.height(8.dp))
         Text(
-            text = restaurant.description.takeUnless { it.isNullOrBlank() }
-                ?: "Discover tasty meals and a warm atmosphere at this restaurant.",
+            text = r.description.takeUnless { it.isNullOrBlank() }
+                ?: "Discover this place on Aroundly.",
             style = MaterialTheme.typography.bodyMedium
         )
 
         Spacer(Modifier.height(20.dp))
-        OpeningHoursCard()
+        OpeningHoursCard(
+            schedule = r.openingHoursSchedule,
+            monFri = r.openingHoursMonFri,
+            saturday = r.openingHoursSaturday,
+            sunday = r.openingHoursSunday
+        )
 
         Spacer(Modifier.height(20.dp))
-        ReviewsSection()
+        AddReviewSection(
+            rating = reviewRating,
+            onRatingChange = viewModel::setReviewRating,
+            comment = reviewComment,
+            onCommentChange = viewModel::setReviewComment,
+            onSubmit = viewModel::submitReview,
+            submitting = submittingReview,
+            message = reviewMessage
+        )
+
+        Spacer(Modifier.height(12.dp))
+        ReviewsList(reviews = reviews)
 
         Spacer(Modifier.height(24.dp))
 
         BottomActionsRow(
-            phone = restaurant.phoneNumber,
-            address = restaurant.address
+            phone = r.phoneNumber,
+            latitude = r.latitude,
+            longitude = r.longitude,
+            address = r.address
         )
 
-        restaurant.websiteUrl?.takeIf { it.isNotBlank() }?.let {
+        r.websiteUrl?.takeIf { it.isNotBlank() }?.let {
             Spacer(Modifier.height(12.dp))
             WebsiteRow(websiteUrl = it)
         }
@@ -106,45 +155,80 @@ fun RestaurantDetailsScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HotelDetailsScreen(
-    hotel: Hotel,
+    viewModel: HotelDetailsViewModel = hiltViewModel(),
     onBack: () -> Unit
 ) {
+    val hotel by viewModel.hotel.collectAsState()
+    val reviews by viewModel.reviews.collectAsState()
+    val averageRating by viewModel.averageRating.collectAsState()
+    val distanceKm by viewModel.distanceKm.collectAsState()
+    val reviewRating by viewModel.reviewRating.collectAsState()
+    val reviewComment by viewModel.reviewComment.collectAsState()
+    val reviewMessage by viewModel.reviewMessage.collectAsState()
+    val submittingReview by viewModel.submittingReview.collectAsState()
+
+    LaunchedEffect(Unit) {
+        viewModel.refreshDistance()
+    }
+
+    if (hotel == null) {
+        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator()
+        }
+        return
+    }
+    val h = hotel!!
+
     PlaceDetailsScaffold(
-        title = hotel.name,
-        imageUrls = hotel.images ?: emptyList(),
+        title = h.name,
+        subtitle = h.address,
+        imageUrls = h.images ?: emptyList(),
         onBack = onBack
     ) {
-        StatRow()
+        StatRow(averageRating = averageRating, distanceKm = distanceKm)
         Spacer(Modifier.height(16.dp))
-
-        TagChipsRow(
-            tags = listOf("Hotel", hotel.type.ifBlank { "Comfort" }, "Family friendly")
-        )
+        val tags = if (h.tags.isNotEmpty()) h.tags else listOfNotNull("Hotel", h.type.takeIf { it.isNotBlank() })
+        TagChipsRow(tags = tags)
 
         Spacer(Modifier.height(20.dp))
-
         Text("About", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
         Spacer(Modifier.height(8.dp))
         Text(
-            text = hotel.description.takeUnless { it.isNullOrBlank() }
-                ?: "Stay comfortably with modern rooms and great service.",
+            text = h.description.takeUnless { it.isNullOrBlank() }
+                ?: "Stay comfortably with great service.",
             style = MaterialTheme.typography.bodyMedium
         )
 
         Spacer(Modifier.height(20.dp))
-        OpeningHoursCard(title = "Check-in / Check-out")
-
-        Spacer(Modifier.height(20.dp))
-        ReviewsSection()
-
-        Spacer(Modifier.height(24.dp))
-
-        BottomActionsRow(
-            phone = hotel.phoneNumber,
-            address = hotel.address
+        OpeningHoursCard(
+            title = "Opening hours",
+            schedule = h.openingHoursSchedule,
+            monFri = h.openingHoursMonFri,
+            saturday = h.openingHoursSaturday,
+            sunday = h.openingHoursSunday
         )
 
-        hotel.websiteUrl?.takeIf { it.isNotBlank() }?.let {
+        Spacer(Modifier.height(20.dp))
+        AddReviewSection(
+            rating = reviewRating,
+            onRatingChange = viewModel::setReviewRating,
+            comment = reviewComment,
+            onCommentChange = viewModel::setReviewComment,
+            onSubmit = viewModel::submitReview,
+            submitting = submittingReview,
+            message = reviewMessage
+        )
+        Spacer(Modifier.height(12.dp))
+        ReviewsList(reviews = reviews)
+
+        Spacer(Modifier.height(24.dp))
+        BottomActionsRow(
+            phone = h.phoneNumber,
+            latitude = h.latitude,
+            longitude = h.longitude,
+            address = h.address
+        )
+        h.websiteUrl?.takeIf { it.isNotBlank() }?.let {
             Spacer(Modifier.height(12.dp))
             WebsiteRow(websiteUrl = it)
         }
@@ -154,45 +238,79 @@ fun HotelDetailsScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PlaceToVisitDetailsScreen(
-    place: PlaceToVisit,
+    viewModel: PlaceDetailsViewModel = hiltViewModel(),
     onBack: () -> Unit
 ) {
+    val place by viewModel.place.collectAsState()
+    val reviews by viewModel.reviews.collectAsState()
+    val averageRating by viewModel.averageRating.collectAsState()
+    val distanceKm by viewModel.distanceKm.collectAsState()
+    val reviewRating by viewModel.reviewRating.collectAsState()
+    val reviewComment by viewModel.reviewComment.collectAsState()
+    val reviewMessage by viewModel.reviewMessage.collectAsState()
+    val submittingReview by viewModel.submittingReview.collectAsState()
+
+    LaunchedEffect(Unit) {
+        viewModel.refreshDistance()
+    }
+
+    if (place == null) {
+        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator()
+        }
+        return
+    }
+    val p = place!!
+
     PlaceDetailsScaffold(
-        title = place.name,
-        imageUrls = place.images ?: emptyList(),
+        title = p.name,
+        subtitle = p.address,
+        imageUrls = p.images ?: emptyList(),
         onBack = onBack
     ) {
-        StatRow()
+        StatRow(averageRating = averageRating, distanceKm = distanceKm)
         Spacer(Modifier.height(16.dp))
-
-        TagChipsRow(
-            tags = listOf("Attraction", "Outdoor")
-        )
+        val tags = if (p.tags.isNotEmpty()) p.tags else listOf("Attraction")
+        TagChipsRow(tags = tags)
 
         Spacer(Modifier.height(20.dp))
-
         Text("About", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
         Spacer(Modifier.height(8.dp))
         Text(
-            text = place.description.takeUnless { it.isNullOrBlank() }
-                ?: "A great place to experience the local atmosphere.",
+            text = p.description.takeUnless { it.isNullOrBlank() }
+                ?: "A place to visit near you.",
             style = MaterialTheme.typography.bodyMedium
         )
 
         Spacer(Modifier.height(20.dp))
-        OpeningHoursCard()
-
-        Spacer(Modifier.height(20.dp))
-        ReviewsSection()
-
-        Spacer(Modifier.height(24.dp))
-
-        BottomActionsRow(
-            phone = null,
-            address = place.address
+        OpeningHoursCard(
+            schedule = p.openingHoursSchedule,
+            monFri = p.openingHoursMonFri,
+            saturday = p.openingHoursSaturday,
+            sunday = p.openingHoursSunday
         )
 
-        place.websiteUrl?.takeIf { it.isNotBlank() }?.let {
+        Spacer(Modifier.height(20.dp))
+        AddReviewSection(
+            rating = reviewRating,
+            onRatingChange = viewModel::setReviewRating,
+            comment = reviewComment,
+            onCommentChange = viewModel::setReviewComment,
+            onSubmit = viewModel::submitReview,
+            submitting = submittingReview,
+            message = reviewMessage
+        )
+        Spacer(Modifier.height(12.dp))
+        ReviewsList(reviews = reviews)
+
+        Spacer(Modifier.height(24.dp))
+        BottomActionsRow(
+            phone = null,
+            latitude = p.latitude,
+            longitude = p.longitude,
+            address = p.address
+        )
+        p.websiteUrl?.takeIf { it.isNotBlank() }?.let {
             Spacer(Modifier.height(12.dp))
             WebsiteRow(websiteUrl = it)
         }
@@ -202,45 +320,79 @@ fun PlaceToVisitDetailsScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EquipmentShopDetailsScreen(
-    shop: EquipmentShop,
+    viewModel: EquipmentDetailsViewModel = hiltViewModel(),
     onBack: () -> Unit
 ) {
+    val shop by viewModel.equipment.collectAsState()
+    val reviews by viewModel.reviews.collectAsState()
+    val averageRating by viewModel.averageRating.collectAsState()
+    val distanceKm by viewModel.distanceKm.collectAsState()
+    val reviewRating by viewModel.reviewRating.collectAsState()
+    val reviewComment by viewModel.reviewComment.collectAsState()
+    val reviewMessage by viewModel.reviewMessage.collectAsState()
+    val submittingReview by viewModel.submittingReview.collectAsState()
+
+    LaunchedEffect(Unit) {
+        viewModel.refreshDistance()
+    }
+
+    if (shop == null) {
+        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator()
+        }
+        return
+    }
+    val e = shop!!
+
     PlaceDetailsScaffold(
-        title = shop.name,
-        imageUrls = shop.images ?: emptyList(),
+        title = e.name,
+        subtitle = e.address,
+        imageUrls = e.images ?: emptyList(),
         onBack = onBack
     ) {
-        StatRow()
+        StatRow(averageRating = averageRating, distanceKm = distanceKm)
         Spacer(Modifier.height(16.dp))
-
-        TagChipsRow(
-            tags = listOf("Rental", shop.type.ifBlank { "Equipment" })
-        )
+        val tags = if (e.tags.isNotEmpty()) e.tags else listOfNotNull("Rental", e.type.takeIf { it.isNotBlank() })
+        TagChipsRow(tags = if (tags.isEmpty()) listOf("Shop") else tags)
 
         Spacer(Modifier.height(20.dp))
-
         Text("About", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
         Spacer(Modifier.height(8.dp))
         Text(
-            text = shop.description.takeUnless { it.isNullOrBlank() }
-                ?: "Find the equipment you need for your next adventure.",
+            text = e.description.takeUnless { it.isNullOrBlank() }
+                ?: "Equipment and rentals for your trip.",
             style = MaterialTheme.typography.bodyMedium
         )
 
         Spacer(Modifier.height(20.dp))
-        OpeningHoursCard()
-
-        Spacer(Modifier.height(20.dp))
-        ReviewsSection()
-
-        Spacer(Modifier.height(24.dp))
-
-        BottomActionsRow(
-            phone = shop.phoneNumber,
-            address = shop.address
+        OpeningHoursCard(
+            schedule = e.openingHoursSchedule,
+            monFri = e.openingHoursMonFri,
+            saturday = e.openingHoursSaturday,
+            sunday = e.openingHoursSunday
         )
 
-        shop.websiteUrl?.takeIf { it.isNotBlank() }?.let {
+        Spacer(Modifier.height(20.dp))
+        AddReviewSection(
+            rating = reviewRating,
+            onRatingChange = viewModel::setReviewRating,
+            comment = reviewComment,
+            onCommentChange = viewModel::setReviewComment,
+            onSubmit = viewModel::submitReview,
+            submitting = submittingReview,
+            message = reviewMessage
+        )
+        Spacer(Modifier.height(12.dp))
+        ReviewsList(reviews = reviews)
+
+        Spacer(Modifier.height(24.dp))
+        BottomActionsRow(
+            phone = e.phoneNumber,
+            latitude = e.latitude,
+            longitude = e.longitude,
+            address = e.address
+        )
+        e.websiteUrl?.takeIf { it.isNotBlank() }?.let {
             Spacer(Modifier.height(12.dp))
             WebsiteRow(websiteUrl = it)
         }
@@ -251,6 +403,7 @@ fun EquipmentShopDetailsScreen(
 @Composable
 private fun PlaceDetailsScaffold(
     title: String,
+    subtitle: String?,
     imageUrls: List<String>,
     onBack: () -> Unit,
     content: @Composable () -> Unit
@@ -288,7 +441,7 @@ private fun PlaceDetailsScaffold(
 
                 Box(
                     modifier = Modifier
-                        .matchParentSize()
+                        .fillMaxSize()
                         .background(
                             Brush.verticalGradient(
                                 colors = listOf(
@@ -332,6 +485,14 @@ private fun PlaceDetailsScaffold(
                         fontWeight = FontWeight.Bold,
                         color = Color.White
                     )
+                    subtitle?.takeIf { it.isNotBlank() }?.let {
+                        Spacer(Modifier.height(4.dp))
+                        Text(
+                            text = "📍 $it",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color.White.copy(alpha = 0.95f)
+                        )
+                    }
                 }
             }
 
@@ -346,48 +507,104 @@ private fun PlaceDetailsScaffold(
     }
 }
 
-@Composable
-private fun AddressRow(address: String) {
-    val context = LocalContext.current
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp)
-            .clickable {
-                val uri = Uri.parse("geo:0,0?q=${Uri.encode(address)}")
-                val intent = Intent(Intent.ACTION_VIEW, uri)
-                context.startActivity(intent)
-            },
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Icon(
-            Icons.Default.LocationOn,
-            contentDescription = null,
-            tint = Color(0xFF1C1C84),
-            modifier = Modifier.size(20.dp))
-        Spacer(Modifier.size(8.dp))
-        Text(address, style = MaterialTheme.typography.bodyMedium)
+private fun formatRating(average: Float): String =
+    if (average > 0f) String.format("%.1f", average) else "—"
+
+private fun formatDistanceKm(km: Double?): String =
+    when {
+        km == null -> "—"
+        km < 1 -> "${(km * 1000).roundToInt()} m"
+        else -> String.format("%.1f km", km)
     }
+
+private fun formatWalkMinutes(km: Double?): String {
+    if (km == null) return "—"
+    val minutes = ((km / 5.0) * 60).roundToInt().coerceAtLeast(1)
+    return "~${minutes} min"
 }
 
 @Composable
-private fun StatRow() {
+private fun StatRow(averageRating: Float, distanceKm: Double?) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        StatCard(title = "Rating", value = "4.8")
-        StatCard(title = "Distance", value = "0.2 km")
-        StatCard(title = "Walk", value = "~12 min")
+        StatCardRating(
+            modifier = Modifier.weight(1f),
+            averageRating = averageRating
+        )
+        StatCard(
+            modifier = Modifier.weight(1f),
+            title = "Distance",
+            value = formatDistanceKm(distanceKm)
+        )
+        StatCard(
+            modifier = Modifier.weight(1f),
+            title = "Walk",
+            value = formatWalkMinutes(distanceKm)
+        )
     }
 }
 
 @Composable
-private fun StatCard(title: String, value: String) {
+private fun StatCardRating(modifier: Modifier = Modifier, averageRating: Float) {
     Card(
-        modifier = Modifier
-            .height(72.dp),
+        modifier = modifier.heightIn(min = 80.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color(0xFFFFF8E1)
+        )
+    ) {
+        Column(
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
+            verticalArrangement = Arrangement.spacedBy(2.dp)
+        ) {
+            Text(
+                text = "Rating",
+                style = MaterialTheme.typography.labelSmall,
+                color = Color(0xFF8D6E63)
+            )
+            RatingStarsRow(
+                rating = averageRating.coerceIn(0f, 5f),
+                starSize = 13.sp
+            )
+            Text(
+                text = formatRating(averageRating),
+                style = MaterialTheme.typography.bodySmall,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF5D4037)
+            )
+        }
+    }
+}
+
+@Composable
+private fun RatingStarsRow(
+    rating: Float,
+    starSize: TextUnit,
+    onPickStar: ((Int) -> Unit)? = null
+) {
+    Row(horizontalArrangement = Arrangement.spacedBy(1.dp)) {
+        for (star in 1..5) {
+            val filled = rating >= star - 0.25f
+            Text(
+                text = if (filled) "★" else "☆",
+                color = Color(0xFFFFA000),
+                fontSize = starSize,
+                modifier = if (onPickStar != null) {
+                    Modifier.clickable { onPickStar(star) }
+                } else {
+                    Modifier
+                }
+            )
+        }
+    }
+}
+
+@Composable
+private fun StatCard(modifier: Modifier = Modifier, title: String, value: String) {
+    Card(
+        modifier = modifier.height(72.dp),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
             containerColor = Color(0xFFFFF8E1)
@@ -440,7 +657,13 @@ private fun TagChipsRow(tags: List<String>) {
 }
 
 @Composable
-private fun OpeningHoursCard(title: String = "Opening Hours") {
+private fun OpeningHoursCard(
+    title: String = "Opening hours",
+    schedule: List<OpeningHoursDay> = emptyList(),
+    monFri: String?,
+    saturday: String?,
+    sunday: String?
+) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
@@ -455,19 +678,59 @@ private fun OpeningHoursCard(title: String = "Opening Hours") {
                 fontWeight = FontWeight.Bold
             )
             Spacer(Modifier.height(8.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Column {
-                    Text("Mon – Fri", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
-                    Text("Saturday", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
-                    Text("Sunday", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+            if (schedule.isNotEmpty()) {
+                schedule.forEach { day ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            day.dayLabel,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color.Gray
+                        )
+                        Text(
+                            text = when {
+                                day.isClosed -> "Closed"
+                                day.closeTime.isNotBlank() ->
+                                    "${day.openTime} – ${day.closeTime}".trim()
+                                day.openTime.isNotBlank() -> day.openTime
+                                else -> "—"
+                            },
+                            style = MaterialTheme.typography.bodySmall,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
                 }
-                Column(horizontalAlignment = Alignment.End) {
-                    Text("7:00 AM – 10:00 PM", style = MaterialTheme.typography.bodySmall)
-                    Text("8:00 AM – 11:00 PM", style = MaterialTheme.typography.bodySmall)
-                    Text("9:00 AM – 9:00 PM", style = MaterialTheme.typography.bodySmall)
+            } else {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Column {
+                        Text("Mon – Fri", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                        Text("Saturday", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                        Text("Sunday", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                    }
+                    Column(horizontalAlignment = Alignment.End) {
+                        Text(
+                            monFri?.takeIf { it.isNotBlank() } ?: "—",
+                            style = MaterialTheme.typography.bodySmall,
+                            fontWeight = FontWeight.Medium
+                        )
+                        Text(
+                            saturday?.takeIf { it.isNotBlank() } ?: "—",
+                            style = MaterialTheme.typography.bodySmall,
+                            fontWeight = FontWeight.Medium
+                        )
+                        Text(
+                            sunday?.takeIf { it.isNotBlank() } ?: "—",
+                            style = MaterialTheme.typography.bodySmall,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
                 }
             }
         }
@@ -475,26 +738,67 @@ private fun OpeningHoursCard(title: String = "Opening Hours") {
 }
 
 @Composable
-private fun ReviewsSection() {
+private fun AddReviewSection(
+    rating: Float,
+    onRatingChange: (Float) -> Unit,
+    comment: String,
+    onCommentChange: (String) -> Unit,
+    onSubmit: () -> Unit,
+    submitting: Boolean,
+    message: String?
+) {
     Column {
-        Text("Reviews", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+        Text("Your review", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
         Spacer(Modifier.height(8.dp))
-        ReviewCard(
-            name = "Sarah M.",
-            text = "Best spot nearby. The atmosphere is perfect for relaxing.",
-            rating = "5.0"
+        Text("Rating", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+        Spacer(Modifier.height(4.dp))
+        RatingStarsRow(
+            rating = rating,
+            starSize = 28.sp,
+            onPickStar = { onRatingChange(it.toFloat()) }
         )
+        Spacer(Modifier.height(4.dp))
+        Text("${"%.1f".format(rating)} / 5", style = MaterialTheme.typography.bodySmall)
+        OutlinedTextField(
+            value = comment,
+            onValueChange = onCommentChange,
+            label = { Text("Comment") },
+            modifier = Modifier.fillMaxWidth(),
+            minLines = 2
+        )
+        message?.let {
+            Spacer(Modifier.height(4.dp))
+            Text(it, color = if (it.contains("fail", ignoreCase = true)) Color.Red else Color(0xFF5D4037), style = MaterialTheme.typography.bodySmall)
+        }
         Spacer(Modifier.height(8.dp))
-        ReviewCard(
-            name = "Raj P.",
-            text = "Great place. Friendly staff and good vibes.",
-            rating = "4.8"
-        )
+        Button(
+            onClick = onSubmit,
+            enabled = !submitting,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(if (submitting) "Posting…" else "Post review")
+        }
     }
 }
 
 @Composable
-private fun ReviewCard(name: String, text: String, rating: String) {
+private fun ReviewsList(reviews: List<PlaceReview>) {
+    Column {
+        Text("Reviews", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+        Spacer(Modifier.height(8.dp))
+        if (reviews.isEmpty()) {
+            Text("No reviews yet. Be the first!", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+        } else {
+            reviews.forEach { rev ->
+                ReviewCard(review = rev)
+                Spacer(Modifier.height(8.dp))
+            }
+        }
+    }
+}
+
+@Composable
+private fun ReviewCard(review: PlaceReview) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
@@ -508,11 +812,42 @@ private fun ReviewCard(name: String, text: String, rating: String) {
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(name, fontWeight = FontWeight.SemiBold)
-                Text("$rating ★", color = Color(0xFFFFA000), style = MaterialTheme.typography.bodySmall)
+                Text(review.userName, fontWeight = FontWeight.SemiBold)
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    RatingStarsRow(
+                        rating = review.rating.coerceIn(0f, 5f),
+                        starSize = 12.sp
+                    )
+                    Text(
+                        "${"%.1f".format(review.rating)}",
+                        color = Color(0xFFFFA000),
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
             }
             Spacer(Modifier.height(6.dp))
-            Text(text, style = MaterialTheme.typography.bodySmall, color = Color(0xFF5D4037))
+            Text(review.comment, style = MaterialTheme.typography.bodySmall, color = Color(0xFF5D4037))
+        }
+    }
+}
+
+private fun openInGoogleMaps(context: Context, latitude: Double?, longitude: Double?, address: String?) {
+    when {
+        latitude != null && longitude != null -> {
+            val gmmIntentUri = Uri.parse("google.navigation:q=$latitude,$longitude")
+            val mapIntent = Intent(Intent.ACTION_VIEW, gmmIntentUri).apply {
+                setPackage("com.google.android.apps.maps")
+            }
+            try {
+                context.startActivity(mapIntent)
+            } catch (_: Exception) {
+                val web = Uri.parse("https://www.google.com/maps/dir/?api=1&destination=$latitude,$longitude")
+                context.startActivity(Intent(Intent.ACTION_VIEW, web))
+            }
+        }
+        !address.isNullOrBlank() -> {
+            val web = Uri.parse("https://www.google.com/maps/search/?api=1&query=${Uri.encode(address)}")
+            context.startActivity(Intent(Intent.ACTION_VIEW, web))
         }
     }
 }
@@ -520,12 +855,13 @@ private fun ReviewCard(name: String, text: String, rating: String) {
 @Composable
 private fun BottomActionsRow(
     phone: String?,
+    latitude: Double?,
+    longitude: Double?,
     address: String?
 ) {
     val context = LocalContext.current
     Row(
-        modifier = Modifier
-            .fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Button(
@@ -547,13 +883,9 @@ private fun BottomActionsRow(
 
         Button(
             onClick = {
-                address?.let {
-                    val uri = Uri.parse("geo:0,0?q=${Uri.encode(it)}")
-                    val intent = Intent(Intent.ACTION_VIEW, uri)
-                    context.startActivity(intent)
-                }
+                openInGoogleMaps(context, latitude, longitude, address)
             },
-            enabled = address != null,
+            enabled = latitude != null && longitude != null || !address.isNullOrBlank(),
             modifier = Modifier.weight(1f),
             colors = ButtonDefaults.buttonColors(
                 containerColor = Color(0xFFFFC107),
@@ -591,19 +923,5 @@ private fun WebsiteRow(websiteUrl: String) {
         )
         Spacer(Modifier.size(8.dp))
         Text(websiteUrl, style = MaterialTheme.typography.bodyMedium, color = PrimaryTealDark)
-    }
-}
-
-@Composable
-private fun PhoneRow(phone: String) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Icon(Icons.Default.Call, contentDescription = null, tint = Color(0xFF1C1C84), modifier = Modifier.size(20.dp))
-        Spacer(Modifier.size(8.dp))
-        Text(phone, style = MaterialTheme.typography.bodyMedium)
     }
 }

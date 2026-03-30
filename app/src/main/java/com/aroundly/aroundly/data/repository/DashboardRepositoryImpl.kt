@@ -2,13 +2,44 @@ package com.aroundly.aroundly.data.repository
 
 import com.aroundly.aroundly.domain.model.EquipmentShop
 import com.aroundly.aroundly.domain.model.Hotel
+import com.aroundly.aroundly.domain.model.OpeningHoursDay
 import com.aroundly.aroundly.domain.model.PlaceToVisit
 import com.aroundly.aroundly.domain.model.Restaurant
 import com.aroundly.aroundly.domain.repository.DashboardRepository
+import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
+
+private fun DocumentSnapshot.tagsList(): List<String> =
+    (get("tags") as? List<*>)?.mapNotNull { it as? String } ?: emptyList()
+
+private fun DocumentSnapshot.optDouble(name: String): Double? =
+    (get(name) as? Number)?.toDouble()
+
+private fun DocumentSnapshot.openingHoursScheduleList(): List<OpeningHoursDay> {
+    val raw = get("openingHoursSchedule") as? List<*> ?: return emptyList()
+    return raw.mapNotNull { entry ->
+        val m = entry as? Map<*, *> ?: return@mapNotNull null
+        OpeningHoursDay(
+            dayLabel = (m["dayLabel"] as? String) ?: "",
+            openTime = (m["openTime"] as? String) ?: "",
+            closeTime = (m["closeTime"] as? String) ?: "",
+            isClosed = (m["isClosed"] as? Boolean) ?: false
+        )
+    }
+}
+
+private fun List<OpeningHoursDay>.toFirestoreScheduleMaps(): List<Map<String, Any?>> =
+    map {
+        mapOf(
+            "dayLabel" to it.dayLabel,
+            "openTime" to it.openTime,
+            "closeTime" to it.closeTime,
+            "isClosed" to it.isClosed
+        )
+    }
 
 class DashboardRepositoryImpl @Inject constructor(
     private val firestore: FirebaseFirestore
@@ -37,7 +68,14 @@ class DashboardRepositoryImpl @Inject constructor(
                 phoneNumber = doc.getString("phoneNumber"),
                 city = doc.getString("city"),
                 websiteUrl = doc.getString("websiteUrl"),
-                images = imagesList
+                images = imagesList,
+                tags = doc.tagsList(),
+                latitude = doc.optDouble("latitude"),
+                longitude = doc.optDouble("longitude"),
+                openingHoursMonFri = doc.getString("openingHoursMonFri"),
+                openingHoursSaturday = doc.getString("openingHoursSaturday"),
+                openingHoursSunday = doc.getString("openingHoursSunday"),
+                openingHoursSchedule = doc.openingHoursScheduleList()
             )
         }
     }
@@ -65,7 +103,14 @@ class DashboardRepositoryImpl @Inject constructor(
                 phoneNumber = doc.getString("phoneNumber"),
                 city = doc.getString("city"),
                 websiteUrl = doc.getString("websiteUrl"),
-                images = imagesList
+                images = imagesList,
+                tags = doc.tagsList(),
+                latitude = doc.optDouble("latitude"),
+                longitude = doc.optDouble("longitude"),
+                openingHoursMonFri = doc.getString("openingHoursMonFri"),
+                openingHoursSaturday = doc.getString("openingHoursSaturday"),
+                openingHoursSunday = doc.getString("openingHoursSunday"),
+                openingHoursSchedule = doc.openingHoursScheduleList()
             )
         }
     }
@@ -90,7 +135,14 @@ class DashboardRepositoryImpl @Inject constructor(
                 address = doc.getString("address"),
                 city = doc.getString("city"),
                 websiteUrl = doc.getString("websiteUrl"),
-                images = imagesList
+                images = imagesList,
+                tags = doc.tagsList(),
+                latitude = doc.optDouble("latitude"),
+                longitude = doc.optDouble("longitude"),
+                openingHoursMonFri = doc.getString("openingHoursMonFri"),
+                openingHoursSaturday = doc.getString("openingHoursSaturday"),
+                openingHoursSunday = doc.getString("openingHoursSunday"),
+                openingHoursSchedule = doc.openingHoursScheduleList()
             )
         }
     }
@@ -118,7 +170,14 @@ class DashboardRepositoryImpl @Inject constructor(
                 phoneNumber = doc.getString("phoneNumber"),
                 city = doc.getString("city"),
                 websiteUrl = doc.getString("websiteUrl"),
-                images = imagesList
+                images = imagesList,
+                tags = doc.tagsList(),
+                latitude = doc.optDouble("latitude"),
+                longitude = doc.optDouble("longitude"),
+                openingHoursMonFri = doc.getString("openingHoursMonFri"),
+                openingHoursSaturday = doc.getString("openingHoursSaturday"),
+                openingHoursSunday = doc.getString("openingHoursSunday"),
+                openingHoursSchedule = doc.openingHoursScheduleList()
             )
         }
     }
@@ -142,7 +201,14 @@ class DashboardRepositoryImpl @Inject constructor(
             phoneNumber = doc.getString("phoneNumber"),
             city = doc.getString("city"),
             websiteUrl = doc.getString("websiteUrl"),
-            images = imagesList
+            images = imagesList,
+            tags = doc.tagsList(),
+            latitude = doc.optDouble("latitude"),
+            longitude = doc.optDouble("longitude"),
+            openingHoursMonFri = doc.getString("openingHoursMonFri"),
+            openingHoursSaturday = doc.getString("openingHoursSaturday"),
+            openingHoursSunday = doc.getString("openingHoursSunday"),
+            openingHoursSchedule = doc.openingHoursScheduleList()
         )
     }
 
@@ -165,7 +231,14 @@ class DashboardRepositoryImpl @Inject constructor(
             phoneNumber = doc.getString("phoneNumber"),
             city = doc.getString("city"),
             websiteUrl = doc.getString("websiteUrl"),
-            images = imagesList
+            images = imagesList,
+            tags = doc.tagsList(),
+            latitude = doc.optDouble("latitude"),
+            longitude = doc.optDouble("longitude"),
+            openingHoursMonFri = doc.getString("openingHoursMonFri"),
+            openingHoursSaturday = doc.getString("openingHoursSaturday"),
+            openingHoursSunday = doc.getString("openingHoursSunday"),
+            openingHoursSchedule = doc.openingHoursScheduleList()
         )
     }
 
@@ -186,7 +259,14 @@ class DashboardRepositoryImpl @Inject constructor(
             address = doc.getString("address"),
             city = doc.getString("city"),
             websiteUrl = doc.getString("websiteUrl"),
-            images = imagesList
+            images = imagesList,
+            tags = doc.tagsList(),
+            latitude = doc.optDouble("latitude"),
+            longitude = doc.optDouble("longitude"),
+            openingHoursMonFri = doc.getString("openingHoursMonFri"),
+            openingHoursSaturday = doc.getString("openingHoursSaturday"),
+            openingHoursSunday = doc.getString("openingHoursSunday"),
+            openingHoursSchedule = doc.openingHoursScheduleList()
         )
     }
 
@@ -209,7 +289,14 @@ class DashboardRepositoryImpl @Inject constructor(
             phoneNumber = doc.getString("phoneNumber"),
             city = doc.getString("city"),
             websiteUrl = doc.getString("websiteUrl"),
-            images = imagesList
+            images = imagesList,
+            tags = doc.tagsList(),
+            latitude = doc.optDouble("latitude"),
+            longitude = doc.optDouble("longitude"),
+            openingHoursMonFri = doc.getString("openingHoursMonFri"),
+            openingHoursSaturday = doc.getString("openingHoursSaturday"),
+            openingHoursSunday = doc.getString("openingHoursSunday"),
+            openingHoursSchedule = doc.openingHoursScheduleList()
         )
     }
 
@@ -273,7 +360,14 @@ class DashboardRepositoryImpl @Inject constructor(
                 phoneNumber = doc.getString("phoneNumber"),
                 city = doc.getString("city"),
                 websiteUrl = doc.getString("websiteUrl"),
-                images = imagesList
+                images = imagesList,
+                tags = doc.tagsList(),
+                latitude = doc.optDouble("latitude"),
+                longitude = doc.optDouble("longitude"),
+                openingHoursMonFri = doc.getString("openingHoursMonFri"),
+                openingHoursSaturday = doc.getString("openingHoursSaturday"),
+                openingHoursSunday = doc.getString("openingHoursSunday"),
+                openingHoursSchedule = doc.openingHoursScheduleList()
             )
         }
     }
@@ -300,7 +394,14 @@ class DashboardRepositoryImpl @Inject constructor(
                 phoneNumber = doc.getString("phoneNumber"),
                 city = doc.getString("city"),
                 websiteUrl = doc.getString("websiteUrl"),
-                images = imagesList
+                images = imagesList,
+                tags = doc.tagsList(),
+                latitude = doc.optDouble("latitude"),
+                longitude = doc.optDouble("longitude"),
+                openingHoursMonFri = doc.getString("openingHoursMonFri"),
+                openingHoursSaturday = doc.getString("openingHoursSaturday"),
+                openingHoursSunday = doc.getString("openingHoursSunday"),
+                openingHoursSchedule = doc.openingHoursScheduleList()
             )
         }
     }
@@ -325,7 +426,14 @@ class DashboardRepositoryImpl @Inject constructor(
                 address = doc.getString("address"),
                 city = doc.getString("city"),
                 websiteUrl = doc.getString("websiteUrl"),
-                images = imagesList
+                images = imagesList,
+                tags = doc.tagsList(),
+                latitude = doc.optDouble("latitude"),
+                longitude = doc.optDouble("longitude"),
+                openingHoursMonFri = doc.getString("openingHoursMonFri"),
+                openingHoursSaturday = doc.getString("openingHoursSaturday"),
+                openingHoursSunday = doc.getString("openingHoursSunday"),
+                openingHoursSchedule = doc.openingHoursScheduleList()
             )
         }
     }
@@ -352,7 +460,14 @@ class DashboardRepositoryImpl @Inject constructor(
                 phoneNumber = doc.getString("phoneNumber"),
                 city = doc.getString("city"),
                 websiteUrl = doc.getString("websiteUrl"),
-                images = imagesList
+                images = imagesList,
+                tags = doc.tagsList(),
+                latitude = doc.optDouble("latitude"),
+                longitude = doc.optDouble("longitude"),
+                openingHoursMonFri = doc.getString("openingHoursMonFri"),
+                openingHoursSaturday = doc.getString("openingHoursSaturday"),
+                openingHoursSunday = doc.getString("openingHoursSunday"),
+                openingHoursSchedule = doc.openingHoursScheduleList()
             )
         }
     }
@@ -367,7 +482,14 @@ class DashboardRepositoryImpl @Inject constructor(
                 "address" to (restaurant.address ?: ""),
                 "phoneNumber" to (restaurant.phoneNumber ?: ""),
                 "websiteUrl" to (restaurant.websiteUrl ?: ""),
-                "images" to (restaurant.images ?: emptyList())
+                "images" to (restaurant.images ?: emptyList()),
+                "tags" to restaurant.tags,
+                "latitude" to restaurant.latitude,
+                "longitude" to restaurant.longitude,
+                "openingHoursMonFri" to (restaurant.openingHoursMonFri ?: ""),
+                "openingHoursSaturday" to (restaurant.openingHoursSaturday ?: ""),
+                "openingHoursSunday" to (restaurant.openingHoursSunday ?: ""),
+                "openingHoursSchedule" to restaurant.openingHoursSchedule.toFirestoreScheduleMaps()
             )
         ).await()
     }
@@ -382,7 +504,14 @@ class DashboardRepositoryImpl @Inject constructor(
                 "address" to (hotel.address ?: ""),
                 "phoneNumber" to (hotel.phoneNumber ?: ""),
                 "websiteUrl" to (hotel.websiteUrl ?: ""),
-                "images" to (hotel.images ?: emptyList())
+                "images" to (hotel.images ?: emptyList()),
+                "tags" to hotel.tags,
+                "latitude" to hotel.latitude,
+                "longitude" to hotel.longitude,
+                "openingHoursMonFri" to (hotel.openingHoursMonFri ?: ""),
+                "openingHoursSaturday" to (hotel.openingHoursSaturday ?: ""),
+                "openingHoursSunday" to (hotel.openingHoursSunday ?: ""),
+                "openingHoursSchedule" to hotel.openingHoursSchedule.toFirestoreScheduleMaps()
             )
         ).await()
     }
@@ -395,7 +524,14 @@ class DashboardRepositoryImpl @Inject constructor(
                 "description" to (place.description ?: ""),
                 "address" to (place.address ?: ""),
                 "websiteUrl" to (place.websiteUrl ?: ""),
-                "images" to (place.images ?: emptyList())
+                "images" to (place.images ?: emptyList()),
+                "tags" to place.tags,
+                "latitude" to place.latitude,
+                "longitude" to place.longitude,
+                "openingHoursMonFri" to (place.openingHoursMonFri ?: ""),
+                "openingHoursSaturday" to (place.openingHoursSaturday ?: ""),
+                "openingHoursSunday" to (place.openingHoursSunday ?: ""),
+                "openingHoursSchedule" to place.openingHoursSchedule.toFirestoreScheduleMaps()
             )
         ).await()
     }
@@ -410,7 +546,14 @@ class DashboardRepositoryImpl @Inject constructor(
                 "address" to (shop.address ?: ""),
                 "phoneNumber" to (shop.phoneNumber ?: ""),
                 "websiteUrl" to (shop.websiteUrl ?: ""),
-                "images" to (shop.images ?: emptyList())
+                "images" to (shop.images ?: emptyList()),
+                "tags" to shop.tags,
+                "latitude" to shop.latitude,
+                "longitude" to shop.longitude,
+                "openingHoursMonFri" to (shop.openingHoursMonFri ?: ""),
+                "openingHoursSaturday" to (shop.openingHoursSaturday ?: ""),
+                "openingHoursSunday" to (shop.openingHoursSunday ?: ""),
+                "openingHoursSchedule" to shop.openingHoursSchedule.toFirestoreScheduleMaps()
             )
         ).await()
     }

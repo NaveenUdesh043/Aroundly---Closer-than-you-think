@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -27,16 +28,15 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Image
-import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Button
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -56,6 +56,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import com.aroundly.aroundly.domain.model.OpeningHoursDay
 import com.aroundly.aroundly.domain.model.EquipmentShop
 import com.aroundly.aroundly.domain.model.Hotel
 import com.aroundly.aroundly.domain.model.PlaceSubmission
@@ -66,8 +67,37 @@ import com.aroundly.aroundly.domain.model.SubmissionStatus
 import com.aroundly.aroundly.ui.theme.PrimaryTeal
 import com.aroundly.aroundly.ui.theme.PrimaryTealDark
 import com.aroundly.aroundly.uiLibrary.common.GenericDropdown
+import com.aroundly.aroundly.uiLibrary.common.LogoutToolbarIcon
 import com.aroundly.aroundly.uiLibrary.viewModel.ManagerViewModel
 import androidx.hilt.navigation.compose.hiltViewModel
+
+private val WeekdayLabels = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
+
+private fun defaultWeeklySchedule(): List<OpeningHoursDay> =
+    WeekdayLabels.map { OpeningHoursDay(dayLabel = it, openTime = "09:00", closeTime = "17:00", isClosed = false) }
+
+private fun scheduleFromLegacy(monFri: String?, sat: String?, sun: String?): List<OpeningHoursDay> {
+    val mf = monFri?.trim().orEmpty()
+    val sa = sat?.trim().orEmpty()
+    val su = sun?.trim().orEmpty()
+    return listOf(
+        OpeningHoursDay("Mon", mf, "", mf.isEmpty()),
+        OpeningHoursDay("Tue", mf, "", mf.isEmpty()),
+        OpeningHoursDay("Wed", mf, "", mf.isEmpty()),
+        OpeningHoursDay("Thu", mf, "", mf.isEmpty()),
+        OpeningHoursDay("Fri", mf, "", mf.isEmpty()),
+        OpeningHoursDay("Sat", sa, "", sa.isEmpty()),
+        OpeningHoursDay("Sun", su, "", su.isEmpty())
+    )
+}
+
+private fun mergeSchedule(
+    stored: List<OpeningHoursDay>,
+    monFri: String?,
+    sat: String?,
+    sun: String?
+): List<OpeningHoursDay> =
+    if (stored.isNotEmpty()) stored else scheduleFromLegacy(monFri, sat, sun)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -91,6 +121,10 @@ fun ManagerDashboardScreen(
     var address by remember { mutableStateOf("") }
     var phoneNumber by remember { mutableStateOf("") }
     var websiteUrl by remember { mutableStateOf("") }
+    var tagsInput by remember { mutableStateOf("") }
+    var openingHoursSchedule by remember { mutableStateOf(defaultWeeklySchedule()) }
+    var latitudeStr by remember { mutableStateOf("") }
+    var longitudeStr by remember { mutableStateOf("") }
     var receiptUri by remember { mutableStateOf<Uri?>(null) }
     var receiptBytes by remember { mutableStateOf<ByteArray?>(null) }
     var placeImageUris by remember { mutableStateOf<List<Uri>>(emptyList()) }
@@ -131,9 +165,10 @@ fun ManagerDashboardScreen(
                     titleContentColor = Color.White
                 ),
                 actions = {
-                    IconButton(onClick = onLogout) {
-                        Icon(Icons.Default.Logout, contentDescription = "Logout", tint = Color.White)
-                    }
+                    LogoutToolbarIcon(
+                        onLogoutConfirmed = onLogout,
+                        tint = Color.White
+                    )
                 }
             )
         }
@@ -213,6 +248,51 @@ fun ManagerDashboardScreen(
                 label = { Text("Phone Number") },
                 modifier = Modifier.fillMaxWidth()
             )
+            Spacer(Modifier.height(8.dp))
+            OutlinedTextField(
+                value = websiteUrl,
+                onValueChange = { websiteUrl = it },
+                label = { Text("Website (optional)") },
+                modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(Modifier.height(8.dp))
+            OutlinedTextField(
+                value = tagsInput,
+                onValueChange = { tagsInput = it },
+                label = { Text("Tags (comma-separated, e.g. Cozy, WiFi, Vegan)") },
+                modifier = Modifier.fillMaxWidth(),
+                minLines = 2
+            )
+            Spacer(Modifier.height(8.dp))
+            Text("Opening hours (by day)", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+            Spacer(Modifier.height(8.dp))
+            WeeklyOpeningHoursEditor(
+                schedule = openingHoursSchedule,
+                onScheduleChange = { openingHoursSchedule = it }
+            )
+            Spacer(Modifier.height(8.dp))
+            Text(
+                "Location pin (optional — for distance & Google Maps)",
+                style = MaterialTheme.typography.labelSmall,
+                color = Color.Gray
+            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                OutlinedTextField(
+                    value = latitudeStr,
+                    onValueChange = { latitudeStr = it },
+                    label = { Text("Latitude") },
+                    modifier = Modifier.weight(1f)
+                )
+                OutlinedTextField(
+                    value = longitudeStr,
+                    onValueChange = { longitudeStr = it },
+                    label = { Text("Longitude") },
+                    modifier = Modifier.weight(1f)
+                )
+            }
 
             Spacer(Modifier.height(16.dp))
             PaymentInfoSection()
@@ -298,6 +378,9 @@ fun ManagerDashboardScreen(
                 onClick = {
                     viewModel.clearMessage()
                     if (name.isNotBlank() && city.isNotBlank() && receiptBytes != null) {
+                        val tagList = tagsInput.split(",")
+                            .map { it.trim() }
+                            .filter { it.isNotEmpty() }
                         viewModel.submitPlace(
                             placeType = placeType,
                             name = name,
@@ -307,6 +390,13 @@ fun ManagerDashboardScreen(
                             address = address,
                             phoneNumber = phoneNumber,
                             websiteUrl = websiteUrl,
+                            tags = tagList,
+                            latitude = latitudeStr.toDoubleOrNull(),
+                            longitude = longitudeStr.toDoubleOrNull(),
+                            openingHoursMonFri = "",
+                            openingHoursSaturday = "",
+                            openingHoursSunday = "",
+                            openingHoursSchedule = openingHoursSchedule,
                             receiptImageBytes = receiptBytes,
                             placeImageBytesList = placeImageBytesList
                         )
@@ -358,6 +448,68 @@ fun ManagerDashboardScreen(
             mySubmissions.forEach { sub ->
                 SubmissionCard(submission = sub)
                 Spacer(Modifier.height(8.dp))
+            }
+        }
+    }
+}
+
+@Composable
+private fun WeeklyOpeningHoursEditor(
+    schedule: List<OpeningHoursDay>,
+    onScheduleChange: (List<OpeningHoursDay>) -> Unit
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        schedule.forEachIndexed { index, day ->
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(
+                    text = day.dayLabel,
+                    modifier = Modifier.width(40.dp),
+                    style = MaterialTheme.typography.bodySmall,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Switch(
+                    checked = day.isClosed,
+                    onCheckedChange = { closed ->
+                        onScheduleChange(
+                            schedule.mapIndexed { i, d ->
+                                if (i == index) d.copy(isClosed = closed) else d
+                            }
+                        )
+                    }
+                )
+                Text("Closed", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                if (!day.isClosed) {
+                    OutlinedTextField(
+                        value = day.openTime,
+                        onValueChange = { v ->
+                            onScheduleChange(
+                                schedule.mapIndexed { i, d ->
+                                    if (i == index) d.copy(openTime = v) else d
+                                }
+                            )
+                        },
+                        label = { Text("Open") },
+                        modifier = Modifier.weight(1f),
+                        singleLine = true
+                    )
+                    OutlinedTextField(
+                        value = day.closeTime,
+                        onValueChange = { v ->
+                            onScheduleChange(
+                                schedule.mapIndexed { i, d ->
+                                    if (i == index) d.copy(closeTime = v) else d
+                                }
+                            )
+                        },
+                        label = { Text("Close") },
+                        modifier = Modifier.weight(1f),
+                        singleLine = true
+                    )
+                }
             }
         }
     }
@@ -544,6 +696,20 @@ private fun EditRestaurantForm(restaurant: Restaurant, viewModel: ManagerViewMod
     var description by remember { mutableStateOf(restaurant.description ?: "") }
     var address by remember { mutableStateOf(restaurant.address ?: "") }
     var phone by remember { mutableStateOf(restaurant.phoneNumber ?: "") }
+    var website by remember { mutableStateOf(restaurant.websiteUrl ?: "") }
+    var tagsStr by remember { mutableStateOf(restaurant.tags.joinToString(", ")) }
+    var schedule by remember {
+        mutableStateOf(
+            mergeSchedule(
+                restaurant.openingHoursSchedule,
+                restaurant.openingHoursMonFri,
+                restaurant.openingHoursSaturday,
+                restaurant.openingHoursSunday
+            )
+        )
+    }
+    var latStr by remember { mutableStateOf(restaurant.latitude?.toString() ?: "") }
+    var lngStr by remember { mutableStateOf(restaurant.longitude?.toString() ?: "") }
     Column(Modifier.padding(16.dp)) {
         Text("Edit Restaurant", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
         Spacer(Modifier.height(16.dp))
@@ -558,9 +724,43 @@ private fun EditRestaurantForm(restaurant: Restaurant, viewModel: ManagerViewMod
         OutlinedTextField(value = address, onValueChange = { address = it }, label = { Text("Address") }, modifier = Modifier.fillMaxWidth())
         Spacer(Modifier.height(8.dp))
         OutlinedTextField(value = phone, onValueChange = { phone = it }, label = { Text("Phone") }, modifier = Modifier.fillMaxWidth())
+        Spacer(Modifier.height(8.dp))
+        OutlinedTextField(value = website, onValueChange = { website = it }, label = { Text("Website") }, modifier = Modifier.fillMaxWidth())
+        Spacer(Modifier.height(8.dp))
+        OutlinedTextField(value = tagsStr, onValueChange = { tagsStr = it }, label = { Text("Tags (comma-separated)") }, modifier = Modifier.fillMaxWidth(), minLines = 2)
+        Spacer(Modifier.height(8.dp))
+        Text("Opening hours (by day)", fontWeight = FontWeight.Bold)
+        Spacer(Modifier.height(8.dp))
+        WeeklyOpeningHoursEditor(
+            schedule = schedule,
+            onScheduleChange = { schedule = it }
+        )
+        Spacer(Modifier.height(8.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            OutlinedTextField(value = latStr, onValueChange = { latStr = it }, label = { Text("Latitude") }, modifier = Modifier.weight(1f))
+            OutlinedTextField(value = lngStr, onValueChange = { lngStr = it }, label = { Text("Longitude") }, modifier = Modifier.weight(1f))
+        }
         Spacer(Modifier.height(16.dp))
         Button(onClick = {
-            viewModel.updateRestaurant(restaurant.copy(name = name, city = city, type = type, description = description, address = address, phoneNumber = phone))
+            val tags = tagsStr.split(",").map { it.trim() }.filter { it.isNotEmpty() }
+            viewModel.updateRestaurant(
+                restaurant.copy(
+                    name = name,
+                    city = city,
+                    type = type,
+                    description = description,
+                    address = address,
+                    phoneNumber = phone,
+                    websiteUrl = website.ifBlank { null },
+                    tags = tags,
+                    latitude = latStr.toDoubleOrNull(),
+                    longitude = lngStr.toDoubleOrNull(),
+                    openingHoursMonFri = null,
+                    openingHoursSaturday = null,
+                    openingHoursSunday = null,
+                    openingHoursSchedule = schedule
+                )
+            )
             onDismiss()
         }, modifier = Modifier.fillMaxWidth()) { Text("Save") }
         Spacer(Modifier.height(32.dp))
@@ -575,6 +775,20 @@ private fun EditHotelForm(hotel: Hotel, viewModel: ManagerViewModel, onDismiss: 
     var description by remember { mutableStateOf(hotel.description ?: "") }
     var address by remember { mutableStateOf(hotel.address ?: "") }
     var phone by remember { mutableStateOf(hotel.phoneNumber ?: "") }
+    var website by remember { mutableStateOf(hotel.websiteUrl ?: "") }
+    var tagsStr by remember { mutableStateOf(hotel.tags.joinToString(", ")) }
+    var schedule by remember {
+        mutableStateOf(
+            mergeSchedule(
+                hotel.openingHoursSchedule,
+                hotel.openingHoursMonFri,
+                hotel.openingHoursSaturday,
+                hotel.openingHoursSunday
+            )
+        )
+    }
+    var latStr by remember { mutableStateOf(hotel.latitude?.toString() ?: "") }
+    var lngStr by remember { mutableStateOf(hotel.longitude?.toString() ?: "") }
     Column(Modifier.padding(16.dp)) {
         Text("Edit Hotel", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
         Spacer(Modifier.height(16.dp))
@@ -589,9 +803,43 @@ private fun EditHotelForm(hotel: Hotel, viewModel: ManagerViewModel, onDismiss: 
         OutlinedTextField(value = address, onValueChange = { address = it }, label = { Text("Address") }, modifier = Modifier.fillMaxWidth())
         Spacer(Modifier.height(8.dp))
         OutlinedTextField(value = phone, onValueChange = { phone = it }, label = { Text("Phone") }, modifier = Modifier.fillMaxWidth())
+        Spacer(Modifier.height(8.dp))
+        OutlinedTextField(value = website, onValueChange = { website = it }, label = { Text("Website") }, modifier = Modifier.fillMaxWidth())
+        Spacer(Modifier.height(8.dp))
+        OutlinedTextField(value = tagsStr, onValueChange = { tagsStr = it }, label = { Text("Tags (comma-separated)") }, modifier = Modifier.fillMaxWidth(), minLines = 2)
+        Spacer(Modifier.height(8.dp))
+        Text("Opening hours (by day)", fontWeight = FontWeight.Bold)
+        Spacer(Modifier.height(8.dp))
+        WeeklyOpeningHoursEditor(
+            schedule = schedule,
+            onScheduleChange = { schedule = it }
+        )
+        Spacer(Modifier.height(8.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            OutlinedTextField(value = latStr, onValueChange = { latStr = it }, label = { Text("Latitude") }, modifier = Modifier.weight(1f))
+            OutlinedTextField(value = lngStr, onValueChange = { lngStr = it }, label = { Text("Longitude") }, modifier = Modifier.weight(1f))
+        }
         Spacer(Modifier.height(16.dp))
         Button(onClick = {
-            viewModel.updateHotel(hotel.copy(name = name, city = city, type = type, description = description, address = address, phoneNumber = phone))
+            val tags = tagsStr.split(",").map { it.trim() }.filter { it.isNotEmpty() }
+            viewModel.updateHotel(
+                hotel.copy(
+                    name = name,
+                    city = city,
+                    type = type,
+                    description = description,
+                    address = address,
+                    phoneNumber = phone,
+                    websiteUrl = website.ifBlank { null },
+                    tags = tags,
+                    latitude = latStr.toDoubleOrNull(),
+                    longitude = lngStr.toDoubleOrNull(),
+                    openingHoursMonFri = null,
+                    openingHoursSaturday = null,
+                    openingHoursSunday = null,
+                    openingHoursSchedule = schedule
+                )
+            )
             onDismiss()
         }, modifier = Modifier.fillMaxWidth()) { Text("Save") }
         Spacer(Modifier.height(32.dp))
@@ -604,6 +852,20 @@ private fun EditPlaceForm(place: PlaceToVisit, viewModel: ManagerViewModel, onDi
     var city by remember { mutableStateOf(place.city ?: "") }
     var description by remember { mutableStateOf(place.description ?: "") }
     var address by remember { mutableStateOf(place.address ?: "") }
+    var website by remember { mutableStateOf(place.websiteUrl ?: "") }
+    var tagsStr by remember { mutableStateOf(place.tags.joinToString(", ")) }
+    var schedule by remember {
+        mutableStateOf(
+            mergeSchedule(
+                place.openingHoursSchedule,
+                place.openingHoursMonFri,
+                place.openingHoursSaturday,
+                place.openingHoursSunday
+            )
+        )
+    }
+    var latStr by remember { mutableStateOf(place.latitude?.toString() ?: "") }
+    var lngStr by remember { mutableStateOf(place.longitude?.toString() ?: "") }
     Column(Modifier.padding(16.dp)) {
         Text("Edit Place", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
         Spacer(Modifier.height(16.dp))
@@ -614,9 +876,41 @@ private fun EditPlaceForm(place: PlaceToVisit, viewModel: ManagerViewModel, onDi
         OutlinedTextField(value = description, onValueChange = { description = it }, label = { Text("Description") }, modifier = Modifier.fillMaxWidth(), minLines = 2)
         Spacer(Modifier.height(8.dp))
         OutlinedTextField(value = address, onValueChange = { address = it }, label = { Text("Address") }, modifier = Modifier.fillMaxWidth())
+        Spacer(Modifier.height(8.dp))
+        OutlinedTextField(value = website, onValueChange = { website = it }, label = { Text("Website") }, modifier = Modifier.fillMaxWidth())
+        Spacer(Modifier.height(8.dp))
+        OutlinedTextField(value = tagsStr, onValueChange = { tagsStr = it }, label = { Text("Tags (comma-separated)") }, modifier = Modifier.fillMaxWidth(), minLines = 2)
+        Spacer(Modifier.height(8.dp))
+        Text("Opening hours (by day)", fontWeight = FontWeight.Bold)
+        Spacer(Modifier.height(8.dp))
+        WeeklyOpeningHoursEditor(
+            schedule = schedule,
+            onScheduleChange = { schedule = it }
+        )
+        Spacer(Modifier.height(8.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            OutlinedTextField(value = latStr, onValueChange = { latStr = it }, label = { Text("Latitude") }, modifier = Modifier.weight(1f))
+            OutlinedTextField(value = lngStr, onValueChange = { lngStr = it }, label = { Text("Longitude") }, modifier = Modifier.weight(1f))
+        }
         Spacer(Modifier.height(16.dp))
         Button(onClick = {
-            viewModel.updatePlace(place.copy(name = name, city = city, description = description, address = address))
+            val tags = tagsStr.split(",").map { it.trim() }.filter { it.isNotEmpty() }
+            viewModel.updatePlace(
+                place.copy(
+                    name = name,
+                    city = city,
+                    description = description,
+                    address = address,
+                    websiteUrl = website.ifBlank { null },
+                    tags = tags,
+                    latitude = latStr.toDoubleOrNull(),
+                    longitude = lngStr.toDoubleOrNull(),
+                    openingHoursMonFri = null,
+                    openingHoursSaturday = null,
+                    openingHoursSunday = null,
+                    openingHoursSchedule = schedule
+                )
+            )
             onDismiss()
         }, modifier = Modifier.fillMaxWidth()) { Text("Save") }
         Spacer(Modifier.height(32.dp))
@@ -631,6 +925,20 @@ private fun EditEquipmentForm(shop: EquipmentShop, viewModel: ManagerViewModel, 
     var description by remember { mutableStateOf(shop.description ?: "") }
     var address by remember { mutableStateOf(shop.address ?: "") }
     var phone by remember { mutableStateOf(shop.phoneNumber ?: "") }
+    var website by remember { mutableStateOf(shop.websiteUrl ?: "") }
+    var tagsStr by remember { mutableStateOf(shop.tags.joinToString(", ")) }
+    var schedule by remember {
+        mutableStateOf(
+            mergeSchedule(
+                shop.openingHoursSchedule,
+                shop.openingHoursMonFri,
+                shop.openingHoursSaturday,
+                shop.openingHoursSunday
+            )
+        )
+    }
+    var latStr by remember { mutableStateOf(shop.latitude?.toString() ?: "") }
+    var lngStr by remember { mutableStateOf(shop.longitude?.toString() ?: "") }
     Column(Modifier.padding(16.dp)) {
         Text("Edit Equipment Shop", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
         Spacer(Modifier.height(16.dp))
@@ -645,9 +953,43 @@ private fun EditEquipmentForm(shop: EquipmentShop, viewModel: ManagerViewModel, 
         OutlinedTextField(value = address, onValueChange = { address = it }, label = { Text("Address") }, modifier = Modifier.fillMaxWidth())
         Spacer(Modifier.height(8.dp))
         OutlinedTextField(value = phone, onValueChange = { phone = it }, label = { Text("Phone") }, modifier = Modifier.fillMaxWidth())
+        Spacer(Modifier.height(8.dp))
+        OutlinedTextField(value = website, onValueChange = { website = it }, label = { Text("Website") }, modifier = Modifier.fillMaxWidth())
+        Spacer(Modifier.height(8.dp))
+        OutlinedTextField(value = tagsStr, onValueChange = { tagsStr = it }, label = { Text("Tags (comma-separated)") }, modifier = Modifier.fillMaxWidth(), minLines = 2)
+        Spacer(Modifier.height(8.dp))
+        Text("Opening hours (by day)", fontWeight = FontWeight.Bold)
+        Spacer(Modifier.height(8.dp))
+        WeeklyOpeningHoursEditor(
+            schedule = schedule,
+            onScheduleChange = { schedule = it }
+        )
+        Spacer(Modifier.height(8.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            OutlinedTextField(value = latStr, onValueChange = { latStr = it }, label = { Text("Latitude") }, modifier = Modifier.weight(1f))
+            OutlinedTextField(value = lngStr, onValueChange = { lngStr = it }, label = { Text("Longitude") }, modifier = Modifier.weight(1f))
+        }
         Spacer(Modifier.height(16.dp))
         Button(onClick = {
-            viewModel.updateEquipmentShop(shop.copy(name = name, city = city, type = type, description = description, address = address, phoneNumber = phone))
+            val tags = tagsStr.split(",").map { it.trim() }.filter { it.isNotEmpty() }
+            viewModel.updateEquipmentShop(
+                shop.copy(
+                    name = name,
+                    city = city,
+                    type = type,
+                    description = description,
+                    address = address,
+                    phoneNumber = phone,
+                    websiteUrl = website.ifBlank { null },
+                    tags = tags,
+                    latitude = latStr.toDoubleOrNull(),
+                    longitude = lngStr.toDoubleOrNull(),
+                    openingHoursMonFri = null,
+                    openingHoursSaturday = null,
+                    openingHoursSunday = null,
+                    openingHoursSchedule = schedule
+                )
+            )
             onDismiss()
         }, modifier = Modifier.fillMaxWidth()) { Text("Save") }
         Spacer(Modifier.height(32.dp))

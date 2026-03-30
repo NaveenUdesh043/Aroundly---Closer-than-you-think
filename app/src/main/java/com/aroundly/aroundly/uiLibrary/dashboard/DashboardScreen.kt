@@ -27,7 +27,6 @@ import androidx.compose.material.icons.filled.Hotel
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Restaurant
-import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.Card
@@ -37,7 +36,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -68,6 +66,7 @@ import com.aroundly.aroundly.ui.theme.AccentAmber
 import com.aroundly.aroundly.ui.theme.PrimaryTeal
 import com.aroundly.aroundly.ui.theme.PrimaryTealDark
 import com.aroundly.aroundly.uiLibrary.common.GenericDropdown
+import com.aroundly.aroundly.uiLibrary.common.LogoutToolbarIcon
 import com.aroundly.aroundly.uiLibrary.viewModel.DashboardViewModel
 import androidx.hilt.navigation.compose.hiltViewModel
 
@@ -483,13 +482,10 @@ private fun DashboardHeader(
                     )
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    IconButton(onClick = onLogout) {
-                        Icon(
-                            Icons.Default.Logout,
-                            contentDescription = "Logout",
-                            tint = Color(0xFF3E2723)
-                        )
-                    }
+                    LogoutToolbarIcon(
+                        onLogoutConfirmed = onLogout,
+                        tint = Color(0xFF3E2723)
+                    )
                 }
             }
 

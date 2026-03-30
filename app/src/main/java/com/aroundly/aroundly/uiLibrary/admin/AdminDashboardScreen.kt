@@ -25,12 +25,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ExitToApp
-import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -61,6 +56,7 @@ import coil.compose.AsyncImage
 import com.aroundly.aroundly.domain.model.PlaceSubmission
 import com.aroundly.aroundly.ui.theme.PrimaryTeal
 import com.aroundly.aroundly.uiLibrary.viewModel.AdminViewModel
+import com.aroundly.aroundly.uiLibrary.common.LogoutExitToolbarIcon
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.aroundly.aroundly.ui.theme.Amber
 import com.aroundly.aroundly.ui.theme.AmberBg
@@ -230,14 +226,10 @@ fun AdminHeader(
                     )
                 }
 
-                IconButton(onClick = onLogout) {
-
-                    Icon(
-                        Icons.Default.ExitToApp,
-                        contentDescription = null,
-                        tint = White
-                    )
-                }
+                LogoutExitToolbarIcon(
+                    onLogoutConfirmed = onLogout,
+                    tint = White
+                )
             }
 
             Spacer(Modifier.height(20.dp))

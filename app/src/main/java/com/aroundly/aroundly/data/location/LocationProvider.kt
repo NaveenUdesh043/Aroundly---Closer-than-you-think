@@ -13,6 +13,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import java.util.Locale
+import android.location.Geocoder.isPresent
 
 data class LocationResult(
     val latitude: Double,
@@ -76,5 +77,58 @@ class LocationProvider(private val context: Context) {
         } catch (e: Exception) {
             null
         }
+    }
+
+    /**
+     * Resolves an address string to coordinates (Google Play services / backend geocoder).
+     * May return null if offline, ambiguous address, or Geocoder unavailable (some emulators).
+     */
+    @Suppress("DEPRECATION")
+    suspend fun geocodeAddressToCoordinates(address: String): Pair<Double, Double>? =
+        withContext(Dispatchers.IO) {
+            val trimmed = address.trim()
+            if (trimmed.isEmpty()) return@withContext null
+            try {
+                if (!Geocoder.isPresent()) return@withContext null
+                val geocoder = Geocoder(context, Locale.getDefault())
+                val list = geocoder.getFromLocationName(trimmed, 5) ?: return@withContext null
+                val a = list.firstOrNull() ?: return@withContext null
+                Pair(a.latitude, a.longitude)
+            } catch (_: Exception) {
+                null
+            }
+        }
+
+    /**
+     * Distance from user's current location to the place: prefers geocoding [placeAddress],
+     * then falls back to stored [placeLat]/[placeLng]. Returns null if location unavailable.
+     */
+    suspend fun distanceFromUserToPlaceKm(
+        placeAddress: String?,
+        placeLat: Double?,
+        placeLng: Double?
+    ): Double? {
+        val user = getCurrentLocation() ?: return null
+        val addr = placeAddress?.trim().orEmpty()
+        if (addr.isNotEmpty()) {
+            val geo = geocodeAddressToCoordinates(addr)
+            if (geo != null) {
+                return DistanceUtils.haversineKm(
+                    user.latitude,
+                    user.longitude,
+                    geo.first,
+                    geo.second
+                )
+            }
+        }
+        if (placeLat != null && placeLng != null) {
+            return DistanceUtils.haversineKm(
+                user.latitude,
+                user.longitude,
+                placeLat,
+                placeLng
+            )
+        }
+        return null
     }
 }

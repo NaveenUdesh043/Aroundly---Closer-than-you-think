@@ -1,13 +1,6 @@
 package com.aroundly.aroundly.uiLibrary.navigation
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -24,15 +17,11 @@ import com.aroundly.aroundly.uiLibrary.common.RestaurantDetailsScreen
 import com.aroundly.aroundly.uiLibrary.dashboard.DashboardScreen
 import com.aroundly.aroundly.uiLibrary.manager.ManagerDashboardScreen
 import com.aroundly.aroundly.uiLibrary.manager.ManagerSignupScreen
-import com.aroundly.aroundly.uiLibrary.viewModel.RestaurantDetailsViewModel
-import com.aroundly.aroundly.uiLibrary.viewModel.HotelDetailsViewModel
-import com.aroundly.aroundly.uiLibrary.viewModel.PlaceDetailsViewModel
-import com.aroundly.aroundly.uiLibrary.viewModel.EquipmentDetailsViewModel
-import androidx.hilt.navigation.compose.hiltViewModel
 import com.google.firebase.auth.FirebaseAuth
 
 @Composable
 fun NavGraph() {
+
     val navController = rememberNavController()
 
     NavHost(navController = navController, startDestination = "welcome") {
@@ -153,60 +142,28 @@ fun NavGraph() {
             "restaurant_details/{id}",
             arguments = listOf(navArgument("id") { type = NavType.StringType })
         ) {
-            val viewModel: RestaurantDetailsViewModel = hiltViewModel()
-            val restaurant by viewModel.restaurant.collectAsState()
-            restaurant?.let { r ->
-                RestaurantDetailsScreen(restaurant = r, onBack = { navController.popBackStack() })
-            } ?: run {
-                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
-                }
-            }
+            RestaurantDetailsScreen(onBack = { navController.popBackStack() })
         }
 
         composable(
             "hotel_details/{id}",
             arguments = listOf(navArgument("id") { type = NavType.StringType })
         ) {
-            val viewModel: HotelDetailsViewModel = hiltViewModel()
-            val hotel by viewModel.hotel.collectAsState()
-            hotel?.let { h ->
-                HotelDetailsScreen(hotel = h, onBack = { navController.popBackStack() })
-            } ?: run {
-                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
-                }
-            }
+            HotelDetailsScreen(onBack = { navController.popBackStack() })
         }
 
         composable(
             "place_details/{id}",
             arguments = listOf(navArgument("id") { type = NavType.StringType })
         ) {
-            val viewModel: PlaceDetailsViewModel = hiltViewModel()
-            val place by viewModel.place.collectAsState()
-            place?.let { p ->
-                PlaceToVisitDetailsScreen(place = p, onBack = { navController.popBackStack() })
-            } ?: run {
-                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
-                }
-            }
+            PlaceToVisitDetailsScreen(onBack = { navController.popBackStack() })
         }
 
         composable(
             "equipment_details/{id}",
             arguments = listOf(navArgument("id") { type = NavType.StringType })
         ) {
-            val viewModel: EquipmentDetailsViewModel = hiltViewModel()
-            val equipment by viewModel.equipment.collectAsState()
-            equipment?.let { e ->
-                EquipmentShopDetailsScreen(shop = e, onBack = { navController.popBackStack() })
-            } ?: run {
-                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
-                }
-            }
+            EquipmentShopDetailsScreen(onBack = { navController.popBackStack() })
         }
 
         composable("manager_dashboard") {

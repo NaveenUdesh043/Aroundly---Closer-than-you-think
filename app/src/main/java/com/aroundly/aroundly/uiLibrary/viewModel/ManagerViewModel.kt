@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.aroundly.aroundly.domain.model.EquipmentShop
 import com.aroundly.aroundly.domain.model.Hotel
+import com.aroundly.aroundly.domain.model.OpeningHoursDay
 import com.aroundly.aroundly.domain.model.PlaceSubmission
 import com.aroundly.aroundly.domain.model.PlaceToVisit
 import com.aroundly.aroundly.domain.model.PlaceType
@@ -117,6 +118,13 @@ class ManagerViewModel @Inject constructor(
         address: String,
         phoneNumber: String,
         websiteUrl: String,
+        tags: List<String>,
+        latitude: Double?,
+        longitude: Double?,
+        openingHoursMonFri: String,
+        openingHoursSaturday: String,
+        openingHoursSunday: String,
+        openingHoursSchedule: List<OpeningHoursDay>,
         receiptImageBytes: ByteArray?,
         placeImageBytesList: List<ByteArray>
     ) {
@@ -159,6 +167,13 @@ class ManagerViewModel @Inject constructor(
                 address = address,
                 phoneNumber = phoneNumber,
                 websiteUrl = websiteUrl,
+                tags = tags,
+                latitude = latitude,
+                longitude = longitude,
+                openingHoursMonFri = openingHoursMonFri,
+                openingHoursSaturday = openingHoursSaturday,
+                openingHoursSunday = openingHoursSunday,
+                openingHoursSchedule = openingHoursSchedule,
                 receiptImageUrl = receiptUrl,
                 placeImages = placeImageUrls,
                 status = SubmissionStatus.PENDING,

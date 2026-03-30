@@ -8,6 +8,7 @@ data class User(
     val phoneNumber: String = "",
     val role: UserRole = UserRole.USER
 )
+
 data class Restaurant(
     val id: String = "",
     val ownerId: String = "",
@@ -18,7 +19,14 @@ data class Restaurant(
     val images: List<String>? = null,
     val address: String? = null,
     val phoneNumber: String? = null,
-    val websiteUrl: String? = null
+    val websiteUrl: String? = null,
+    val tags: List<String> = emptyList(),
+    val latitude: Double? = null,
+    val longitude: Double? = null,
+    val openingHoursMonFri: String? = null,
+    val openingHoursSaturday: String? = null,
+    val openingHoursSunday: String? = null,
+    val openingHoursSchedule: List<OpeningHoursDay> = emptyList()
 )
 
 data class Hotel(
@@ -31,7 +39,14 @@ data class Hotel(
     val images: List<String>? = null,
     val address: String? = null,
     val phoneNumber: String? = null,
-    val websiteUrl: String? = null
+    val websiteUrl: String? = null,
+    val tags: List<String> = emptyList(),
+    val latitude: Double? = null,
+    val longitude: Double? = null,
+    val openingHoursMonFri: String? = null,
+    val openingHoursSaturday: String? = null,
+    val openingHoursSunday: String? = null,
+    val openingHoursSchedule: List<OpeningHoursDay> = emptyList()
 )
 
 data class PlaceToVisit(
@@ -42,7 +57,14 @@ data class PlaceToVisit(
     val description: String? = null,
     val images: List<String>? = null,
     val address: String? = null,
-    val websiteUrl: String? = null
+    val websiteUrl: String? = null,
+    val tags: List<String> = emptyList(),
+    val latitude: Double? = null,
+    val longitude: Double? = null,
+    val openingHoursMonFri: String? = null,
+    val openingHoursSaturday: String? = null,
+    val openingHoursSunday: String? = null,
+    val openingHoursSchedule: List<OpeningHoursDay> = emptyList()
 )
 
 data class EquipmentShop(
@@ -55,5 +77,12 @@ data class EquipmentShop(
     val images: List<String>? = null,
     val address: String? = null,
     val phoneNumber: String? = null,
-    val websiteUrl: String? = null
+    val websiteUrl: String? = null,
+    val tags: List<String> = emptyList(),
+    val latitude: Double? = null,
+    val longitude: Double? = null,
+    val openingHoursMonFri: String? = null,
+    val openingHoursSaturday: String? = null,
+    val openingHoursSunday: String? = null,
+    val openingHoursSchedule: List<OpeningHoursDay> = emptyList()
 )

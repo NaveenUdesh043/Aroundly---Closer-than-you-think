@@ -12,6 +12,13 @@ data class PlaceSubmission(
     val address: String = "",
     val phoneNumber: String = "",
     val websiteUrl: String = "",
+    val tags: List<String> = emptyList(),
+    val latitude: Double? = null,
+    val longitude: Double? = null,
+    val openingHoursMonFri: String = "",
+    val openingHoursSaturday: String = "",
+    val openingHoursSunday: String = "",
+    val openingHoursSchedule: List<OpeningHoursDay> = emptyList(),
     val receiptImageUrl: String = "",
     val placeImages: List<String> = emptyList(),
     val status: SubmissionStatus = SubmissionStatus.PENDING,
@@ -28,7 +35,14 @@ data class PlaceSubmission(
         address = address,
         phoneNumber = phoneNumber,
         websiteUrl = websiteUrl.ifBlank { null },
-        images = placeImages.ifEmpty { null }
+        images = placeImages.ifEmpty { null },
+        tags = tags,
+        latitude = latitude,
+        longitude = longitude,
+        openingHoursMonFri = openingHoursMonFri.ifBlank { null },
+        openingHoursSaturday = openingHoursSaturday.ifBlank { null },
+        openingHoursSunday = openingHoursSunday.ifBlank { null },
+        openingHoursSchedule = openingHoursSchedule
     )
 
     fun toHotel(): Hotel = Hotel(
@@ -40,7 +54,14 @@ data class PlaceSubmission(
         address = address,
         phoneNumber = phoneNumber,
         websiteUrl = websiteUrl.ifBlank { null },
-        images = placeImages.ifEmpty { null }
+        images = placeImages.ifEmpty { null },
+        tags = tags,
+        latitude = latitude,
+        longitude = longitude,
+        openingHoursMonFri = openingHoursMonFri.ifBlank { null },
+        openingHoursSaturday = openingHoursSaturday.ifBlank { null },
+        openingHoursSunday = openingHoursSunday.ifBlank { null },
+        openingHoursSchedule = openingHoursSchedule
     )
 
     fun toPlaceToVisit(): PlaceToVisit = PlaceToVisit(
@@ -50,7 +71,14 @@ data class PlaceSubmission(
         description = description,
         address = address,
         websiteUrl = websiteUrl.ifBlank { null },
-        images = placeImages.ifEmpty { null }
+        images = placeImages.ifEmpty { null },
+        tags = tags,
+        latitude = latitude,
+        longitude = longitude,
+        openingHoursMonFri = openingHoursMonFri.ifBlank { null },
+        openingHoursSaturday = openingHoursSaturday.ifBlank { null },
+        openingHoursSunday = openingHoursSunday.ifBlank { null },
+        openingHoursSchedule = openingHoursSchedule
     )
 
     fun toEquipmentShop(): EquipmentShop = EquipmentShop(
@@ -62,7 +90,14 @@ data class PlaceSubmission(
         address = address,
         phoneNumber = phoneNumber,
         websiteUrl = websiteUrl.ifBlank { null },
-        images = placeImages.ifEmpty { null }
+        images = placeImages.ifEmpty { null },
+        tags = tags,
+        latitude = latitude,
+        longitude = longitude,
+        openingHoursMonFri = openingHoursMonFri.ifBlank { null },
+        openingHoursSaturday = openingHoursSaturday.ifBlank { null },
+        openingHoursSunday = openingHoursSunday.ifBlank { null },
+        openingHoursSchedule = openingHoursSchedule
     )
 }
 
