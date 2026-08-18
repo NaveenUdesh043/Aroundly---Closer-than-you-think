@@ -52,6 +52,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.aroundly.aroundly.domain.model.UserRole
+import com.aroundly.aroundly.ui.theme.AccentPurple
+import com.aroundly.aroundly.ui.theme.SurfaceInput
+import com.aroundly.aroundly.ui.theme.SurfaceWarm
+import com.aroundly.aroundly.ui.theme.TextDisabled
+import com.aroundly.aroundly.ui.theme.TextMuted
+import com.aroundly.aroundly.ui.theme.TextOnDarkMuted
+import com.aroundly.aroundly.ui.theme.TextPrimary
+import com.aroundly.aroundly.ui.theme.TextSecondary
 import com.aroundly.aroundly.uiLibrary.viewModel.AuthViewModel
 
 @Composable
@@ -83,7 +91,7 @@ fun ManagerSignupScreen(
             Color(0xFF2B2320)
         )
     )
-    val backgroundColor = Color(0xFFF4F0E9)
+    val backgroundColor = SurfaceWarm
 
     val scrollState = rememberScrollState()
 
@@ -146,7 +154,7 @@ fun ManagerSignupScreen(
                     Text(
                         text = "List your business on Aroundly",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = Color(0xFFE2DED6)
+                        color = TextOnDarkMuted
                     )
 
                 }
@@ -175,13 +183,13 @@ fun ManagerSignupScreen(
                     text = "Your Account",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF25211C)
+                    color = TextPrimary
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = "Create your manager profile",
                     style = MaterialTheme.typography.bodySmall,
-                    color = Color(0xFF8C8478)
+                    color = TextMuted
                 )
 
                 Spacer(modifier = Modifier.height(20.dp))
@@ -189,7 +197,7 @@ fun ManagerSignupScreen(
                 Text(
                     text = "FIRST NAME",
                     style = MaterialTheme.typography.labelSmall,
-                    color = Color(0xFF9A9183)
+                    color = TextMuted
                 )
                 Spacer(modifier = Modifier.height(6.dp))
                 OutlinedTextField(
@@ -198,16 +206,16 @@ fun ManagerSignupScreen(
                         val parts = value.split(" ", limit = 1)
                         firstName = parts.getOrNull(0) ?: ""
                     },
-                    placeholder = { Text("John", color = Color(0xFFB8B0A4)) },
+                    placeholder = { Text("John", color = TextDisabled) },
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = Color.Transparent,
                         unfocusedBorderColor = Color.Transparent,
-                        focusedContainerColor = Color(0xFFF7F1E7),
-                        unfocusedContainerColor = Color(0xFFF7F1E7),
-                        cursorColor = Color(0xFF1C1C1C)
+                        focusedContainerColor = SurfaceInput,
+                        unfocusedContainerColor = SurfaceInput,
+                        cursorColor = TextPrimary
                     ),
                     singleLine = true,
-                    textStyle = TextStyle(color = Color(0xFF1C1C1C)),
+                    textStyle = TextStyle(color = TextPrimary),
                     shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -217,7 +225,7 @@ fun ManagerSignupScreen(
                 Text(
                     text = "LAST NAME",
                     style = MaterialTheme.typography.labelSmall,
-                    color = Color(0xFF9A9183)
+                    color = TextMuted
                 )
                 Spacer(modifier = Modifier.height(6.dp))
                 OutlinedTextField(
@@ -226,16 +234,16 @@ fun ManagerSignupScreen(
                         val parts = value.split(" ", limit = 1)
                         lastName = parts.getOrNull(0) ?: ""
                     },
-                    placeholder = { Text("Smith", color = Color(0xFFB8B0A4)) },
+                    placeholder = { Text("Smith", color = TextDisabled) },
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = Color.Transparent,
                         unfocusedBorderColor = Color.Transparent,
-                        focusedContainerColor = Color(0xFFF7F1E7),
-                        unfocusedContainerColor = Color(0xFFF7F1E7),
-                        cursorColor = Color(0xFF1C1C1C)
+                        focusedContainerColor = SurfaceInput,
+                        unfocusedContainerColor = SurfaceInput,
+                        cursorColor = TextPrimary
                     ),
                     singleLine = true,
-                    textStyle = TextStyle(color = Color(0xFF1C1C1C)),
+                    textStyle = TextStyle(color = TextPrimary),
                     shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -246,22 +254,22 @@ fun ManagerSignupScreen(
                 Text(
                     text = "BUSINESS NAME",
                     style = MaterialTheme.typography.labelSmall,
-                    color = Color(0xFF9A9183)
+                    color = TextMuted
                 )
                 Spacer(modifier = Modifier.height(6.dp))
                 OutlinedTextField(
                     value = businessName,
                     onValueChange = { businessName = it },
-                    placeholder = { Text("Business name", color = Color(0xFFB8B0A4)) },
+                    placeholder = { Text("Business name", color = TextDisabled) },
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = Color.Transparent,
                         unfocusedBorderColor = Color.Transparent,
-                        focusedContainerColor = Color(0xFFF7F1E7),
-                        unfocusedContainerColor = Color(0xFFF7F1E7),
-                        cursorColor = Color(0xFF1C1C1C)
+                        focusedContainerColor = SurfaceInput,
+                        unfocusedContainerColor = SurfaceInput,
+                        cursorColor = TextPrimary
                     ),
                     singleLine = true,
-                    textStyle = TextStyle(color = Color(0xFF1C1C1C)),
+                    textStyle = TextStyle(color = TextPrimary),
                     shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -271,23 +279,23 @@ fun ManagerSignupScreen(
                 Text(
                     text = "EMAIL",
                     style = MaterialTheme.typography.labelSmall,
-                    color = Color(0xFF9A9183)
+                    color = TextMuted
                 )
                 Spacer(modifier = Modifier.height(6.dp))
                 OutlinedTextField(
                     value = email,
                     onValueChange = { email = it },
-                    placeholder = { Text("business@email.com", color = Color(0xFFB8B0A4)) },
+                    placeholder = { Text("business@email.com", color = TextDisabled) },
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = Color.Transparent,
                         unfocusedBorderColor = Color.Transparent,
-                        focusedContainerColor = Color(0xFFF7F1E7),
-                        unfocusedContainerColor = Color(0xFFF7F1E7),
-                        cursorColor = Color(0xFF1C1C1C)
+                        focusedContainerColor = SurfaceInput,
+                        unfocusedContainerColor = SurfaceInput,
+                        cursorColor = TextPrimary
                     ),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                     singleLine = true,
-                    textStyle = TextStyle(color = Color(0xFF1C1C1C)),
+                    textStyle = TextStyle(color = TextPrimary),
                     shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -297,23 +305,23 @@ fun ManagerSignupScreen(
                 Text(
                     text = "PHONE",
                     style = MaterialTheme.typography.labelSmall,
-                    color = Color(0xFF9A9183)
+                    color = TextMuted
                 )
                 Spacer(modifier = Modifier.height(6.dp))
                 OutlinedTextField(
                     value = contactNumber,
                     onValueChange = { contactNumber = it },
-                    placeholder = { Text("+94 7X XXX XXXX", color = Color(0xFFB8B0A4)) },
+                    placeholder = { Text("+94 7X XXX XXXX", color = TextDisabled) },
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = Color.Transparent,
                         unfocusedBorderColor = Color.Transparent,
-                        focusedContainerColor = Color(0xFFF7F1E7),
-                        unfocusedContainerColor = Color(0xFFF7F1E7),
-                        cursorColor = Color(0xFF1C1C1C)
+                        focusedContainerColor = SurfaceInput,
+                        unfocusedContainerColor = SurfaceInput,
+                        cursorColor = TextPrimary
                     ),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                     singleLine = true,
-                    textStyle = TextStyle(color = Color(0xFF1C1C1C)),
+                    textStyle = TextStyle(color = TextPrimary),
                     shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -323,19 +331,19 @@ fun ManagerSignupScreen(
                 Text(
                     text = "PASSWORD",
                     style = MaterialTheme.typography.labelSmall,
-                    color = Color(0xFF9A9183)
+                    color = TextMuted
                 )
                 Spacer(modifier = Modifier.height(6.dp))
                 OutlinedTextField(
                     value = password,
                     onValueChange = { password = it },
-                    placeholder = { Text("Min. 8 characters", color = Color(0xFFB8B0A4)) },
+                    placeholder = { Text("Min. 8 characters", color = TextDisabled) },
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = Color.Transparent,
                         unfocusedBorderColor = Color.Transparent,
-                        focusedContainerColor = Color(0xFFF7F1E7),
-                        unfocusedContainerColor = Color(0xFFF7F1E7),
-                        cursorColor = Color(0xFF1C1C1C)
+                        focusedContainerColor = SurfaceInput,
+                        unfocusedContainerColor = SurfaceInput,
+                        cursorColor = TextPrimary
                     ),
                     singleLine = true,
                     visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
@@ -345,11 +353,11 @@ fun ManagerSignupScreen(
                             Icon(
                                 imageVector = icon,
                                 contentDescription = if (passwordVisible) "Hide password" else "Show password",
-                                tint = Color(0XFFAE62ED)
+                                tint = AccentPurple
                             )
                         }
                     },
-                    textStyle = TextStyle(color = Color(0xFF1C1C1C)),
+                    textStyle = TextStyle(color = TextPrimary),
                     shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -359,19 +367,19 @@ fun ManagerSignupScreen(
                 Text(
                     text = "CONFIRM PASSWORD",
                     style = MaterialTheme.typography.labelSmall,
-                    color = Color(0xFF9A9183)
+                    color = TextMuted
                 )
                 Spacer(modifier = Modifier.height(6.dp))
                 OutlinedTextField(
                     value = confirmPassword,
                     onValueChange = { confirmPassword = it },
-                    placeholder = { Text("Repeat your password", color = Color(0xFFB8B0A4)) },
+                    placeholder = { Text("Repeat your password", color = TextDisabled) },
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = Color.Transparent,
                         unfocusedBorderColor = Color.Transparent,
-                        focusedContainerColor = Color(0xFFF7F1E7),
-                        unfocusedContainerColor = Color(0xFFF7F1E7),
-                        cursorColor = Color(0xFF1C1C1C)
+                        focusedContainerColor = SurfaceInput,
+                        unfocusedContainerColor = SurfaceInput,
+                        cursorColor = TextPrimary
                     ),
                     singleLine = true,
                     visualTransformation = if (confirmPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
@@ -381,11 +389,11 @@ fun ManagerSignupScreen(
                             Icon(
                                 imageVector = icon,
                                 contentDescription = if (confirmPasswordVisible) "Hide password" else "Show password",
-                                tint = Color(0XFFAE62ED)
+                                tint = AccentPurple
                             )
                         }
                     },
-                    textStyle = TextStyle(color = Color(0xFF1C1C1C)),
+                    textStyle = TextStyle(color = TextPrimary),
                     shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -421,24 +429,24 @@ fun ManagerSignupScreen(
                     Text(
                         text = "I have read and accept the Terms and Conditions",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = Color.Black
+                        color = TextPrimary
                     )
-
 
                 }
             }
+        }
 
-            TextButton(
-                onClick = { showTermsDialog = true },
-                contentPadding = PaddingValues(0.dp)
-            ) {
-                Text(
-                    text = "View Terms and Conditions",
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        textDecoration = TextDecoration.Underline,
-                        fontWeight = FontWeight.Bold
-                    ),
-                    color = Color(0xFF1C1C1C)
+        TextButton(
+            onClick = { showTermsDialog = true },
+            contentPadding = PaddingValues(0.dp)
+        ) {
+            Text(
+                text = "View Terms and Conditions",
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    textDecoration = TextDecoration.Underline,
+                    fontWeight = FontWeight.Bold
+                ),
+                color = TextPrimary
                 )
             }
 
@@ -494,7 +502,7 @@ fun ManagerSignupScreen(
         ) {
             Text(
                 text = if (isLoading) "Creating account..." else "Continue  →",
-                color = Color.Black,
+                color = TextPrimary,
                 fontWeight = FontWeight.Bold
             )
         }
@@ -503,7 +511,7 @@ fun ManagerSignupScreen(
         TextButton(onClick = onNavigateToLogin) {
             Text("Already have an account? Login",
                 style = TextStyle(
-                    color = Color(0xFF1C1C1C),
+                    color = TextPrimary,
                     fontWeight = FontWeight.Bold
                 )
             )
@@ -615,6 +623,5 @@ fun ManagerSignupScreen(
                 }
             )
         }
-            }
     }
 }

@@ -1,6 +1,7 @@
 package com.aroundly.aroundly.uiLibrary.auth
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -17,15 +18,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.aroundly.aroundly.ui.theme.TextPrimary
 
 @Composable
 fun SocialButton(
     label: String,
-    leadingText: String
+    leadingText: String,
+    onClick: () -> Unit = {}
 ) {
     Surface(
         modifier = Modifier
-            .height(44.dp),
+            .height(44.dp)
+            .clickable(onClick = onClick),
         shape = RoundedCornerShape(16.dp),
         color = Color.White,
         shadowElevation = 0.dp
@@ -41,12 +45,12 @@ fun SocialButton(
                 text = leadingText,
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.Bold,
-                color = Color.Black
+                color = TextPrimary
             )
             Text(
                 text = "  $label",
                 style = MaterialTheme.typography.bodyMedium,
-                color = Color.Black
+                color = TextPrimary
             )
         }
     }

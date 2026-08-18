@@ -1,5 +1,7 @@
 package com.aroundly.aroundly.uiLibrary.auth
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -41,6 +43,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -51,6 +54,19 @@ import androidx.compose.ui.unit.dp
 import com.aroundly.aroundly.R
 import com.aroundly.aroundly.uiLibrary.common.DottedProgressBar
 import com.aroundly.aroundly.uiLibrary.viewModel.AuthViewModel
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInStatusCodes
+import com.google.android.gms.common.api.ApiException
+import com.google.android.gms.common.api.CommonStatusCodes
+import com.aroundly.aroundly.ui.theme.AccentPurple
+import com.aroundly.aroundly.ui.theme.SurfaceDivider
+import com.aroundly.aroundly.ui.theme.SurfaceInput
+import com.aroundly.aroundly.ui.theme.SurfaceWarm
+import com.aroundly.aroundly.ui.theme.TextLink
+import com.aroundly.aroundly.ui.theme.TextMuted
+import com.aroundly.aroundly.ui.theme.TextOnDarkMuted
+import com.aroundly.aroundly.ui.theme.TextPrimary
+import com.aroundly.aroundly.ui.theme.TextSecondary
 
 
 @Composable
@@ -68,7 +84,35 @@ fun LoginScreen(
     var error by remember { mutableStateOf("") }
     var isLoading by remember { mutableStateOf(false) }
 
-    val backgroundColor = Color(0xFFF4F0E9)
+    val context = LocalContext.current
+    val googleSignInClient = remember { GoogleSignInHelper.getClient(context) }
+    val googleAuthLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        try {
+            val account = GoogleSignIn.getSignedInAccountFromIntent(result.data)
+            val googleAccount = account.getResult(ApiException::class.java)
+            val idToken = googleAccount.idToken
+            if (idToken != null) {
+                isLoading = true
+                error = ""
+                viewModel.signInWithGoogle(idToken) { success, message ->
+                    isLoading = false
+                    if (success) onLoginSuccess() else error = message
+                }
+            } else {
+                error = "Google sign-in failed"
+            }
+        } catch (e: ApiException) {
+            if (e.statusCode != GoogleSignInStatusCodes.SIGN_IN_CANCELLED &&
+                e.statusCode != CommonStatusCodes.CANCELED
+            ) {
+                error = "Google sign-in failed"
+            }
+        }
+    }
+
+    val backgroundColor = SurfaceWarm
     val headerGradient = Brush.verticalGradient(
         colors = listOf(
             Color(0xFF131013),
@@ -120,7 +164,7 @@ fun LoginScreen(
                         text = "Closer than you think",
                         style = MaterialTheme.typography.bodyMedium,
                         fontStyle = FontStyle.Italic,
-                        color = Color(0xFFE2DED6),
+                        color = TextOnDarkMuted,
                         textAlign = TextAlign.Center
                     )
                 }
@@ -150,23 +194,23 @@ fun LoginScreen(
                     text = "Email",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF25211C)
+                    color = TextPrimary
                 )
                 Spacer(Modifier.height(4.dp))
 
                 OutlinedTextField(
                     value = email,
                     onValueChange = { email = it },
-                    placeholder = { Text("you@example.com", color = Color(0xFFCCAE91)) },
+                    placeholder = { Text("you@example.com", color = TextMuted) },
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = Color.Transparent,
                         unfocusedBorderColor = Color.Transparent,
-                        focusedContainerColor = Color(0xFFF7F1E7),
-                        unfocusedContainerColor = Color(0xFFF7F1E7),
-                        cursorColor = Color(0xFF1C1C1C)
+                        focusedContainerColor = SurfaceInput,
+                        unfocusedContainerColor = SurfaceInput,
+                        cursorColor = TextPrimary
                     ),
                     singleLine = true,
-                    textStyle = TextStyle(color = Color(0xFF1C1C1C)),
+                    textStyle = TextStyle(color = TextPrimary),
                     shape = RoundedCornerShape(16.dp),
                     modifier = Modifier
                         .fillMaxWidth()
@@ -177,19 +221,19 @@ fun LoginScreen(
                     text = "Password",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF25211C)
+                    color = TextPrimary
                 )
                 Spacer(Modifier.height(4.dp))
                 OutlinedTextField(
                     value = password,
                     onValueChange = { password = it },
-                    placeholder = { Text("••••••••", color = Color(0xFFCCAE91)) },
+                    placeholder = { Text("••••••••", color = TextMuted) },
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = Color.Transparent,
                         unfocusedBorderColor = Color.Transparent,
-                        focusedContainerColor = Color(0xFFF7F1E7),
-                        unfocusedContainerColor = Color(0xFFF7F1E7),
-                        cursorColor = Color(0xFF1C1C1C)
+                        focusedContainerColor = SurfaceInput,
+                        unfocusedContainerColor = SurfaceInput,
+                        cursorColor = TextPrimary
                     ),
                     singleLine = true,
                     visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
@@ -200,7 +244,7 @@ fun LoginScreen(
                             Icon(
                                 imageVector = icon,
                                 contentDescription = if (passwordVisible) "Hide password" else "Show password",
-                                tint = Color(0XFFAE62ED)
+                                tint = AccentPurple
                             )
                         }
                     },
@@ -217,7 +261,7 @@ fun LoginScreen(
                 ) {
                     Text(
                         text = "Forgot password?",
-                        color = Color(0xFFD8891E),
+                        color = TextLink,
                         style = MaterialTheme.typography.labelMedium
                     )
                 }
@@ -270,11 +314,45 @@ fun LoginScreen(
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Divider(
+                        modifier = Modifier.weight(1f),
+                        color = SurfaceDivider,
+                        thickness = 1.dp
+                    )
+                    Text(
+                        text = "  or continue with  ",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = TextMuted
+                    )
+                    Divider(
+                        modifier = Modifier.weight(1f),
+                        color = SurfaceDivider,
+                        thickness = 1.dp
+                    )
+                }
+
+                Spacer(Modifier.height(16.dp))
+
+                SocialButton(
+                    label = "Google",
+                    leadingText = "G",
+                    onClick = {
+                        error = ""
+                        googleAuthLauncher.launch(googleSignInClient.signInIntent)
+                    }
+                )
+
+                Spacer(Modifier.height(16.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.Center
                 ) {
                     Text(
                         text = "Don't have an account? ",
-                        color = Color(0xFF6A6054)
+                        color = TextSecondary
                     )
                     Text(
                         text = "Create one",

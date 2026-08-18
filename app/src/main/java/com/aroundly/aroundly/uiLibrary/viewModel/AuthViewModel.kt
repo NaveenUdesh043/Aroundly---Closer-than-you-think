@@ -4,6 +4,7 @@ import android.util.Patterns
 import androidx.lifecycle.ViewModel
 import com.aroundly.aroundly.domain.model.UserRole
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 
@@ -12,6 +13,63 @@ class AuthViewModel : ViewModel() {
 
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
     private val firestore: FirebaseFirestore = FirebaseFirestore.getInstance()
+
+    fun signInWithGoogle(idToken: String, callback: (Boolean, String) -> Unit) {
+        if (idToken.isBlank()) {
+            callback(false, "Google sign-in failed")
+            return
+        }
+
+        val credential = GoogleAuthProvider.getCredential(idToken, null)
+        auth.signInWithCredential(credential)
+            .addOnCompleteListener { task ->
+                if (!task.isSuccessful) {
+                    callback(false, task.exception?.localizedMessage ?: "Google sign-in failed")
+                    return@addOnCompleteListener
+                }
+
+                val firebaseUser = auth.currentUser
+                if (firebaseUser == null) {
+                    callback(false, "Google sign-in failed")
+                    return@addOnCompleteListener
+                }
+
+                val uid = firebaseUser.uid
+                firestore.collection("users").document(uid).get()
+                    .addOnSuccessListener { document ->
+                        if (document.exists()) {
+                            callback(true, "Google sign-in successful")
+                            return@addOnSuccessListener
+                        }
+
+                        val nameParts = (firebaseUser.displayName ?: "").split(" ")
+                        val firstName = nameParts.getOrNull(0) ?: ""
+                        val lastName = nameParts.getOrNull(1) ?: ""
+
+                        val user = hashMapOf(
+                            "uid" to uid,
+                            "firstName" to firstName,
+                            "lastName" to lastName,
+                            "contactNumber" to (firebaseUser.phoneNumber ?: ""),
+                            "phoneNumber" to (firebaseUser.phoneNumber ?: ""),
+                            "email" to (firebaseUser.email ?: ""),
+                            "role" to UserRole.USER.name,
+                            "createdAt" to FieldValue.serverTimestamp()
+                        )
+
+                        firestore.collection("users").document(uid).set(user)
+                            .addOnSuccessListener {
+                                callback(true, "Google sign-in successful")
+                            }
+                            .addOnFailureListener { e ->
+                                callback(false, e.localizedMessage ?: "Failed to save user data")
+                            }
+                    }
+                    .addOnFailureListener { e ->
+                        callback(false, e.localizedMessage ?: "Google sign-in failed")
+                    }
+            }
+    }
 
     fun login(email: String, password: String, callback: (Boolean, String) -> Unit) {
         if (email.isBlank() || password.isBlank()) {

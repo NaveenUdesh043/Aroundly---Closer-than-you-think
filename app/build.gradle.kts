@@ -69,6 +69,9 @@ dependencies {
     // Location
     implementation(libs.play.services.location)
 
+    // Google Sign-In
+    implementation(libs.play.services.auth)
+
     // Coil for image loading
     implementation(libs.coil.compose)
 

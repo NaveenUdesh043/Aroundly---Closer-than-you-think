@@ -4,6 +4,11 @@ import android.Manifest
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -21,6 +26,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Hotel
@@ -39,34 +46,62 @@ import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import com.aroundly.aroundly.R
 import com.aroundly.aroundly.domain.model.EquipmentShop
 import com.aroundly.aroundly.domain.model.Hotel
 import com.aroundly.aroundly.domain.model.PlaceToVisit
 import com.aroundly.aroundly.domain.model.Restaurant
-import com.aroundly.aroundly.ui.theme.AccentAmber
-import com.aroundly.aroundly.ui.theme.PrimaryTeal
-import com.aroundly.aroundly.ui.theme.PrimaryTealDark
+import com.aroundly.aroundly.ui.theme.Amber
+import com.aroundly.aroundly.ui.theme.AmberDark
+import com.aroundly.aroundly.ui.theme.AmberGlow
+import com.aroundly.aroundly.ui.theme.BgDark
+import com.aroundly.aroundly.ui.theme.BgMid
+import com.aroundly.aroundly.ui.theme.BgWarm
+import com.aroundly.aroundly.ui.theme.SageGreen
+import com.aroundly.aroundly.ui.theme.White
+import com.aroundly.aroundly.ui.theme.White50
+import com.aroundly.aroundly.ui.theme.White70
+import com.aroundly.aroundly.ui.theme.White25
+import com.aroundly.aroundly.ui.theme.TextDisabled
+import com.aroundly.aroundly.ui.theme.TextMuted
+import com.aroundly.aroundly.ui.theme.TextOnDarkMuted
+import com.aroundly.aroundly.ui.theme.TextPrimary
+import com.aroundly.aroundly.ui.theme.TextSecondary
+import com.aroundly.aroundly.ui.theme.StatusPending
+import com.aroundly.aroundly.ui.theme.StatusApproved
+import com.aroundly.aroundly.ui.theme.StatusRejected
 import com.aroundly.aroundly.uiLibrary.common.GenericDropdown
 import com.aroundly.aroundly.uiLibrary.viewModel.DashboardViewModel
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -109,337 +144,314 @@ fun DashboardScreen(
     var selectedTab by remember { mutableIntStateOf(0) }
     val tabs = listOf("All", "Restaurants", "Hotels", "Places", "Rentals")
 
-    Scaffold { padding ->
-        Column(
+    val sectionCategories = listOf(
+        Triple("Restaurants & Cafes", Icons.Default.Restaurant, Color(0xFFFF8F00)),
+        Triple("Places to Stay", Icons.Default.Hotel, Color(0xFF00897B)),
+        Triple("Places to Visit", Icons.Default.Place, Color(0xFF7B1FA2)),
+        Triple("Travel Rentals", Icons.Default.ShoppingCart, Color(0xFF1565C0))
+    )
+
+    Scaffold(
+        containerColor = BgDark
+    ) { padding ->
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .background(MaterialTheme.colorScheme.surface)
         ) {
-            DashboardHeader(
-                city = selectedCity,
-                isLoadingLocation = isLoadingLocation,
-                onLogout = onLogout,
-                onLocationClick = {
-                    if (viewModel.hasLocationPermission()) {
-                        viewModel.detectLocation()
-                    } else {
-                        locationPermissionLauncher.launch(
-                            arrayOf(
-                                Manifest.permission.ACCESS_FINE_LOCATION,
-                                Manifest.permission.ACCESS_COARSE_LOCATION
-                            )
-                        )
-                    }
-                }
-            )
-
-            Spacer(Modifier.height(12.dp))
-
-            // Search bar
-            OutlinedTextField(
-                value = searchQuery,
-                onValueChange = { viewModel.setSearchQuery(it) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
-                placeholder = { Text("Search",
-                    color = Color(0xFF1C1C84)) },
-                leadingIcon = {
-                    Icon(Icons.Default.Search,
-                        contentDescription = null,
-                        tint = Color(0xFF1C1C84))
-                },
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color(0xFF1C1C84),
-                    unfocusedBorderColor = Color(0xFF1C1C84),
-                    focusedLabelColor = Color(0xFF1C1C84),
-                    unfocusedLabelColor = Color(0xFF1C1C84)
-                ),
-                shape = RoundedCornerShape(12.dp)
-            )
-
-            // Filter dropdowns
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(bottom = 24.dp)
             ) {
-                GenericDropdown(
-                    label = "Select City",
-                    options = cities.ifEmpty { listOf("All") },
-                    selectedOption = selectedCity.ifEmpty { "Select City" },
-                    onOptionSelected = { viewModel.setSelectedCity(it) }
-                )
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Box(modifier = Modifier.weight(1f)) {
-                        GenericDropdown(
-                            label = "Restaurant",
-                            options = restTypes.ifEmpty { listOf("All") },
-                            selectedOption = selectedRestType.ifEmpty { "Cafes" },
-                            onOptionSelected = { viewModel.setSelectedRestaurantType(it) }
-                        )
-                    }
-                    Box(modifier = Modifier.weight(1f)) {
-                        GenericDropdown(
-                            label = "Hotel",
-                            options = hotelTypes.ifEmpty { listOf("All") },
-                            selectedOption = selectedHotelType.ifEmpty { "Hotels" },
-                            onOptionSelected = { viewModel.setSelectedHotelType(it) }
-                        )
-                    }
-                    Box(modifier = Modifier.weight(1f)) {
-                        GenericDropdown(
-                            label = "Rental",
-                            options = eqTypes.ifEmpty { listOf("All") },
-                            selectedOption = selectedEqType.ifEmpty { "Rental" },
-                            onOptionSelected = { viewModel.setSelectedEquipmentType(it) }
-                        )
-                    }
-                }
-            }
-
-            Spacer(Modifier.height(8.dp))
-
-            AnimatedVisibility(
-                visible = currentLocation?.cityHint != null && selectedCity.isNotEmpty()
-            ) {
-                val cityFromLocation = currentLocation?.cityHint ?: ""
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(Color(0xFFE3F2FD))
-                        .padding(12.dp)
-                ) {
-                    Column {
-                        Text(
-                            text = "Using your location",
-                            style = MaterialTheme.typography.labelMedium,
-                            color = Color(0xFF1565C0),
-                            fontWeight = FontWeight.Bold
-                        )
-                        Spacer(Modifier.height(2.dp))
-                        Text(
-                            text = "Showing places near $cityFromLocation.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = Color(0xFF1565C0)
-                        )
-                    }
-                }
-            }
-
-            // Tab chips
-            LazyRow(
-                modifier = Modifier.padding(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                items(tabs.size) { index ->
-                    FilterChip(
-                        selected = selectedTab == index,
-                        onClick = { selectedTab = index },
-                        label = { Text(tabs[index]) },
-                        colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = Color(0xFF1C1C84),
-                            selectedLabelColor = Color.White,
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                            labelColor = MaterialTheme.colorScheme.onSurface
-                        )
+                // ── HEADER ──
+                item {
+                    DashboardHeader(
+                        city = selectedCity,
+                        isLoadingLocation = isLoadingLocation,
+                        onLogout = onLogout,
+                        onLocationClick = {
+                            if (viewModel.hasLocationPermission()) {
+                                viewModel.detectLocation()
+                            } else {
+                                locationPermissionLauncher.launch(
+                                    arrayOf(
+                                        Manifest.permission.ACCESS_FINE_LOCATION,
+                                        Manifest.permission.ACCESS_COARSE_LOCATION
+                                    )
+                                )
+                            }
+                        }
                     )
-
                 }
-            }
 
-            Spacer(Modifier.height(16.dp))
-
-            if (isLoading) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator(color = Color(0xFF1C1C84))
+                // ── SEARCH ──
+                item {
+                    SearchBar(
+                        query = searchQuery,
+                        onQueryChange = { viewModel.setSearchQuery(it) }
+                    )
                 }
-            } else {
-                LazyColumn(
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    val showRestaurants = selectedTab == 0 || selectedTab == 1
-                    val showHotels = selectedTab == 0 || selectedTab == 2
-                    val showPlaces = selectedTab == 0 || selectedTab == 3
-                    val showEquipment = selectedTab == 0 || selectedTab == 4
 
-                    if (showRestaurants && restaurants.isNotEmpty()) {
-                        item {
-                            SectionHeader(
-                                "Restaurants & Cafes",
-                                Icons.Default.Restaurant)
-                        }
-                        items(restaurants) { r ->
-                            PlaceCard(
-                                name = r.name,
-                                type = r.type,
-                                imageUrl = r.images?.firstOrNull(),
-                                onClick = { onRestaurantClick(r) }
-                            )
-                        }
-                    }
+                // ── FILTER CHIPS ──
+                item {
+                    FilterChipRow(
+                        tabs = tabs,
+                        selectedTab = selectedTab,
+                        onTabSelected = { selectedTab = it }
+                    )
+                }
 
-                    if (showHotels && hotels.isNotEmpty()) {
-                        item {
-                            SectionHeader("Places to Stay", Icons.Default.Hotel)
-                        }
-                        items(hotels) { h ->
-                            PlaceCard(
-                                name = h.name,
-                                type = h.type,
-                                imageUrl = h.images?.firstOrNull(),
-                                onClick = { onHotelClick(h) }
-                            )
-                        }
-                    }
-
-                    if (showPlaces && places.isNotEmpty()) {
-                        item {
-                            SectionHeader("Places to Visit", Icons.Default.Place)
-                        }
-                        items(places) { p ->
-                            PlaceCard(
-                                name = p.name,
-                                type = "Attraction",
-                                imageUrl = p.images?.firstOrNull(),
-                                onClick = { onPlaceClick(p) }
-                            )
-                        }
-                    }
-
-                    if (showEquipment && equipment.isNotEmpty()) {
-                        item {
-                            SectionHeader("Travel Equipments ", Icons.Default.ShoppingCart)
-                        }
-                        items(equipment) { e ->
-                            PlaceCard(
-                                name = e.name,
-                                type = e.type,
-                                imageUrl = e.images?.firstOrNull(),
-                                onClick = { onEquipmentClick(e) }
-                            )
-                        }
-                    }
-
-                    if (restaurants.isEmpty() && hotels.isEmpty() && places.isEmpty() && equipment.isEmpty()) {
-                        item {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(32.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    "No places found. Try adjusting your filters or add a new city.",
-                                    style = MaterialTheme.typography.bodyLarge,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                // ── DROPDOWN FILTERS ──
+                item {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 20.dp, vertical = 8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        GenericDropdown(
+                            label = "Select City",
+                            options = cities.ifEmpty { listOf("All") },
+                            selectedOption = selectedCity.ifEmpty { "Select City" },
+                            onOptionSelected = { viewModel.setSelectedCity(it) }
+                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Box(modifier = Modifier.weight(1f)) {
+                                GenericDropdown(
+                                    label = "Restaurant",
+                                    options = restTypes.ifEmpty { listOf("All") },
+                                    selectedOption = selectedRestType.ifEmpty { "Cafes" },
+                                    onOptionSelected = { viewModel.setSelectedRestaurantType(it) }
+                                )
+                            }
+                            Box(modifier = Modifier.weight(1f)) {
+                                GenericDropdown(
+                                    label = "Hotel",
+                                    options = hotelTypes.ifEmpty { listOf("All") },
+                                    selectedOption = selectedHotelType.ifEmpty { "Hotels" },
+                                    onOptionSelected = { viewModel.setSelectedHotelType(it) }
+                                )
+                            }
+                            Box(modifier = Modifier.weight(1f)) {
+                                GenericDropdown(
+                                    label = "Rental",
+                                    options = eqTypes.ifEmpty { listOf("All") },
+                                    selectedOption = selectedEqType.ifEmpty { "Rental" },
+                                    onOptionSelected = { viewModel.setSelectedEquipmentType(it) }
                                 )
                             }
                         }
                     }
                 }
-            }
-        }
-    }
-}
 
-@Composable
-private fun SectionHeader(title: String, icon: ImageVector, ) {
-    Row(
-        modifier = Modifier.padding(vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Icon(
-            icon,
-            contentDescription = null,
-            tint = Color(0xFF1C1C84),
-            modifier = Modifier.size(24.dp)
-        )
-        Spacer(Modifier.size(8.dp))
-        Text(
-            title,
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold,
-            color = Color(0xFF1C1C84)
-        )
-    }
-}
+                // ── LOCATION BANNER ──
+                item {
+                    AnimatedVisibility(
+                        visible = currentLocation?.cityHint != null && selectedCity.isNotEmpty(),
+                        enter = fadeIn()
+                    ) {
+                        val cityFromLocation = currentLocation?.cityHint ?: ""
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 20.dp, vertical = 4.dp)
+                                .clip(RoundedCornerShape(16.dp))
+                                .background(
+                                    Brush.linearGradient(
+                                        listOf(
+                                            Color(0xFFFFF3E0),
+                                            Color(0xFFFFECB3)
+                                        )
+                                    )
+                                )
+                                .padding(horizontal = 16.dp, vertical = 12.dp)
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(36.dp)
+                                        .clip(CircleShape)
+                                        .background(Color(0x22FF8F00)),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        Icons.Default.LocationOn,
+                                        contentDescription = null,
+                                        tint = Color(0xFFF57C00),
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                }
+                                Spacer(Modifier.width(12.dp))
+                                Column {
+                                    Text(
+                                        text = "Showing places near $cityFromLocation",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = White
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
 
-@Composable
-private fun PlaceCard(
-    name: String,
-    type: String,
-    imageUrl: String?,
-    onClick: () -> Unit
-) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-    ) {
-        Box(
-            modifier = Modifier
-                .height(140.dp)
-                .background(
-                    Brush.linearGradient(
-                        colors = listOf(Color(0xFF1C1C84), Color(0xFF1C1C84).copy(alpha = 0.5f))
-                    )
-                )
-        ) {
-            if (imageUrl != null) {
-                AsyncImage(
-                    model = imageUrl,
-                    contentDescription = name,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)),
-                    contentScale = ContentScale.Crop
-                )
-            }
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        Brush.verticalGradient(
-                            colors = listOf(
-                                Color.Transparent,
-                                Color.Black.copy(alpha = 0.7f)
+                // ── CONTENT ──
+                if (isLoading) {
+                    item {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(300.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator(color = Amber)
+                        }
+                    }
+                } else {
+                    val showRestaurants = selectedTab == 0 || selectedTab == 1
+                    val showHotels = selectedTab == 0 || selectedTab == 2
+                    val showPlaces = selectedTab == 0 || selectedTab == 3
+                    val showEquipment = selectedTab == 0 || selectedTab == 4
+
+                    var itemCount = 0
+
+                    if (showRestaurants && restaurants.isNotEmpty()) {
+                        item {
+                            SectionHeader(
+                                title = sectionCategories[0].first,
+                                icon = sectionCategories[0].second,
+                                accentColor = sectionCategories[0].third
                             )
-                        )
-                    )
-            )
-            Column(
-                modifier = Modifier
-                    .align(Alignment.BottomStart)
-                    .padding(16.dp)
-            ) {
-                Text(
-                    name,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White
-                )
-                Text(
-                    type,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Color.White.copy(alpha = 0.9f)
-                )
+                        }
+                        if (restaurants.isNotEmpty()) {
+                            // Hero card for first restaurant
+                            item {
+                                RestaurantHeroCard(
+                                    restaurant = restaurants.first(),
+                                    onClick = { onRestaurantClick(restaurants.first()) }
+                                )
+                            }
+                        }
+                        if (restaurants.size > 1) {
+                            items(restaurants.drop(1)) { r ->
+                                itemCount++
+                                AnimatedCardAppear(index = itemCount) {
+                                    PlaceCard(
+                                        name = r.name,
+                                        type = r.type,
+                                        imageUrl = r.images?.firstOrNull(),
+                                        badgeColor = sectionCategories[0].third,
+                                        onClick = { onRestaurantClick(r) }
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    if (showHotels && hotels.isNotEmpty()) {
+                        item {
+                            SectionHeader(
+                                title = sectionCategories[1].first,
+                                icon = sectionCategories[1].second,
+                                accentColor = sectionCategories[1].third
+                            )
+                        }
+                        itemsIndexed(hotels) { index, h ->
+                            itemCount++
+                            AnimatedCardAppear(index = itemCount) {
+                                PlaceCard(
+                                    name = h.name,
+                                    type = h.type,
+                                    imageUrl = h.images?.firstOrNull(),
+                                    badgeColor = sectionCategories[1].third,
+                                    onClick = { onHotelClick(h) }
+                                )
+                            }
+                        }
+                    }
+
+                    if (showPlaces && places.isNotEmpty()) {
+                        item {
+                            SectionHeader(
+                                title = sectionCategories[2].first,
+                                icon = sectionCategories[2].second,
+                                accentColor = sectionCategories[2].third
+                            )
+                        }
+                        itemsIndexed(places) { index, p ->
+                            itemCount++
+                            AnimatedCardAppear(index = itemCount) {
+                                PlaceCard(
+                                    name = p.name,
+                                    type = "Attraction",
+                                    imageUrl = p.images?.firstOrNull(),
+                                    badgeColor = sectionCategories[2].third,
+                                    onClick = { onPlaceClick(p) }
+                                )
+                            }
+                        }
+                    }
+
+                    if (showEquipment && equipment.isNotEmpty()) {
+                        item {
+                            SectionHeader(
+                                title = sectionCategories[3].first,
+                                icon = sectionCategories[3].second,
+                                accentColor = sectionCategories[3].third
+                            )
+                        }
+                        itemsIndexed(equipment) { index, e ->
+                            itemCount++
+                            AnimatedCardAppear(index = itemCount) {
+                                PlaceCard(
+                                    name = e.name,
+                                    type = e.type,
+                                    imageUrl = e.images?.firstOrNull(),
+                                    badgeColor = sectionCategories[3].third,
+                                    onClick = { onEquipmentClick(e) }
+                                )
+                            }
+                        }
+                    }
+
+                    if (restaurants.isEmpty() && hotels.isEmpty() && places.isEmpty() && equipment.isEmpty()) {
+                        item {
+                            EmptyState()
+                        }
+                    }
+                }
             }
         }
+    }
+}
+
+@Composable
+private fun AnimatedCardAppear(
+    index: Int,
+    content: @Composable () -> Unit
+) {
+    var visible by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) { visible = true }
+
+    val alpha by animateFloatAsState(
+        targetValue = if (visible) 1f else 0f,
+        animationSpec = tween(
+            durationMillis = 400,
+            delayMillis = (index * 60).coerceAtMost(300),
+            easing = LinearEasing
+        ),
+        label = "cardAlpha"
+    )
+
+    Box(
+        modifier = Modifier.graphicsLayer {
+            this.alpha = alpha
+        }
+    ) {
+        content()
     }
 }
 
@@ -453,15 +465,20 @@ private fun DashboardHeader(
     Box(
         modifier = Modifier
             .fillMaxWidth()
+            .shadow(8.dp, RoundedCornerShape(bottomStart = 28.dp, bottomEnd = 28.dp))
+            .clip(RoundedCornerShape(bottomStart = 28.dp, bottomEnd = 28.dp))
             .background(
-                Brush.verticalGradient(
-                    colors = listOf(
-                        Color(0xFFFFF3E0),
-                        Color(0xFFFFFFFF)
-                    )
+                Brush.linearGradient(
+                    colorStops = arrayOf(
+                        0.0f to BgDark,
+                        0.45f to BgMid,
+                        1.0f to BgWarm
+                    ),
+                    start = Offset(0f, 0f),
+                    end = Offset(500f, 500f)
                 )
             )
-            .padding(horizontal = 16.dp, vertical = 12.dp)
+            .padding(horizontal = 20.dp, vertical = 20.dp)
     ) {
         Column {
             Row(
@@ -469,94 +486,558 @@ private fun DashboardHeader(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Column {
-                    Text(
-                        text = "Good day,",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = Color(0xFF8D6E63)
-                    )
-                    Text(
-                        text = "Hey, Explorer",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFF3E2723)
-                    )
-                }
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    IconButton(onClick = onLogout) {
-                        Icon(
-                            Icons.Default.Logout,
-                            contentDescription = "Logout",
-                            tint = Color(0xFF3E2723)
+                Column(modifier = Modifier.weight(1f)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier
+                                .size(44.dp)
+                                .clip(RoundedCornerShape(14.dp))
+                                .background(
+                                    Brush.linearGradient(listOf(Amber, AmberDark))
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Image(
+                                painter = painterResource(id = R.drawable.aroundly_app_icon),
+                                contentDescription = "App Icon",
+                                modifier = Modifier.size(28.dp)
+                            )
+                        }
+                        Spacer(Modifier.width(12.dp))
+                        Text(
+                            buildAnnotatedString {
+                                withStyle(androidx.compose.ui.text.SpanStyle(color = White, fontWeight = FontWeight.Bold)) {
+                                    append("Around")
+                                }
+                                withStyle(androidx.compose.ui.text.SpanStyle(color = Amber, fontWeight = FontWeight.Bold)) {
+                                    append("ly")
+                                }
+                            },
+                            fontSize = 22.sp
                         )
                     }
+                    Spacer(Modifier.height(12.dp))
+                    Text(
+                        text = "Discover amazing places",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = White70,
+                        fontStyle = FontStyle.Italic
+                    )
+                }
+                IconButton(
+                    onClick = onLogout,
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .background(Color(0x1AFFFFFF))
+                ) {
+                    Icon(
+                        Icons.Default.Logout,
+                        contentDescription = "Logout",
+                        tint = White70,
+                        modifier = Modifier.size(20.dp)
+                    )
                 }
             }
 
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(16.dp))
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+            // Location pill
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(Color(0x1AFFFFFF))
+                    .clickable { onLocationClick() }
+                    .padding(horizontal = 14.dp, vertical = 10.dp)
             ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(32.dp)
+                            .clip(CircleShape)
+                            .background(Color(0x33FF8F00)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (isLoadingLocation) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(16.dp),
+                                color = Amber,
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Icon(
+                                Icons.Default.LocationOn,
+                                contentDescription = null,
+                                tint = Color(0xFFFF8F00),
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+                    }
+                    Spacer(Modifier.width(10.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = if (city.isNotEmpty()) city else "Use my location",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            color = White
+                        )
+                        Text(
+                            text = "Tap to change location",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = White50
+                        )
+                    }
+                    Icon(
+                        Icons.Default.LocationOn,
+                        contentDescription = null,
+                        tint = White25,
+                        modifier = Modifier.size(14.dp)
+                    )
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun SearchBar(
+    query: String,
+    onQueryChange: (String) -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp, vertical = 12.dp)
+            .shadow(4.dp, RoundedCornerShape(20.dp))
+            .clip(RoundedCornerShape(20.dp))
+            .background(BgMid)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 4.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                Icons.Default.Search,
+                contentDescription = null,
+                tint = Amber,
+                modifier = Modifier.size(22.dp)
+            )
+            Spacer(Modifier.width(10.dp))
+            androidx.compose.material3.TextField(
+                value = query,
+                onValueChange = onQueryChange,
+                modifier = Modifier.fillMaxWidth(),
+                placeholder = {
+                    Text(
+                        "Search restaurants, hotels, places...",
+                        color = White50,
+                        fontSize = 14.sp
+                    )
+                },
+                colors = androidx.compose.material3.TextFieldDefaults.colors(
+                    focusedContainerColor = Color.Transparent,
+                    unfocusedContainerColor = Color.Transparent,
+                    focusedIndicatorColor = Color.Transparent,
+                    unfocusedIndicatorColor = Color.Transparent,
+                    cursorColor = Amber
+                ),
+                singleLine = true
+            )
+        }
+    }
+}
+
+@Composable
+private fun FilterChipRow(
+    tabs: List<String>,
+    selectedTab: Int,
+    onTabSelected: (Int) -> Unit
+) {
+    LazyRow(
+        modifier = Modifier.padding(horizontal = 20.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        items(tabs.size) { index ->
+            FilterChip(
+                selected = selectedTab == index,
+                onClick = { onTabSelected(index) },
+                label = {
+                    Text(
+                        tabs[index],
+                        fontWeight = if (selectedTab == index) FontWeight.Bold else FontWeight.Normal
+                    )
+                },
+                leadingIcon = if (selectedTab == index) {
+                    {
+                        Icon(
+                            imageVector = when (index) {
+                                1 -> Icons.Default.Restaurant
+                                2 -> Icons.Default.Hotel
+                                3 -> Icons.Default.Place
+                                4 -> Icons.Default.ShoppingCart
+                                else -> Icons.Default.Search
+                            },
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
+                } else null,
+                colors = FilterChipDefaults.filterChipColors(
+                    selectedContainerColor = Color(0xFF1C1C1C),
+                    selectedLabelColor = Color.White,
+                    selectedLeadingIconColor = Color.White,
+                    containerColor = Color(0xFF2A2A2E),
+                    labelColor = White70
+                ),
+                border = null
+            )
+        }
+    }
+}
+
+@Composable
+private fun SectionHeader(
+    title: String,
+    icon: ImageVector,
+    accentColor: Color
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(36.dp)
+                .clip(RoundedCornerShape(10.dp))
+                .background(accentColor.copy(alpha = 0.12f)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                icon,
+                contentDescription = null,
+                tint = accentColor,
+                modifier = Modifier.size(18.dp)
+            )
+        }
+        Spacer(Modifier.width(10.dp))
+        Text(
+            title,
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            color = White
+        )
+    }
+}
+
+@Composable
+private fun RestaurantHeroCard(
+    restaurant: Restaurant,
+    onClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp, vertical = 4.dp)
+            .clickable(onClick = onClick),
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = BgMid)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(200.dp)
+        ) {
+            val imageUrl = restaurant.images?.firstOrNull()
+            if (imageUrl != null) {
+                AsyncImage(
+                    model = imageUrl,
+                    contentDescription = restaurant.name,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clip(RoundedCornerShape(20.dp)),
+                    contentScale = ContentScale.Crop
+                )
+            } else {
                 Box(
                     modifier = Modifier
-                        .weight(1f)
-                        .clip(RoundedCornerShape(24.dp))
-                        .background(Color(0xFFFFECB3))
-                        .clickable { onLocationClick() }
-                        .padding(horizontal = 12.dp, vertical = 8.dp)
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Icon(
-                            Icons.Default.LocationOn,
-                            contentDescription = null,
-                            tint = Color(0xFFF4511E),
-                            modifier = Modifier.size(18.dp)
+                        .fillMaxSize()
+                        .clip(RoundedCornerShape(20.dp))
+                        .background(
+                            Brush.linearGradient(
+                                listOf(
+                                    Color(0xFFFF8F00),
+                                    Color(0xFFEF6C00)
+                                )
+                            )
                         )
-                        Column {
-                            Text(
-                                text = if (city.isNotEmpty()) city else "Use my location",
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.SemiBold,
-                                color = Color(0xFF5D4037)
+                )
+            }
+
+            // Gradient overlay
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clip(RoundedCornerShape(20.dp))
+                    .background(
+                        Brush.verticalGradient(
+                            colors = listOf(
+                                Color.Transparent,
+                                Color.Black.copy(alpha = 0.8f)
+                            ),
+                            startY = 60f
+                        )
+                    )
+            )
+
+            // Featured badge
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .padding(12.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(Color(0xCCFF8F00))
+                    .padding(horizontal = 10.dp, vertical = 4.dp)
+            ) {
+                Text(
+                    "Featured",
+                    color = Color.White,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+
+            Column(
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .padding(16.dp)
+            ) {
+                Text(
+                    restaurant.name,
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Spacer(Modifier.height(4.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(6.dp))
+                            .background(Color(0x33FFFFFF))
+                            .padding(horizontal = 8.dp, vertical = 3.dp)
+                    ) {
+                Text(
+                    restaurant.type,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = White
+                )
+                    }
+                    if (restaurant.city != null) {
+                        Spacer(Modifier.width(8.dp))
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                Icons.Default.LocationOn,
+                                contentDescription = null,
+                                tint = Amber,
+                                modifier = Modifier.size(12.dp)
                             )
                             Text(
-                                text = "Change location",
+                                restaurant.city,
                                 style = MaterialTheme.typography.bodySmall,
-                                color = Color(0xFF8D6E63)
+                                color = White70
                             )
                         }
                     }
                 }
+            }
+        }
+    }
+}
 
-                Spacer(Modifier.width(12.dp))
-
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(Color(0xFFFFF8E1)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    if (isLoadingLocation) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(20.dp),
-                            color = Color(0xFFF57C00),
-                            strokeWidth = 2.dp
-                        )
-                    } else {
-                        Text(
-                            text = "📍",
-                            style = MaterialTheme.typography.titleMedium
+@Composable
+private fun PlaceCard(
+    name: String,
+    type: String,
+    imageUrl: String?,
+    badgeColor: Color,
+    onClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp, vertical = 4.dp)
+            .clickable(onClick = onClick),
+        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = BgMid)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(110.dp)
+        ) {
+            // Image
+            Box(
+                modifier = Modifier
+                    .width(120.dp)
+                    .height(110.dp)
+            ) {
+                if (imageUrl != null) {
+                    AsyncImage(
+                        model = imageUrl,
+                        contentDescription = name,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .clip(
+                                RoundedCornerShape(
+                                    topStart = 18.dp,
+                                    bottomStart = 18.dp
+                                )
+                            ),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .clip(
+                                RoundedCornerShape(
+                                    topStart = 18.dp,
+                                    bottomStart = 18.dp
+                                )
+                            )
+                            .background(
+                                Brush.linearGradient(
+                                    listOf(
+                                        badgeColor.copy(alpha = 0.7f),
+                                        badgeColor.copy(alpha = 0.4f)
+                                    )
+                                )
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = when (badgeColor) {
+                                Color(0xFFFF8F00) -> Icons.Default.Restaurant
+                                Color(0xFF00897B) -> Icons.Default.Hotel
+                                Color(0xFF7B1FA2) -> Icons.Default.Place
+                                else -> Icons.Default.ShoppingCart
+                            },
+                            contentDescription = null,
+                            tint = Color.White.copy(alpha = 0.6f),
+                            modifier = Modifier.size(36.dp)
                         )
                     }
                 }
             }
+
+            // Content
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = 14.dp, vertical = 12.dp),
+                verticalArrangement = Arrangement.Center
+            ) {
+                // Type badge
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(6.dp))
+                    .background(badgeColor.copy(alpha = 0.15f))
+                    .padding(horizontal = 8.dp, vertical = 3.dp)
+            ) {
+                Text(
+                    type,
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.SemiBold,
+                    color = badgeColor,
+                    fontSize = 10.sp
+                )
+            }
+                Spacer(Modifier.height(6.dp))
+                Text(
+                    name,
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = White,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    lineHeight = 18.sp
+                )
+                Spacer(Modifier.height(4.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        Icons.Default.LocationOn,
+                        contentDescription = null,
+                        tint = White50,
+                        modifier = Modifier.size(12.dp)
+                    )
+                    Text(
+                        type,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = White50,
+                        maxLines = 1
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun EmptyState() {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(48.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Box(
+                modifier = Modifier
+                    .size(80.dp)
+                    .clip(CircleShape)
+                    .background(
+                        Brush.radialGradient(
+                            listOf(
+                                Color(0x22FFB020),
+                                Color.Transparent
+                            )
+                        )
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    Icons.Default.Search,
+                    contentDescription = null,
+                    tint = White50,
+                    modifier = Modifier.size(36.dp)
+                )
+            }
+            Spacer(Modifier.height(16.dp))
+            Text(
+                "No places found",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = White
+            )
+            Spacer(Modifier.height(6.dp))
+            Text(
+                "Try adjusting your filters or search\nfor something different",
+                style = MaterialTheme.typography.bodyMedium,
+                color = White70,
+                lineHeight = 20.sp
+            )
         }
     }
 }

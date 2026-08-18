@@ -1,5 +1,7 @@
 <resources>
     <string name="app_name">Aroundly</string>
+    <!-- Replaced automatically by google-services.json once OAuth web client is configured -->
+    <string name="default_web_client_id" translatable="false">175388254194-REPLACE.apps.googleusercontent.com</string>
     <string name="PENDING">Pending</string>
     <string name="APPROVED">Approved</string>
     <string name="REJECTED">Rejected</string>

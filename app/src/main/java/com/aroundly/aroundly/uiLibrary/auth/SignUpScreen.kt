@@ -1,5 +1,7 @@
 package com.aroundly.aroundly.uiLibrary.auth
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -24,6 +26,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -40,6 +43,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -49,6 +53,19 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.aroundly.aroundly.uiLibrary.viewModel.AuthViewModel
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInStatusCodes
+import com.google.android.gms.common.api.ApiException
+import com.google.android.gms.common.api.CommonStatusCodes
+import com.aroundly.aroundly.ui.theme.AccentPurple
+import com.aroundly.aroundly.ui.theme.SurfaceDivider
+import com.aroundly.aroundly.ui.theme.SurfaceInput
+import com.aroundly.aroundly.ui.theme.SurfaceWarm
+import com.aroundly.aroundly.ui.theme.TextDisabled
+import com.aroundly.aroundly.ui.theme.TextMuted
+import com.aroundly.aroundly.ui.theme.TextOnDarkMuted
+import com.aroundly.aroundly.ui.theme.TextPrimary
+import com.aroundly.aroundly.ui.theme.TextSecondary
 
 @Composable
 fun SignupScreen(
@@ -70,7 +87,35 @@ fun SignupScreen(
     var errorMessage by remember { mutableStateOf("") }
     var isLoading by remember { mutableStateOf(false) }
 
-    val backgroundColor = Color(0xFFF4F0E9)
+    val context = LocalContext.current
+    val googleSignInClient = remember { GoogleSignInHelper.getClient(context) }
+    val googleAuthLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        try {
+            val account = GoogleSignIn.getSignedInAccountFromIntent(result.data)
+            val googleAccount = account.getResult(ApiException::class.java)
+            val idToken = googleAccount.idToken
+            if (idToken != null) {
+                isLoading = true
+                errorMessage = ""
+                viewModel.signInWithGoogle(idToken) { success, message ->
+                    isLoading = false
+                    if (success) onSignupSuccess() else errorMessage = message
+                }
+            } else {
+                errorMessage = "Google sign-in failed"
+            }
+        } catch (e: ApiException) {
+            if (e.statusCode != GoogleSignInStatusCodes.SIGN_IN_CANCELLED &&
+                e.statusCode != CommonStatusCodes.CANCELED
+            ) {
+                errorMessage = "Google sign-in failed"
+            }
+        }
+    }
+
+    val backgroundColor = SurfaceWarm
     val headerGradient = Brush.verticalGradient(
         colors = listOf(
             Color(0xFF131013),
@@ -153,7 +198,7 @@ fun SignupScreen(
                     Text(
                         text = "Join Aroundly today",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = Color(0xFFE2DED6)
+                        color = TextOnDarkMuted
                     )
                 }
             }
@@ -186,13 +231,13 @@ fun SignupScreen(
                     text = "Personal Info",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF25211C)
+                    color = TextPrimary
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = "Tell us about yourself",
                     style = MaterialTheme.typography.bodySmall,
-                    color = Color(0xFF8C8478)
+                    color = TextMuted
                 )
 
                 Spacer(modifier = Modifier.height(20.dp))
@@ -201,7 +246,7 @@ fun SignupScreen(
                 Text(
                     text = "FIRST NAME",
                     style = MaterialTheme.typography.labelSmall,
-                    color = Color(0xFF9A9183)
+                    color = TextMuted
                 )
                 Spacer(modifier = Modifier.height(6.dp))
 
@@ -211,16 +256,16 @@ fun SignupScreen(
                         val parts = value.split(" ", limit = 1)
                         firstName = parts.getOrNull(0) ?: ""
                     },
-                    placeholder = { Text("John", color = Color(0xFFB8B0A4)) },
+                    placeholder = { Text("John", color = TextDisabled) },
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = Color.Transparent,
                         unfocusedBorderColor = Color.Transparent,
-                        focusedContainerColor = Color(0xFFF7F1E7),
-                        unfocusedContainerColor = Color(0xFFF7F1E7),
-                        cursorColor = Color(0xFF1C1C1C)
+                        focusedContainerColor = SurfaceInput,
+                        unfocusedContainerColor = SurfaceInput,
+                        cursorColor = TextPrimary
                     ),
                     singleLine = true,
-                    textStyle = TextStyle(color = Color(0xFF1C1C1C)),
+                    textStyle = TextStyle(color = TextPrimary),
                     shape = RoundedCornerShape(16.dp),
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -229,7 +274,7 @@ fun SignupScreen(
                 Text(
                     text = "LAST NAME",
                     style = MaterialTheme.typography.labelSmall,
-                    color = Color(0xFF9A9183)
+                    color = TextMuted
                 )
                 Spacer(modifier = Modifier.height(6.dp))
                 OutlinedTextField(
@@ -238,16 +283,16 @@ fun SignupScreen(
                         val parts = value.split(" ", limit = 1)
                         lastName = parts.getOrNull(0) ?: ""
                     },
-                    placeholder = { Text("Doe", color = Color(0xFFB8B0A4)) },
+                    placeholder = { Text("Doe", color = TextDisabled) },
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = Color.Transparent,
                         unfocusedBorderColor = Color.Transparent,
-                        focusedContainerColor = Color(0xFFF7F1E7),
-                        unfocusedContainerColor = Color(0xFFF7F1E7),
-                        cursorColor = Color(0xFF1C1C1C)
+                        focusedContainerColor = SurfaceInput,
+                        unfocusedContainerColor = SurfaceInput,
+                        cursorColor = TextPrimary
                     ),
                     singleLine = true,
-                    textStyle = TextStyle(color = Color(0xFF1C1C1C)),
+                    textStyle = TextStyle(color = TextPrimary),
                     shape = RoundedCornerShape(16.dp),
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -257,24 +302,24 @@ fun SignupScreen(
                 Text(
                     text = "CONTACT NUMBER",
                     style = MaterialTheme.typography.labelSmall,
-                    color = Color(0xFF9A9183)
+                    color = TextMuted
                 )
                 Spacer(modifier = Modifier.height(6.dp))
 
                 OutlinedTextField(
                     value = contactNumber,
                     onValueChange = { contactNumber = it },
-                    placeholder = { Text("Phone number", color = Color(0xFFB8B0A4)) },
+                    placeholder = { Text("Phone number", color = TextDisabled) },
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = Color.Transparent,
                         unfocusedBorderColor = Color.Transparent,
-                        focusedContainerColor = Color(0xFFF7F1E7),
-                        unfocusedContainerColor = Color(0xFFF7F1E7),
-                        cursorColor = Color(0xFF1C1C1C)
+                        focusedContainerColor = SurfaceInput,
+                        unfocusedContainerColor = SurfaceInput,
+                        cursorColor = TextPrimary
                     ),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                     singleLine = true,
-                    textStyle = TextStyle(color = Color(0xFF1C1C1C)),
+                    textStyle = TextStyle(color = TextPrimary),
                     shape = RoundedCornerShape(16.dp),
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -284,24 +329,24 @@ fun SignupScreen(
                 Text(
                     text = "EMAIL",
                     style = MaterialTheme.typography.labelSmall,
-                    color = Color(0xFF9A9183)
+                    color = TextMuted
                 )
                 Spacer(modifier = Modifier.height(6.dp))
 
                 OutlinedTextField(
                     value = email,
                     onValueChange = { email = it },
-                    placeholder = { Text("you@example.com", color = Color(0xFFB8B0A4)) },
+                    placeholder = { Text("you@example.com", color = TextDisabled) },
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = Color.Transparent,
                         unfocusedBorderColor = Color.Transparent,
-                        focusedContainerColor = Color(0xFFF7F1E7),
-                        unfocusedContainerColor = Color(0xFFF7F1E7),
-                        cursorColor = Color(0xFF1C1C1C)
+                        focusedContainerColor = SurfaceInput,
+                        unfocusedContainerColor = SurfaceInput,
+                        cursorColor = TextPrimary
                     ),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                     singleLine = true,
-                    textStyle = TextStyle(color = Color(0xFF1C1C1C)),
+                    textStyle = TextStyle(color = TextPrimary),
                     shape = RoundedCornerShape(16.dp),
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -311,20 +356,20 @@ fun SignupScreen(
                 Text(
                     text = "PASSWORD",
                     style = MaterialTheme.typography.labelSmall,
-                    color = Color(0xFF9A9183)
+                    color = TextMuted
                 )
                 Spacer(modifier = Modifier.height(6.dp))
 
                 OutlinedTextField(
                     value = password,
                     onValueChange = { password = it },
-                    placeholder = { Text("Min. 8 characters", color = Color(0xFFB8B0A4)) },
+                    placeholder = { Text("Min. 8 characters", color = TextDisabled) },
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = Color.Transparent,
                         unfocusedBorderColor = Color.Transparent,
-                        focusedContainerColor = Color(0xFFF7F1E7),
-                        unfocusedContainerColor = Color(0xFFF7F1E7),
-                        cursorColor = Color(0xFF1C1C1C)
+                        focusedContainerColor = SurfaceInput,
+                        unfocusedContainerColor = SurfaceInput,
+                        cursorColor = TextPrimary
                     ),
                     singleLine = true,
                     visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
@@ -334,11 +379,11 @@ fun SignupScreen(
                             Icon(
                                 imageVector = image,
                                 contentDescription = if (passwordVisible) "Hide password" else "Show password",
-                                tint = Color(0XFFAE62ED)
+                                tint = AccentPurple
                             )
                         }
                     },
-                    textStyle = TextStyle(color = Color(0xFF1C1C1C)),
+                    textStyle = TextStyle(color = TextPrimary),
                     shape = RoundedCornerShape(16.dp),
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -348,20 +393,20 @@ fun SignupScreen(
                 Text(
                     text = "CONFIRM PASSWORD",
                     style = MaterialTheme.typography.labelSmall,
-                    color = Color(0xFF9A9183)
+                    color = TextMuted
                 )
                 Spacer(modifier = Modifier.height(6.dp))
 
                 OutlinedTextField(
                     value = confirmPassword,
                     onValueChange = { confirmPassword = it },
-                    placeholder = { Text("Repeat your password", color = Color(0xFFB8B0A4)) },
+                    placeholder = { Text("Repeat your password", color = TextDisabled) },
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = Color.Transparent,
                         unfocusedBorderColor = Color.Transparent,
-                        focusedContainerColor = Color(0xFFF7F1E7),
-                        unfocusedContainerColor = Color(0xFFF7F1E7),
-                        cursorColor = Color(0xFF1C1C1C)
+                        focusedContainerColor = SurfaceInput,
+                        unfocusedContainerColor = SurfaceInput,
+                        cursorColor = TextPrimary
                     ),
                     singleLine = true,
                     visualTransformation = if (confirmPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
@@ -371,12 +416,12 @@ fun SignupScreen(
                             Icon(
                                 imageVector = image,
                                 contentDescription = if (confirmPasswordVisible) "Hide password" else "Show password",
-                                tint = Color(0XFFAE62ED)
+                                tint = AccentPurple
                             )
 
                         }
                     },
-                    textStyle = TextStyle(color = Color(0xFF1C1C1C)),
+                    textStyle = TextStyle(color = TextPrimary),
                     shape = RoundedCornerShape(16.dp),
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -387,6 +432,40 @@ fun SignupScreen(
                     Text(text = errorMessage, color = Color.Red)
                     Spacer(modifier = Modifier.height(8.dp))
                 }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Divider(
+                        modifier = Modifier.weight(1f),
+                        color = SurfaceDivider,
+                        thickness = 1.dp
+                    )
+                    Text(
+                        text = "  or sign up with  ",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = TextMuted
+                    )
+                    Divider(
+                        modifier = Modifier.weight(1f),
+                        color = SurfaceDivider,
+                        thickness = 1.dp
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                SocialButton(
+                    label = "Google",
+                    leadingText = "G",
+                    onClick = {
+                        errorMessage = ""
+                        googleAuthLauncher.launch(googleSignInClient.signInIntent)
+                    }
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
 
                 Button(
                     onClick = {
@@ -451,7 +530,7 @@ fun SignupScreen(
         ) {
             Text(
                 text = "Already have an account? ",
-                color = Color(0xFF6A6054)
+                color = TextSecondary
             )
             Text(
                 text = "Sign in",
