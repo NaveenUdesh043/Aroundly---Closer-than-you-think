@@ -49,19 +49,26 @@ import com.aroundly.aroundly.domain.model.PlaceToVisit
 import com.aroundly.aroundly.domain.model.Restaurant
 import com.aroundly.aroundly.ui.theme.PrimaryTealDark
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import com.aroundly.aroundly.uiLibrary.viewModel.ReviewViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RestaurantDetailsScreen(
     restaurant: Restaurant,
+    reviewViewModel: ReviewViewModel,
     onBack: () -> Unit
 ) {
+    val avgRating by reviewViewModel.averageRating.collectAsState()
+    val reviewCount by reviewViewModel.reviewCount.collectAsState()
+
     PlaceDetailsScaffold(
         title = restaurant.name,
         imageUrls = restaurant.images ?: emptyList(),
         onBack = onBack
     ) {
-        StatRow()
+        StatRow(rating = avgRating, reviewCount = reviewCount)
         Spacer(Modifier.height(16.dp))
 
         TagChipsRow(
@@ -87,7 +94,7 @@ fun RestaurantDetailsScreen(
         OpeningHoursCard()
 
         Spacer(Modifier.height(20.dp))
-        ReviewsSection()
+        ReviewsSection(viewModel = reviewViewModel)
 
         Spacer(Modifier.height(24.dp))
 
@@ -107,14 +114,18 @@ fun RestaurantDetailsScreen(
 @Composable
 fun HotelDetailsScreen(
     hotel: Hotel,
+    reviewViewModel: ReviewViewModel,
     onBack: () -> Unit
 ) {
+    val avgRating by reviewViewModel.averageRating.collectAsState()
+    val reviewCount by reviewViewModel.reviewCount.collectAsState()
+
     PlaceDetailsScaffold(
         title = hotel.name,
         imageUrls = hotel.images ?: emptyList(),
         onBack = onBack
     ) {
-        StatRow()
+        StatRow(rating = avgRating, reviewCount = reviewCount)
         Spacer(Modifier.height(16.dp))
 
         TagChipsRow(
@@ -135,7 +146,7 @@ fun HotelDetailsScreen(
         OpeningHoursCard(title = "Check-in / Check-out")
 
         Spacer(Modifier.height(20.dp))
-        ReviewsSection()
+        ReviewsSection(viewModel = reviewViewModel)
 
         Spacer(Modifier.height(24.dp))
 
@@ -155,14 +166,18 @@ fun HotelDetailsScreen(
 @Composable
 fun PlaceToVisitDetailsScreen(
     place: PlaceToVisit,
+    reviewViewModel: ReviewViewModel,
     onBack: () -> Unit
 ) {
+    val avgRating by reviewViewModel.averageRating.collectAsState()
+    val reviewCount by reviewViewModel.reviewCount.collectAsState()
+
     PlaceDetailsScaffold(
         title = place.name,
         imageUrls = place.images ?: emptyList(),
         onBack = onBack
     ) {
-        StatRow()
+        StatRow(rating = avgRating, reviewCount = reviewCount)
         Spacer(Modifier.height(16.dp))
 
         TagChipsRow(
@@ -183,7 +198,7 @@ fun PlaceToVisitDetailsScreen(
         OpeningHoursCard()
 
         Spacer(Modifier.height(20.dp))
-        ReviewsSection()
+        ReviewsSection(viewModel = reviewViewModel)
 
         Spacer(Modifier.height(24.dp))
 
@@ -203,14 +218,18 @@ fun PlaceToVisitDetailsScreen(
 @Composable
 fun EquipmentShopDetailsScreen(
     shop: EquipmentShop,
+    reviewViewModel: ReviewViewModel,
     onBack: () -> Unit
 ) {
+    val avgRating by reviewViewModel.averageRating.collectAsState()
+    val reviewCount by reviewViewModel.reviewCount.collectAsState()
+
     PlaceDetailsScaffold(
         title = shop.name,
         imageUrls = shop.images ?: emptyList(),
         onBack = onBack
     ) {
-        StatRow()
+        StatRow(rating = avgRating, reviewCount = reviewCount)
         Spacer(Modifier.height(16.dp))
 
         TagChipsRow(
@@ -231,7 +250,7 @@ fun EquipmentShopDetailsScreen(
         OpeningHoursCard()
 
         Spacer(Modifier.height(20.dp))
-        ReviewsSection()
+        ReviewsSection(viewModel = reviewViewModel)
 
         Spacer(Modifier.height(24.dp))
 
@@ -371,15 +390,18 @@ private fun AddressRow(address: String) {
 }
 
 @Composable
-private fun StatRow() {
+private fun StatRow(rating: Float = 0f, reviewCount: Int = 0) {
     Row(
         modifier = Modifier
             .fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        StatCard(title = "Rating", value = "4.8")
+        StatCard(
+            title = "Rating",
+            value = if (rating > 0) String.format(java.util.Locale.US, "%.1f", rating) else "New"
+        )
+        StatCard(title = "Reviews", value = "$reviewCount")
         StatCard(title = "Distance", value = "0.2 km")
-        StatCard(title = "Walk", value = "~12 min")
     }
 }
 
@@ -470,49 +492,6 @@ private fun OpeningHoursCard(title: String = "Opening Hours") {
                     Text("9:00 AM – 9:00 PM", style = MaterialTheme.typography.bodySmall)
                 }
             }
-        }
-    }
-}
-
-@Composable
-private fun ReviewsSection() {
-    Column {
-        Text("Reviews", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-        Spacer(Modifier.height(8.dp))
-        ReviewCard(
-            name = "Sarah M.",
-            text = "Best spot nearby. The atmosphere is perfect for relaxing.",
-            rating = "5.0"
-        )
-        Spacer(Modifier.height(8.dp))
-        ReviewCard(
-            name = "Raj P.",
-            text = "Great place. Friendly staff and good vibes.",
-            rating = "4.8"
-        )
-    }
-}
-
-@Composable
-private fun ReviewCard(name: String, text: String, rating: String) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = Color(0xFFFFF8E1)
-        )
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(name, fontWeight = FontWeight.SemiBold)
-                Text("$rating ★", color = Color(0xFFFFA000), style = MaterialTheme.typography.bodySmall)
-            }
-            Spacer(Modifier.height(6.dp))
-            Text(text, style = MaterialTheme.typography.bodySmall, color = Color(0xFF5D4037))
         }
     }
 }

@@ -28,6 +28,7 @@ import com.aroundly.aroundly.uiLibrary.viewModel.RestaurantDetailsViewModel
 import com.aroundly.aroundly.uiLibrary.viewModel.HotelDetailsViewModel
 import com.aroundly.aroundly.uiLibrary.viewModel.PlaceDetailsViewModel
 import com.aroundly.aroundly.uiLibrary.viewModel.EquipmentDetailsViewModel
+import com.aroundly.aroundly.uiLibrary.viewModel.ReviewViewModel
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.google.firebase.auth.FirebaseAuth
 
@@ -154,9 +155,14 @@ fun NavGraph() {
             arguments = listOf(navArgument("id") { type = NavType.StringType })
         ) {
             val viewModel: RestaurantDetailsViewModel = hiltViewModel()
+            val reviewViewModel: ReviewViewModel = hiltViewModel()
             val restaurant by viewModel.restaurant.collectAsState()
             restaurant?.let { r ->
-                RestaurantDetailsScreen(restaurant = r, onBack = { navController.popBackStack() })
+                RestaurantDetailsScreen(
+                    restaurant = r,
+                    reviewViewModel = reviewViewModel,
+                    onBack = { navController.popBackStack() }
+                )
             } ?: run {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator()
@@ -169,9 +175,14 @@ fun NavGraph() {
             arguments = listOf(navArgument("id") { type = NavType.StringType })
         ) {
             val viewModel: HotelDetailsViewModel = hiltViewModel()
+            val reviewViewModel: ReviewViewModel = hiltViewModel()
             val hotel by viewModel.hotel.collectAsState()
             hotel?.let { h ->
-                HotelDetailsScreen(hotel = h, onBack = { navController.popBackStack() })
+                HotelDetailsScreen(
+                    hotel = h,
+                    reviewViewModel = reviewViewModel,
+                    onBack = { navController.popBackStack() }
+                )
             } ?: run {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator()
@@ -184,9 +195,14 @@ fun NavGraph() {
             arguments = listOf(navArgument("id") { type = NavType.StringType })
         ) {
             val viewModel: PlaceDetailsViewModel = hiltViewModel()
+            val reviewViewModel: ReviewViewModel = hiltViewModel()
             val place by viewModel.place.collectAsState()
             place?.let { p ->
-                PlaceToVisitDetailsScreen(place = p, onBack = { navController.popBackStack() })
+                PlaceToVisitDetailsScreen(
+                    place = p,
+                    reviewViewModel = reviewViewModel,
+                    onBack = { navController.popBackStack() }
+                )
             } ?: run {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator()
@@ -199,9 +215,14 @@ fun NavGraph() {
             arguments = listOf(navArgument("id") { type = NavType.StringType })
         ) {
             val viewModel: EquipmentDetailsViewModel = hiltViewModel()
+            val reviewViewModel: ReviewViewModel = hiltViewModel()
             val equipment by viewModel.equipment.collectAsState()
             equipment?.let { e ->
-                EquipmentShopDetailsScreen(shop = e, onBack = { navController.popBackStack() })
+                EquipmentShopDetailsScreen(
+                    shop = e,
+                    reviewViewModel = reviewViewModel,
+                    onBack = { navController.popBackStack() }
+                )
             } ?: run {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator()
