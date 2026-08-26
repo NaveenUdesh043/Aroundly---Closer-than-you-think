@@ -69,6 +69,10 @@ dependencies {
     // Location
     implementation(libs.play.services.location)
 
+    // Google Maps
+    implementation(libs.play.services.maps)
+    implementation(libs.maps.compose)
+
     // Google Sign-In
     implementation(libs.play.services.auth)
 

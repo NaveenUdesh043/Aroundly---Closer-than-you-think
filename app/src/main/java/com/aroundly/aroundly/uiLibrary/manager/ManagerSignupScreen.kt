@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
@@ -47,12 +48,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.aroundly.aroundly.domain.model.UserRole
 import com.aroundly.aroundly.ui.theme.AccentPurple
+import com.aroundly.aroundly.ui.theme.BgDark
 import com.aroundly.aroundly.ui.theme.SurfaceInput
 import com.aroundly.aroundly.ui.theme.SurfaceWarm
 import com.aroundly.aroundly.ui.theme.TextDisabled
@@ -98,7 +101,7 @@ fun ManagerSignupScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(backgroundColor)
+            .background(BgDark)
             .verticalScroll(scrollState)
             .padding(vertical = 24.dp),
         verticalArrangement = Arrangement.Top,
@@ -166,7 +169,7 @@ fun ManagerSignupScreen(
         // Account form sheet
         Card(
             modifier = Modifier
-                .padding(horizontal = 8.dp, vertical = 24.dp)
+                .padding(horizontal = 16.dp, vertical = 24.dp)
                 .fillMaxWidth(),
             shape = androidx.compose.foundation.shape.RoundedCornerShape(24.dp),
             colors = CardDefaults.cardColors(containerColor = Color.White)
@@ -180,14 +183,14 @@ fun ManagerSignupScreen(
                 horizontalAlignment = Alignment.Start
             ) {
                 Text(
-                    text = "Your Account",
-                    style = MaterialTheme.typography.titleMedium,
+                    text = "Manager Details",
+                    style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                     color = TextPrimary
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "Create your manager profile",
+                    text = "Create manager's profile",
                     style = MaterialTheme.typography.bodySmall,
                     color = TextMuted
                 )
@@ -197,7 +200,8 @@ fun ManagerSignupScreen(
                 Text(
                     text = "FIRST NAME",
                     style = MaterialTheme.typography.labelSmall,
-                    color = TextMuted
+                    fontWeight = FontWeight.Bold,
+                    color = TextPrimary
                 )
                 Spacer(modifier = Modifier.height(6.dp))
                 OutlinedTextField(
@@ -225,7 +229,8 @@ fun ManagerSignupScreen(
                 Text(
                     text = "LAST NAME",
                     style = MaterialTheme.typography.labelSmall,
-                    color = TextMuted
+                    fontWeight = FontWeight.Bold,
+                    color = TextPrimary
                 )
                 Spacer(modifier = Modifier.height(6.dp))
                 OutlinedTextField(
@@ -254,7 +259,8 @@ fun ManagerSignupScreen(
                 Text(
                     text = "BUSINESS NAME",
                     style = MaterialTheme.typography.labelSmall,
-                    color = TextMuted
+                    fontWeight = FontWeight.Bold,
+                    color = TextPrimary
                 )
                 Spacer(modifier = Modifier.height(6.dp))
                 OutlinedTextField(
@@ -279,7 +285,8 @@ fun ManagerSignupScreen(
                 Text(
                     text = "EMAIL",
                     style = MaterialTheme.typography.labelSmall,
-                    color = TextMuted
+                    fontWeight = FontWeight.Bold,
+                    color = TextPrimary
                 )
                 Spacer(modifier = Modifier.height(6.dp))
                 OutlinedTextField(
@@ -305,7 +312,8 @@ fun ManagerSignupScreen(
                 Text(
                     text = "PHONE",
                     style = MaterialTheme.typography.labelSmall,
-                    color = TextMuted
+                    fontWeight = FontWeight.Bold,
+                    color = TextPrimary
                 )
                 Spacer(modifier = Modifier.height(6.dp))
                 OutlinedTextField(
@@ -331,7 +339,8 @@ fun ManagerSignupScreen(
                 Text(
                     text = "PASSWORD",
                     style = MaterialTheme.typography.labelSmall,
-                    color = TextMuted
+                    fontWeight = FontWeight.Bold,
+                    color = TextPrimary
                 )
                 Spacer(modifier = Modifier.height(6.dp))
                 OutlinedTextField(
@@ -353,7 +362,7 @@ fun ManagerSignupScreen(
                             Icon(
                                 imageVector = icon,
                                 contentDescription = if (passwordVisible) "Hide password" else "Show password",
-                                tint = AccentPurple
+                                tint = Color(0xFF3D3025)
                             )
                         }
                     },
@@ -367,7 +376,8 @@ fun ManagerSignupScreen(
                 Text(
                     text = "CONFIRM PASSWORD",
                     style = MaterialTheme.typography.labelSmall,
-                    color = TextMuted
+                    fontWeight = FontWeight.Bold,
+                    color = TextPrimary
                 )
                 Spacer(modifier = Modifier.height(6.dp))
                 OutlinedTextField(
@@ -389,7 +399,7 @@ fun ManagerSignupScreen(
                             Icon(
                                 imageVector = icon,
                                 contentDescription = if (confirmPasswordVisible) "Hide password" else "Show password",
-                                tint = AccentPurple
+                                tint = Color(0xFF3D3025)
                             )
                         }
                     },
@@ -405,7 +415,7 @@ fun ManagerSignupScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(backgroundColor)
+                .background(BgDark)
                 .padding(horizontal = 8.dp, vertical = 16.dp),
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.CenterHorizontally
@@ -424,31 +434,39 @@ fun ManagerSignupScreen(
                 Spacer(modifier = Modifier.width(8.dp))
 
                 Column(
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier
+                        .weight(1f)
+
                 ) {
                     Text(
                         text = "I have read and accept the Terms and Conditions",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = TextPrimary
+                        color = SurfaceWarm
                     )
 
                 }
             }
         }
 
-        TextButton(
-            onClick = { showTermsDialog = true },
-            contentPadding = PaddingValues(0.dp)
-        ) {
-            Text(
-                text = "View Terms and Conditions",
-                style = MaterialTheme.typography.bodyMedium.copy(
-                    textDecoration = TextDecoration.Underline,
-                    fontWeight = FontWeight.Bold
-                ),
-                color = TextPrimary
-                )
+            Box(
+                modifier = Modifier.fillMaxWidth(),
+                contentAlignment = Alignment.Center
+            ) {
+                TextButton(
+                    onClick = { showTermsDialog = true },
+                ) {
+                    Text(
+                        text = "View Terms and Conditions",
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            textDecoration = TextDecoration.Underline,
+                            fontWeight = FontWeight.Bold
+                        ),
+                        textAlign = TextAlign.Center,
+                        color = SurfaceWarm
+                    )
+                }
             }
+
 
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -492,7 +510,8 @@ fun ManagerSignupScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(52.dp)
-                .background(color = Color(0xFFFFB02C), shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp)),
+                .background(color = Color(0xFFFFB02C),
+                    shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp)),
             enabled = !isLoading && termsAccepted ,
             colors = ButtonDefaults.buttonColors(
                 containerColor = Color.Transparent,
@@ -502,18 +521,24 @@ fun ManagerSignupScreen(
         ) {
             Text(
                 text = if (isLoading) "Creating account..." else "Continue  →",
-                color = TextPrimary,
+                color = SurfaceWarm,
                 fontWeight = FontWeight.Bold
             )
         }
-
-        Spacer(modifier = Modifier.height(12.dp))
-        TextButton(onClick = onNavigateToLogin) {
-            Text("Already have an account? Login",
-                style = TextStyle(
-                    color = TextPrimary,
-                    fontWeight = FontWeight.Bold
-                )
+        Spacer(modifier = Modifier.height(16.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Text(
+                text = "Already have an account? ",
+                color = SurfaceWarm
+            )
+            Text(
+                text = "Sign in",
+                color = Color(0xFFFFB02C),
+                fontWeight = FontWeight.SemiBold,
+                modifier = Modifier.clickable(onClick = onNavigateToLogin)
             )
         }
 

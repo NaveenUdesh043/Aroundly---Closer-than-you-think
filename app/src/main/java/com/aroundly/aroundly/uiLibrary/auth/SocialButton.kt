@@ -25,9 +25,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.aroundly.aroundly.R
 import com.aroundly.aroundly.ui.theme.TextPrimary
 import com.aroundly.aroundly.ui.theme.SurfaceDivider
 
@@ -63,7 +66,7 @@ fun SocialButton(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Google "G" logo — left aligned
+            // Google logo image
             Box(
                 modifier = Modifier
                     .size(24.dp)
@@ -73,11 +76,11 @@ fun SocialButton(
                     ),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = "G",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF4285F4)
+                androidx.compose.foundation.Image(
+                    painter = painterResource(id = R.drawable.icons8_google),
+                    contentDescription = "Google",
+                    modifier = Modifier.size(18.dp),
+                    contentScale = ContentScale.Fit
                 )
             }
             Spacer(Modifier.weight(1f))

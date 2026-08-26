@@ -58,6 +58,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignInStatusCodes
 import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.common.api.CommonStatusCodes
 import com.aroundly.aroundly.ui.theme.AccentPurple
+import com.aroundly.aroundly.ui.theme.BgDark
 import com.aroundly.aroundly.ui.theme.SurfaceDivider
 import com.aroundly.aroundly.ui.theme.SurfaceInput
 import com.aroundly.aroundly.ui.theme.SurfaceWarm
@@ -127,7 +128,7 @@ fun SignupScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(backgroundColor)
+            .background(BgDark)
             .padding(vertical = 24.dp),
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.Start
@@ -137,7 +138,7 @@ fun SignupScreen(
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(220.dp),
+                .height(200.dp),
             shape = RoundedCornerShape(bottomStart = 32.dp, bottomEnd = 32.dp),
             colors = CardDefaults.cardColors(
                 containerColor = Color.Transparent
@@ -211,7 +212,7 @@ fun SignupScreen(
             modifier = Modifier
                 .padding(horizontal = 16.dp, vertical = 24.dp)
                 .fillMaxWidth(),
-            shape = RoundedCornerShape(24.dp),
+            shape = RoundedCornerShape(16.dp),
             colors = CardDefaults.cardColors(
                 containerColor = Color.White
             )
@@ -229,7 +230,7 @@ fun SignupScreen(
 
                 Text(
                     text = "Personal Info",
-                    style = MaterialTheme.typography.titleMedium,
+                    style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                     color = TextPrimary
                 )
@@ -245,8 +246,9 @@ fun SignupScreen(
                 // Full name (first + last)
                 Text(
                     text = "FIRST NAME",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = TextMuted
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = TextPrimary
                 )
                 Spacer(modifier = Modifier.height(6.dp))
 
@@ -273,8 +275,9 @@ fun SignupScreen(
                 Spacer(modifier = Modifier.height(6.dp))
                 Text(
                     text = "LAST NAME",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = TextMuted
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = TextPrimary
                 )
                 Spacer(modifier = Modifier.height(6.dp))
                 OutlinedTextField(
@@ -301,8 +304,9 @@ fun SignupScreen(
 
                 Text(
                     text = "CONTACT NUMBER",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = TextMuted
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = TextPrimary
                 )
                 Spacer(modifier = Modifier.height(6.dp))
 
@@ -328,8 +332,9 @@ fun SignupScreen(
 
                 Text(
                     text = "EMAIL",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = TextMuted
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = TextPrimary
                 )
                 Spacer(modifier = Modifier.height(6.dp))
 
@@ -355,8 +360,9 @@ fun SignupScreen(
 
                 Text(
                     text = "PASSWORD",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = TextMuted
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = TextPrimary
                 )
                 Spacer(modifier = Modifier.height(6.dp))
 
@@ -379,7 +385,7 @@ fun SignupScreen(
                             Icon(
                                 imageVector = image,
                                 contentDescription = if (passwordVisible) "Hide password" else "Show password",
-                                tint = AccentPurple
+                                tint = Color(0xFF3D3025)
                             )
                         }
                     },
@@ -392,8 +398,9 @@ fun SignupScreen(
 
                 Text(
                     text = "CONFIRM PASSWORD",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = TextMuted
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = TextPrimary
                 )
                 Spacer(modifier = Modifier.height(6.dp))
 
@@ -416,7 +423,7 @@ fun SignupScreen(
                             Icon(
                                 imageVector = image,
                                 contentDescription = if (confirmPasswordVisible) "Hide password" else "Show password",
-                                tint = AccentPurple
+                                tint = Color(0xFF3D3025)
                             )
 
                         }

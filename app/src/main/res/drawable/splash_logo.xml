@@ -10,7 +10,7 @@
         android:height="50dp"
         android:gravity="center">
         <bitmap
-            android:src="@drawable/aroundly_logo_light"
+            android:src="@drawable/aroundly_app_icon"
             android:gravity="center" />
     </item>
 </layer-list>

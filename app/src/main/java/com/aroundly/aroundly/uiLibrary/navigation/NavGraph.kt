@@ -24,6 +24,7 @@ import com.aroundly.aroundly.uiLibrary.common.RestaurantDetailsScreen
 import com.aroundly.aroundly.uiLibrary.dashboard.DashboardScreen
 import com.aroundly.aroundly.uiLibrary.manager.ManagerDashboardScreen
 import com.aroundly.aroundly.uiLibrary.manager.ManagerSignupScreen
+import com.aroundly.aroundly.uiLibrary.map.MapScreen
 import com.aroundly.aroundly.uiLibrary.viewModel.RestaurantDetailsViewModel
 import com.aroundly.aroundly.uiLibrary.viewModel.HotelDetailsViewModel
 import com.aroundly.aroundly.uiLibrary.viewModel.PlaceDetailsViewModel
@@ -146,7 +147,16 @@ fun NavGraph() {
                 },
                 onEquipmentClick = { e ->
                     navController.navigate("equipment_details/${e.id}")
+                },
+                onMapClick = {
+                    navController.navigate("map")
                 }
+            )
+        }
+
+        composable("map") {
+            MapScreen(
+                onBack = { navController.popBackStack() }
             )
         }
 

@@ -114,7 +114,8 @@ fun DashboardScreen(
     onRestaurantClick: (Restaurant) -> Unit,
     onHotelClick: (Hotel) -> Unit,
     onPlaceClick: (PlaceToVisit) -> Unit,
-    onEquipmentClick: (EquipmentShop) -> Unit
+    onEquipmentClick: (EquipmentShop) -> Unit,
+    onMapClick: () -> Unit = {}
 ) {
     val restaurants by viewModel.filteredRestaurants.collectAsState(initial = emptyList())
     val hotels by viewModel.filteredHotels.collectAsState(initial = emptyList())
@@ -180,7 +181,8 @@ fun DashboardScreen(
                                     )
                                 )
                             }
-                        }
+                        },
+                        onMapClick = onMapClick
                     )
                 }
 
@@ -259,14 +261,7 @@ fun DashboardScreen(
                                 .fillMaxWidth()
                                 .padding(horizontal = 20.dp, vertical = 4.dp)
                                 .clip(RoundedCornerShape(16.dp))
-                                .background(
-                                    Brush.linearGradient(
-                                        listOf(
-                                            Color(0xFFFFF3E0),
-                                            Color(0xFFFFECB3)
-                                        )
-                                    )
-                                )
+                                .background( BgMid)
                                 .padding(horizontal = 16.dp, vertical = 12.dp)
                         ) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -460,7 +455,8 @@ private fun DashboardHeader(
     city: String,
     isLoadingLocation: Boolean,
     onLogout: () -> Unit,
-    onLocationClick: () -> Unit
+    onLocationClick: () -> Unit,
+    onMapClick: () -> Unit = {}
 ) {
     Box(
         modifier = Modifier
@@ -491,7 +487,7 @@ private fun DashboardHeader(
                         Box(
                             modifier = Modifier
                                 .size(44.dp)
-                                .clip(RoundedCornerShape(14.dp))
+                                .clip(CircleShape)
                                 .background(
                                     Brush.linearGradient(listOf(Amber, AmberDark))
                                 ),
@@ -500,7 +496,9 @@ private fun DashboardHeader(
                             Image(
                                 painter = painterResource(id = R.drawable.aroundly_app_icon),
                                 contentDescription = "App Icon",
-                                modifier = Modifier.size(28.dp)
+                                modifier = Modifier
+                                    .size(34.dp)
+                                .clip(CircleShape),
                             )
                         }
                         Spacer(Modifier.width(12.dp))
@@ -516,7 +514,7 @@ private fun DashboardHeader(
                             fontSize = 22.sp
                         )
                     }
-                    Spacer(Modifier.height(12.dp))
+                    Spacer(Modifier.height(20.dp))
                     Text(
                         text = "Discover amazing places",
                         style = MaterialTheme.typography.bodyLarge,
@@ -524,6 +522,21 @@ private fun DashboardHeader(
                         fontStyle = FontStyle.Italic
                     )
                 }
+                IconButton(
+                    onClick = onMapClick,
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .background(Color(0x1AFFFFFF))
+                ) {
+                    Icon(
+                        Icons.Default.LocationOn,
+                        contentDescription = "Map",
+                        tint = White70,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+                Spacer(Modifier.width(16.dp))
                 IconButton(
                     onClick = onLogout,
                     modifier = Modifier
@@ -636,7 +649,7 @@ private fun SearchBar(
                 modifier = Modifier.fillMaxWidth(),
                 placeholder = {
                     Text(
-                        "Search restaurants, hotels, places...",
+                        "Search what you want..",
                         color = White50,
                         fontSize = 14.sp
                     )

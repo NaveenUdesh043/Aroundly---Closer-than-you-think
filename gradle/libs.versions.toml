@@ -60,8 +60,11 @@ androidx-material3 = { group = "androidx.compose.material3", name = "material3",
 play-services-location = { group = "com.google.android.gms", name = "play-services-location", version = "21.3.0" }
 coil-compose = { group = "io.coil-kt", name = "coil-compose", version = "2.7.0" }
 play-services-auth = { group = "com.google.android.gms", name = "play-services-auth", version.ref = "playServicesAuth" }
-kotlinx-coroutines-play-services = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-play-services", version.ref = "kotlinxCoroutinesPlayServices" }
+play-services-maps = { group = "com.google.android.gms", name = "play-services-maps", version = "19.0.0" }
+kotlinx-coroutines-play-services = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-play-services", version = "kotlinx-coroutines-play-services" }
 material-icons-extended = { group = "androidx.compose.material", name = "material-icons-extended" }
+maps-compose = { group = "com.google.maps.android", name = "maps-compose", version = "6.1.0" }
+maps-compose-utils = { group = "com.google.maps.android", name = "maps-compose-utils", version = "6.1.0" }
 
 
 [plugins]

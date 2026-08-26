@@ -14,12 +14,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
@@ -59,6 +55,8 @@ import com.google.android.gms.auth.api.signin.GoogleSignInStatusCodes
 import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.common.api.CommonStatusCodes
 import com.aroundly.aroundly.ui.theme.AccentPurple
+import com.aroundly.aroundly.ui.theme.Amber
+import com.aroundly.aroundly.ui.theme.BgDark
 import com.aroundly.aroundly.ui.theme.SurfaceDivider
 import com.aroundly.aroundly.ui.theme.SurfaceInput
 import com.aroundly.aroundly.ui.theme.SurfaceWarm
@@ -123,7 +121,7 @@ fun LoginScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(backgroundColor)
+            .background(BgDark)
             .padding(vertical = 24.dp),
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.Start
@@ -174,7 +172,7 @@ fun LoginScreen(
         Spacer(Modifier.height(24.dp))
         Card(
             modifier = Modifier
-                .padding(horizontal = 8.dp, vertical = 24.dp)
+                .padding(horizontal = 16.dp, vertical = 24.dp)
                 .fillMaxWidth(),
             shape = RoundedCornerShape(24.dp),
             colors = CardDefaults.cardColors(
@@ -244,7 +242,7 @@ fun LoginScreen(
                             Icon(
                                 imageVector = icon,
                                 contentDescription = if (passwordVisible) "Hide password" else "Show password",
-                                tint = AccentPurple
+                                tint = Color(0xFF3D3025)
                             )
                         }
                     },
@@ -261,7 +259,7 @@ fun LoginScreen(
                 ) {
                     Text(
                         text = "Forgot password?",
-                        color = TextLink,
+                        color =  Color(0xFF3D3025),
                         style = MaterialTheme.typography.labelMedium
                     )
                 }
@@ -356,7 +354,7 @@ fun LoginScreen(
                     )
                     Text(
                         text = "Create one",
-                        color = Color.Black,
+                        color = Amber,
                         fontWeight = FontWeight.SemiBold,
                         modifier = Modifier.clickable(onClick = onNavigateToSignup)
                     )
