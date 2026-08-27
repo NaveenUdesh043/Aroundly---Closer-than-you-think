@@ -1,6 +1,7 @@
 package com.aroundly.aroundly.data.remote
 
 import com.aroundly.aroundly.domain.model.PlaceSubmission
+import com.aroundly.aroundly.domain.model.PlaceType
 import com.aroundly.aroundly.domain.model.SubmissionStatus
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
@@ -68,6 +69,16 @@ class FirebaseSubmissionService(
         }
     }
 
+    suspend fun getSubmissionsByStatus(status: SubmissionStatus): List<PlaceSubmission> {
+        val snapshot = firestore.collection("place_submissions")
+            .whereEqualTo("status", status.name)
+            .get()
+            .await()
+        return snapshot.documents.mapNotNull { doc ->
+            doc.toPlaceSubmission(doc.id)
+        }
+    }
+
     suspend fun updateStatus(
         submissionId: String,
         status: SubmissionStatus,
@@ -85,12 +96,7 @@ class FirebaseSubmissionService(
             .await()
 
         if (status == SubmissionStatus.APPROVED) {
-            val collectionName = when (submission.placeType) {
-                com.aroundly.aroundly.domain.model.PlaceType.RESTAURANT -> "restaurants"
-                com.aroundly.aroundly.domain.model.PlaceType.HOTEL -> "hotels"
-                com.aroundly.aroundly.domain.model.PlaceType.PLACE_TO_VISIT -> "places"
-                com.aroundly.aroundly.domain.model.PlaceType.EQUIPMENT_SHOP -> "equipmentShops"
-            }
+            val collectionName = collectionNameFor(submission.placeType)
 
             val placeData = when (submission.placeType) {
                 com.aroundly.aroundly.domain.model.PlaceType.RESTAURANT -> {
@@ -154,9 +160,64 @@ class FirebaseSubmissionService(
                     .update(placeData as Map<String, Any>)
                     .await()
             } else {
-                firestore.collection(collectionName).add(placeData).await()
+                val docRef = firestore.collection(collectionName).add(placeData).await()
+                firestore.collection("place_submissions").document(submissionId)
+                    .update("existingPlaceId", docRef.id)
+                    .await()
             }
         }
+    }
+
+    suspend fun deletePlace(submission: PlaceSubmission) {
+        val collectionName = collectionNameFor(submission.placeType)
+
+        var placeDocId = submission.existingPlaceId
+        if (placeDocId.isBlank()) {
+            val snapshot = firestore.collection(collectionName)
+                .whereEqualTo("ownerId", submission.ownerId)
+                .whereEqualTo("name", submission.name)
+                .get()
+                .await()
+            placeDocId = snapshot.documents.firstOrNull()?.id ?: ""
+        }
+
+        if (placeDocId.isNotBlank()) {
+            val placeDoc = firestore.collection(collectionName).document(placeDocId).get().await()
+            (placeDoc.get("images") as? List<*>)?.forEach { url ->
+                if (url is String && url.isNotEmpty()) {
+                    runCatching { storage.getReferenceFromUrl(url).delete().await() }
+                }
+            }
+
+            val menuSnapshot = firestore.collection("menuImages")
+                .whereEqualTo("shopId", placeDocId)
+                .get()
+                .await()
+            menuSnapshot.documents.forEach { menuDoc ->
+                val url = menuDoc.getString("imageUrl")
+                if (!url.isNullOrEmpty()) {
+                    runCatching { storage.getReferenceFromUrl(url).delete().await() }
+                }
+                menuDoc.reference.delete().await()
+            }
+
+            val reviewsSnapshot = firestore.collection("reviews")
+                .whereEqualTo("placeId", placeDocId)
+                .get()
+                .await()
+            reviewsSnapshot.documents.forEach { it.reference.delete().await() }
+
+            firestore.collection(collectionName).document(placeDocId).delete().await()
+        }
+
+        firestore.collection("place_submissions").document(submission.id).delete().await()
+    }
+
+    private fun collectionNameFor(placeType: PlaceType): String = when (placeType) {
+        PlaceType.RESTAURANT -> "restaurants"
+        PlaceType.HOTEL -> "hotels"
+        PlaceType.PLACE_TO_VISIT -> "places"
+        PlaceType.EQUIPMENT_SHOP -> "equipmentShops"
     }
 
     suspend fun getSubmissionById(id: String): PlaceSubmission? {

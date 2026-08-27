@@ -25,6 +25,9 @@ class SubmissionRepositoryImpl @Inject constructor(
     override suspend fun getPendingSubmissions(): List<PlaceSubmission> =
         submissionService.getPendingSubmissions()
 
+    override suspend fun getSubmissionsByStatus(status: SubmissionStatus): List<PlaceSubmission> =
+        submissionService.getSubmissionsByStatus(status)
+
     override suspend fun updateSubmissionStatus(
         submissionId: String,
         submission: PlaceSubmission,
@@ -33,6 +36,9 @@ class SubmissionRepositoryImpl @Inject constructor(
     ): Result<Unit> = runCatching {
         submissionService.updateStatus(submissionId, status, adminNotes, submission)
     }
+
+    override suspend fun deletePlace(submission: PlaceSubmission): Result<Unit> =
+        runCatching { submissionService.deletePlace(submission) }
 
     override suspend fun getSubmissionById(id: String): PlaceSubmission? =
         submissionService.getSubmissionById(id)

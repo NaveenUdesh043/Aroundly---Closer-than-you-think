@@ -20,6 +20,12 @@ class AdminViewModel @Inject constructor(
     private val _pendingSubmissions = MutableStateFlow<List<PlaceSubmission>>(emptyList())
     val pendingSubmissions: StateFlow<List<PlaceSubmission>> = _pendingSubmissions.asStateFlow()
 
+    private val _approvedSubmissions = MutableStateFlow<List<PlaceSubmission>>(emptyList())
+    val approvedSubmissions: StateFlow<List<PlaceSubmission>> = _approvedSubmissions.asStateFlow()
+
+    private val _rejectedSubmissions = MutableStateFlow<List<PlaceSubmission>>(emptyList())
+    val rejectedSubmissions: StateFlow<List<PlaceSubmission>> = _rejectedSubmissions.asStateFlow()
+
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
@@ -30,6 +36,22 @@ class AdminViewModel @Inject constructor(
         viewModelScope.launch {
             _isLoading.value = true
             _pendingSubmissions.value = submissionRepository.getPendingSubmissions()
+            _isLoading.value = false
+        }
+    }
+
+    fun loadApprovedSubmissions() {
+        viewModelScope.launch {
+            _isLoading.value = true
+            _approvedSubmissions.value = submissionRepository.getSubmissionsByStatus(SubmissionStatus.APPROVED)
+            _isLoading.value = false
+        }
+    }
+
+    fun loadRejectedSubmissions() {
+        viewModelScope.launch {
+            _isLoading.value = true
+            _rejectedSubmissions.value = submissionRepository.getSubmissionsByStatus(SubmissionStatus.REJECTED)
             _isLoading.value = false
         }
     }
@@ -45,7 +67,7 @@ class AdminViewModel @Inject constructor(
             ).fold(
                 onSuccess = {
                     _message.value = "Approved: ${submission.name}"
-                    loadPendingSubmissions()
+                    loadAll()
                 },
                 onFailure = {
                     _message.value = "Error: ${it.message}"
@@ -66,7 +88,23 @@ class AdminViewModel @Inject constructor(
             ).fold(
                 onSuccess = {
                     _message.value = "Rejected: ${submission.name}"
-                    loadPendingSubmissions()
+                    loadAll()
+                },
+                onFailure = {
+                    _message.value = "Error: ${it.message}"
+                }
+            )
+            _isLoading.value = false
+        }
+    }
+
+    fun deletePlace(submission: PlaceSubmission) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            submissionRepository.deletePlace(submission).fold(
+                onSuccess = {
+                    _message.value = "Deleted: ${submission.name}"
+                    loadAll()
                 },
                 onFailure = {
                     _message.value = "Error: ${it.message}"
@@ -78,5 +116,13 @@ class AdminViewModel @Inject constructor(
 
     fun clearMessage() {
         _message.value = null
+    }
+
+    private fun loadAll() {
+        viewModelScope.launch {
+            _pendingSubmissions.value = submissionRepository.getPendingSubmissions()
+            _approvedSubmissions.value = submissionRepository.getSubmissionsByStatus(SubmissionStatus.APPROVED)
+            _rejectedSubmissions.value = submissionRepository.getSubmissionsByStatus(SubmissionStatus.REJECTED)
+        }
     }
 }

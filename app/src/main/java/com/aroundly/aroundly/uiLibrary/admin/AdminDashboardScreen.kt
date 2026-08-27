@@ -18,14 +18,18 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material3.CircularProgressIndicator
@@ -44,7 +48,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -81,32 +84,33 @@ fun AdminDashboardScreen(
 ) {
 
     val pendingSubmissions by viewModel.pendingSubmissions.collectAsState(initial = emptyList())
+    val approvedSubmissions by viewModel.approvedSubmissions.collectAsState(initial = emptyList())
+    val rejectedSubmissions by viewModel.rejectedSubmissions.collectAsState(initial = emptyList())
     val isLoading by viewModel.isLoading.collectAsState()
     val message by viewModel.message.collectAsState()
 
-    LaunchedEffect(Unit) { viewModel.loadPendingSubmissions() }
+    LaunchedEffect(Unit) {
+        viewModel.loadPendingSubmissions()
+        viewModel.loadApprovedSubmissions()
+        viewModel.loadRejectedSubmissions()
+    }
 
     var activeTab by remember { mutableStateOf(SubmissionTab.PENDING) }
 
-    val approved = remember { mutableStateListOf<PlaceSubmission>() }
-    val rejected = remember { mutableStateListOf<PlaceSubmission>() }
-
-
+    var itemToDelete by remember { mutableStateOf<PlaceSubmission?>(null) }
 
     fun approve(item: PlaceSubmission, notes: String) {
         viewModel.approveSubmission(item, notes)
-        approved.add(item)
     }
 
     fun reject(item: PlaceSubmission, notes: String) {
         viewModel.rejectSubmission(item, notes)
-        rejected.add(item)
     }
 
     val currentList = when (activeTab) {
         SubmissionTab.PENDING -> pendingSubmissions
-        SubmissionTab.APPROVED -> approved
-        SubmissionTab.REJECTED -> rejected
+        SubmissionTab.APPROVED -> approvedSubmissions
+        SubmissionTab.REJECTED -> rejectedSubmissions
     }
 
     Column(
@@ -117,16 +121,16 @@ fun AdminDashboardScreen(
 
         AdminHeader(
             pendingCount = pendingSubmissions.size,
-            approvedCount = approved.size,
-            rejectedCount = rejected.size,
+            approvedCount = approvedSubmissions.size,
+            rejectedCount = rejectedSubmissions.size,
             onLogout = onLogout
         )
 
         AdminTabRow(
             activeTab = activeTab,
             pending = pendingSubmissions.size,
-            approved = approved.size,
-            rejected = rejected.size,
+            approved = approvedSubmissions.size,
+            rejected = rejectedSubmissions.size,
             onTabSelected = { activeTab = it }
         )
 
@@ -172,11 +176,36 @@ fun AdminDashboardScreen(
                             },
                             onReject = { notes ->
                                 reject(submission, notes)
-                            }
+                            },
+                            onDelete = { itemToDelete = submission }
                         )
                     }
                 }
             }
+        }
+
+        itemToDelete?.let { item ->
+            AlertDialog(
+                onDismissRequest = { itemToDelete = null },
+                title = { Text("Delete ${item.name}?") },
+                text = { Text("This will permanently remove the ${item.placeType.name.replace('_', ' ')} and all its images and reviews.") },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            viewModel.deletePlace(item)
+                            itemToDelete = null
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
+                    ) {
+                        Text("Delete")
+                    }
+                },
+                dismissButton = {
+                    OutlinedButton(onClick = { itemToDelete = null }) {
+                        Text("Cancel")
+                    }
+                }
+            )
         }
     }
 }
@@ -342,7 +371,8 @@ fun SubmissionCard(
     item: PlaceSubmission,
     tab: SubmissionTab,
     onApprove: (String) -> Unit,
-    onReject: (String) -> Unit
+    onReject: (String) -> Unit,
+    onDelete: () -> Unit
 ) {
 
     var notes by remember { mutableStateOf("") }
@@ -413,6 +443,25 @@ fun SubmissionCard(
                     ) {
                         Text("Approve")
                     }
+                }
+            }
+
+            if (tab == SubmissionTab.APPROVED) {
+
+                Spacer(Modifier.height(10.dp))
+
+                OutlinedButton(
+                    onClick = onDelete,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.Red)
+                ) {
+                    Icon(
+                        Icons.Default.Delete,
+                        contentDescription = "Delete",
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(Modifier.width(6.dp))
+                    Text("Delete Place")
                 }
             }
         }
