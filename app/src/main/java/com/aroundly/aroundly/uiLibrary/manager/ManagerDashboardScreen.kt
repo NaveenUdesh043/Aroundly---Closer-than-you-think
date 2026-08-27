@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -27,15 +28,17 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Image
-import androidx.compose.material.icons.filled.Logout
+import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -52,6 +55,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -66,13 +70,16 @@ import com.aroundly.aroundly.domain.model.SubmissionStatus
 import com.aroundly.aroundly.ui.theme.PrimaryTeal
 import com.aroundly.aroundly.ui.theme.PrimaryTealDark
 import com.aroundly.aroundly.uiLibrary.common.GenericDropdown
+import com.aroundly.aroundly.uiLibrary.common.MenuTabContent
 import com.aroundly.aroundly.uiLibrary.viewModel.ManagerViewModel
+import com.aroundly.aroundly.uiLibrary.viewModel.MenuViewModel
 import androidx.hilt.navigation.compose.hiltViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ManagerDashboardScreen(
     viewModel: ManagerViewModel = hiltViewModel(),
+    menuViewModel: MenuViewModel = hiltViewModel(),
     onLogout: () -> Unit
 ) {
     val mySubmissions by viewModel.mySubmissions.collectAsState(initial = emptyList())
@@ -95,6 +102,8 @@ fun ManagerDashboardScreen(
     var receiptBytes by remember { mutableStateOf<ByteArray?>(null) }
     var placeImageUris by remember { mutableStateOf<List<Uri>>(emptyList()) }
     var placeImageBytesList by remember { mutableStateOf<List<ByteArray>>(emptyList()) }
+
+    val menuMessage by menuViewModel.message.collectAsState()
 
     val context = LocalContext.current
     val receiptPicker = rememberLauncherForActivityResult(
@@ -132,7 +141,7 @@ fun ManagerDashboardScreen(
                 ),
                 actions = {
                     IconButton(onClick = onLogout) {
-                        Icon(Icons.Default.Logout, contentDescription = "Logout", tint = Color.White)
+                        Icon(Icons.AutoMirrored.Filled.Logout, contentDescription = "Logout", tint = Color.White)
                     }
                 }
             )
@@ -319,23 +328,87 @@ fun ManagerDashboardScreen(
             }
 
             Spacer(Modifier.height(32.dp))
-            Text("My Approved Places (Edit without approval)", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            Text("My Approved Places", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
             Spacer(Modifier.height(8.dp))
+
+            menuMessage?.let { msg ->
+                Text(msg, color = if (msg.contains("fail")) Color.Red else PrimaryTeal)
+                Spacer(Modifier.height(8.dp))
+            }
+
             var showEditSheet by remember { mutableStateOf<Any?>(null) }
+
+            var activeMenuShopId by remember { mutableStateOf<String?>(null) }
+            val menuImagePicker = rememberLauncherForActivityResult(
+                contract = ActivityResultContracts.PickVisualMedia()
+            ) { uri ->
+                if (uri == null) return@rememberLauncherForActivityResult
+                val shopId = activeMenuShopId
+                if (shopId == null) return@rememberLauncherForActivityResult
+                try {
+                    val bytes = context.contentResolver.openInputStream(uri)?.use { stream ->
+                        stream.readBytes()
+                    }
+                    if (bytes != null && bytes.isNotEmpty()) {
+                        menuViewModel.uploadMenuImage(shopId, bytes)
+                    }
+                } catch (_: Exception) {}
+            }
+
             myRestaurants.forEach { r ->
-                ApprovedPlaceCard(name = r.name, type = "Restaurant", onClick = { showEditSheet = r })
+                ApprovedPlaceCardWithMenu(
+                    name = r.name,
+                    type = "Restaurant",
+                    shopId = r.id,
+                    onEdit = { showEditSheet = r },
+                    onUploadImage = {
+                        activeMenuShopId = r.id
+                        menuImagePicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+                    },
+                    menuViewModel = menuViewModel
+                )
                 Spacer(Modifier.height(8.dp))
             }
             myHotels.forEach { h ->
-                ApprovedPlaceCard(name = h.name, type = "Hotel", onClick = { showEditSheet = h })
+                ApprovedPlaceCardWithMenu(
+                    name = h.name,
+                    type = "Hotel",
+                    shopId = h.id,
+                    onEdit = { showEditSheet = h },
+                    onUploadImage = {
+                        activeMenuShopId = h.id
+                        menuImagePicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+                    },
+                    menuViewModel = menuViewModel
+                )
                 Spacer(Modifier.height(8.dp))
             }
             myPlaces.forEach { p ->
-                ApprovedPlaceCard(name = p.name, type = "Place", onClick = { showEditSheet = p })
+                ApprovedPlaceCardWithMenu(
+                    name = p.name,
+                    type = "Place",
+                    shopId = p.id,
+                    onEdit = { showEditSheet = p },
+                    onUploadImage = {
+                        activeMenuShopId = p.id
+                        menuImagePicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+                    },
+                    menuViewModel = menuViewModel
+                )
                 Spacer(Modifier.height(8.dp))
             }
             myEquipmentShops.forEach { e ->
-                ApprovedPlaceCard(name = e.name, type = "Equipment", onClick = { showEditSheet = e })
+                ApprovedPlaceCardWithMenu(
+                    name = e.name,
+                    type = "Equipment",
+                    shopId = e.id,
+                    onEdit = { showEditSheet = e },
+                    onUploadImage = {
+                        activeMenuShopId = e.id
+                        menuImagePicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+                    },
+                    menuViewModel = menuViewModel
+                )
                 Spacer(Modifier.height(8.dp))
             }
             if (myRestaurants.isEmpty() && myHotels.isEmpty() && myPlaces.isEmpty() && myEquipmentShops.isEmpty()) {
@@ -518,6 +591,94 @@ private fun ApprovedPlaceCard(
     }
 }
 
+@Composable
+private fun ApprovedPlaceCardWithMenu(
+    name: String,
+    type: String,
+    shopId: String,
+    onEdit: () -> Unit,
+    onUploadImage: () -> Unit,
+    menuViewModel: MenuViewModel
+) {
+    val menuImages by menuViewModel.menuImages.collectAsState()
+
+    LaunchedEffect(shopId) {
+        menuViewModel.loadMenuImages(shopId)
+    }
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(name, fontWeight = FontWeight.Bold)
+                    Text(type, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                }
+                Row {
+                    IconButton(onClick = onEdit) {
+                        Icon(Icons.Default.Edit, contentDescription = "Edit", tint = PrimaryTeal)
+                    }
+                }
+            }
+
+            Spacer(Modifier.height(8.dp))
+
+            Button(
+                onClick = onUploadImage,
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(containerColor = PrimaryTeal),
+                shape = RoundedCornerShape(8.dp)
+            ) {
+                Icon(Icons.Default.Image, contentDescription = null, modifier = Modifier.size(18.dp))
+                Spacer(Modifier.width(6.dp))
+                Text("Upload Menu Image")
+            }
+
+            if (menuImages.isNotEmpty()) {
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    "Menu Images (${menuImages.size})",
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = PrimaryTealDark
+                )
+                Spacer(Modifier.height(4.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    menuImages.take(3).forEach { image ->
+                        AsyncImage(
+                            model = image.imageUrl,
+                            contentDescription = null,
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(60.dp)
+                                .clip(RoundedCornerShape(8.dp)),
+                            contentScale = androidx.compose.ui.layout.ContentScale.Crop
+                        )
+                    }
+                }
+                if (menuImages.size > 3) {
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        "+${menuImages.size - 3} more images",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = Color.Gray
+                    )
+                }
+            }
+        }
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun EditPlaceBottomSheet(
@@ -544,7 +705,26 @@ private fun EditRestaurantForm(restaurant: Restaurant, viewModel: ManagerViewMod
     var description by remember { mutableStateOf(restaurant.description ?: "") }
     var address by remember { mutableStateOf(restaurant.address ?: "") }
     var phone by remember { mutableStateOf(restaurant.phoneNumber ?: "") }
-    Column(Modifier.padding(16.dp)) {
+    var newImageBytesList by remember { mutableStateOf<List<ByteArray>>(emptyList()) }
+    var newImageUris by remember { mutableStateOf<List<Uri>>(emptyList()) }
+    val context = LocalContext.current
+    val imagePicker = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickMultipleVisualMedia(maxItems = 5)
+    ) { uris ->
+        val bytesList = mutableListOf<ByteArray>()
+        for (uri in uris) {
+            context.contentResolver.openInputStream(uri)?.use { stream ->
+                bytesList.add(stream.readBytes())
+            }
+        }
+        newImageUris = uris
+        newImageBytesList = bytesList
+    }
+    Column(
+        modifier = Modifier
+            .padding(16.dp)
+            .verticalScroll(rememberScrollState())
+    ) {
         Text("Edit Restaurant", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
         Spacer(Modifier.height(16.dp))
         OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Name") }, modifier = Modifier.fillMaxWidth())
@@ -558,9 +738,62 @@ private fun EditRestaurantForm(restaurant: Restaurant, viewModel: ManagerViewMod
         OutlinedTextField(value = address, onValueChange = { address = it }, label = { Text("Address") }, modifier = Modifier.fillMaxWidth())
         Spacer(Modifier.height(8.dp))
         OutlinedTextField(value = phone, onValueChange = { phone = it }, label = { Text("Phone") }, modifier = Modifier.fillMaxWidth())
+        Spacer(Modifier.height(12.dp))
+
+        if (restaurant.images?.isNotEmpty() == true && newImageUris.isEmpty()) {
+            Text("Current Images", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold, color = PrimaryTealDark)
+            Spacer(Modifier.height(4.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                restaurant.images.take(5).forEach { url ->
+                    AsyncImage(
+                        model = url,
+                        contentDescription = null,
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(60.dp)
+                            .clip(RoundedCornerShape(8.dp)),
+                        contentScale = ContentScale.Crop
+                    )
+                }
+            }
+            Spacer(Modifier.height(8.dp))
+        }
+
+        OutlinedButton(onClick = { imagePicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) }, modifier = Modifier.fillMaxWidth()) {
+            Icon(Icons.Default.Image, contentDescription = null, modifier = Modifier.size(18.dp))
+            Spacer(Modifier.width(6.dp))
+            Text("Change Images (up to 5)")
+        }
+        if (newImageUris.isNotEmpty()) {
+            Spacer(Modifier.height(4.dp))
+            Text("${newImageUris.size} new image(s) selected", style = MaterialTheme.typography.bodySmall, color = PrimaryTeal)
+            Spacer(Modifier.height(4.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                newImageUris.take(5).forEach { uri ->
+                    AsyncImage(
+                        model = uri,
+                        contentDescription = null,
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(60.dp)
+                            .clip(RoundedCornerShape(8.dp)),
+                        contentScale = ContentScale.Crop
+                    )
+                }
+            }
+        }
         Spacer(Modifier.height(16.dp))
         Button(onClick = {
-            viewModel.updateRestaurant(restaurant.copy(name = name, city = city, type = type, description = description, address = address, phoneNumber = phone))
+            viewModel.updateRestaurant(
+                restaurant.copy(name = name, city = city, type = type, description = description, address = address, phoneNumber = phone),
+                newImageBytesList = newImageBytesList
+            )
             onDismiss()
         }, modifier = Modifier.fillMaxWidth()) { Text("Save") }
         Spacer(Modifier.height(32.dp))
@@ -575,7 +808,26 @@ private fun EditHotelForm(hotel: Hotel, viewModel: ManagerViewModel, onDismiss: 
     var description by remember { mutableStateOf(hotel.description ?: "") }
     var address by remember { mutableStateOf(hotel.address ?: "") }
     var phone by remember { mutableStateOf(hotel.phoneNumber ?: "") }
-    Column(Modifier.padding(16.dp)) {
+    var newImageBytesList by remember { mutableStateOf<List<ByteArray>>(emptyList()) }
+    var newImageUris by remember { mutableStateOf<List<Uri>>(emptyList()) }
+    val context = LocalContext.current
+    val imagePicker = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickMultipleVisualMedia(maxItems = 5)
+    ) { uris ->
+        val bytesList = mutableListOf<ByteArray>()
+        for (uri in uris) {
+            context.contentResolver.openInputStream(uri)?.use { stream ->
+                bytesList.add(stream.readBytes())
+            }
+        }
+        newImageUris = uris
+        newImageBytesList = bytesList
+    }
+    Column(
+        modifier = Modifier
+            .padding(16.dp)
+            .verticalScroll(rememberScrollState())
+    ) {
         Text("Edit Hotel", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
         Spacer(Modifier.height(16.dp))
         OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Name") }, modifier = Modifier.fillMaxWidth())
@@ -589,9 +841,62 @@ private fun EditHotelForm(hotel: Hotel, viewModel: ManagerViewModel, onDismiss: 
         OutlinedTextField(value = address, onValueChange = { address = it }, label = { Text("Address") }, modifier = Modifier.fillMaxWidth())
         Spacer(Modifier.height(8.dp))
         OutlinedTextField(value = phone, onValueChange = { phone = it }, label = { Text("Phone") }, modifier = Modifier.fillMaxWidth())
+        Spacer(Modifier.height(12.dp))
+
+        if (hotel.images?.isNotEmpty() == true && newImageUris.isEmpty()) {
+            Text("Current Images", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold, color = PrimaryTealDark)
+            Spacer(Modifier.height(4.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                hotel.images.take(5).forEach { url ->
+                    AsyncImage(
+                        model = url,
+                        contentDescription = null,
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(60.dp)
+                            .clip(RoundedCornerShape(8.dp)),
+                        contentScale = ContentScale.Crop
+                    )
+                }
+            }
+            Spacer(Modifier.height(8.dp))
+        }
+
+        OutlinedButton(onClick = { imagePicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) }, modifier = Modifier.fillMaxWidth()) {
+            Icon(Icons.Default.Image, contentDescription = null, modifier = Modifier.size(18.dp))
+            Spacer(Modifier.width(6.dp))
+            Text("Change Images (up to 5)")
+        }
+        if (newImageUris.isNotEmpty()) {
+            Spacer(Modifier.height(4.dp))
+            Text("${newImageUris.size} new image(s) selected", style = MaterialTheme.typography.bodySmall, color = PrimaryTeal)
+            Spacer(Modifier.height(4.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                newImageUris.take(5).forEach { uri ->
+                    AsyncImage(
+                        model = uri,
+                        contentDescription = null,
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(60.dp)
+                            .clip(RoundedCornerShape(8.dp)),
+                        contentScale = ContentScale.Crop
+                    )
+                }
+            }
+        }
         Spacer(Modifier.height(16.dp))
         Button(onClick = {
-            viewModel.updateHotel(hotel.copy(name = name, city = city, type = type, description = description, address = address, phoneNumber = phone))
+            viewModel.updateHotel(
+                hotel.copy(name = name, city = city, type = type, description = description, address = address, phoneNumber = phone),
+                newImageBytesList = newImageBytesList
+            )
             onDismiss()
         }, modifier = Modifier.fillMaxWidth()) { Text("Save") }
         Spacer(Modifier.height(32.dp))
@@ -604,7 +909,26 @@ private fun EditPlaceForm(place: PlaceToVisit, viewModel: ManagerViewModel, onDi
     var city by remember { mutableStateOf(place.city ?: "") }
     var description by remember { mutableStateOf(place.description ?: "") }
     var address by remember { mutableStateOf(place.address ?: "") }
-    Column(Modifier.padding(16.dp)) {
+    var newImageBytesList by remember { mutableStateOf<List<ByteArray>>(emptyList()) }
+    var newImageUris by remember { mutableStateOf<List<Uri>>(emptyList()) }
+    val context = LocalContext.current
+    val imagePicker = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickMultipleVisualMedia(maxItems = 5)
+    ) { uris ->
+        val bytesList = mutableListOf<ByteArray>()
+        for (uri in uris) {
+            context.contentResolver.openInputStream(uri)?.use { stream ->
+                bytesList.add(stream.readBytes())
+            }
+        }
+        newImageUris = uris
+        newImageBytesList = bytesList
+    }
+    Column(
+        modifier = Modifier
+            .padding(16.dp)
+            .verticalScroll(rememberScrollState())
+    ) {
         Text("Edit Place", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
         Spacer(Modifier.height(16.dp))
         OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Name") }, modifier = Modifier.fillMaxWidth())
@@ -614,9 +938,62 @@ private fun EditPlaceForm(place: PlaceToVisit, viewModel: ManagerViewModel, onDi
         OutlinedTextField(value = description, onValueChange = { description = it }, label = { Text("Description") }, modifier = Modifier.fillMaxWidth(), minLines = 2)
         Spacer(Modifier.height(8.dp))
         OutlinedTextField(value = address, onValueChange = { address = it }, label = { Text("Address") }, modifier = Modifier.fillMaxWidth())
+        Spacer(Modifier.height(12.dp))
+
+        if (place.images?.isNotEmpty() == true && newImageUris.isEmpty()) {
+            Text("Current Images", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold, color = PrimaryTealDark)
+            Spacer(Modifier.height(4.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                place.images.take(5).forEach { url ->
+                    AsyncImage(
+                        model = url,
+                        contentDescription = null,
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(60.dp)
+                            .clip(RoundedCornerShape(8.dp)),
+                        contentScale = ContentScale.Crop
+                    )
+                }
+            }
+            Spacer(Modifier.height(8.dp))
+        }
+
+        OutlinedButton(onClick = { imagePicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) }, modifier = Modifier.fillMaxWidth()) {
+            Icon(Icons.Default.Image, contentDescription = null, modifier = Modifier.size(18.dp))
+            Spacer(Modifier.width(6.dp))
+            Text("Change Images (up to 5)")
+        }
+        if (newImageUris.isNotEmpty()) {
+            Spacer(Modifier.height(4.dp))
+            Text("${newImageUris.size} new image(s) selected", style = MaterialTheme.typography.bodySmall, color = PrimaryTeal)
+            Spacer(Modifier.height(4.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                newImageUris.take(5).forEach { uri ->
+                    AsyncImage(
+                        model = uri,
+                        contentDescription = null,
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(60.dp)
+                            .clip(RoundedCornerShape(8.dp)),
+                        contentScale = ContentScale.Crop
+                    )
+                }
+            }
+        }
         Spacer(Modifier.height(16.dp))
         Button(onClick = {
-            viewModel.updatePlace(place.copy(name = name, city = city, description = description, address = address))
+            viewModel.updatePlace(
+                place.copy(name = name, city = city, description = description, address = address),
+                newImageBytesList = newImageBytesList
+            )
             onDismiss()
         }, modifier = Modifier.fillMaxWidth()) { Text("Save") }
         Spacer(Modifier.height(32.dp))
@@ -631,7 +1008,26 @@ private fun EditEquipmentForm(shop: EquipmentShop, viewModel: ManagerViewModel, 
     var description by remember { mutableStateOf(shop.description ?: "") }
     var address by remember { mutableStateOf(shop.address ?: "") }
     var phone by remember { mutableStateOf(shop.phoneNumber ?: "") }
-    Column(Modifier.padding(16.dp)) {
+    var newImageBytesList by remember { mutableStateOf<List<ByteArray>>(emptyList()) }
+    var newImageUris by remember { mutableStateOf<List<Uri>>(emptyList()) }
+    val context = LocalContext.current
+    val imagePicker = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickMultipleVisualMedia(maxItems = 5)
+    ) { uris ->
+        val bytesList = mutableListOf<ByteArray>()
+        for (uri in uris) {
+            context.contentResolver.openInputStream(uri)?.use { stream ->
+                bytesList.add(stream.readBytes())
+            }
+        }
+        newImageUris = uris
+        newImageBytesList = bytesList
+    }
+    Column(
+        modifier = Modifier
+            .padding(16.dp)
+            .verticalScroll(rememberScrollState())
+    ) {
         Text("Edit Equipment Shop", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
         Spacer(Modifier.height(16.dp))
         OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Name") }, modifier = Modifier.fillMaxWidth())
@@ -645,9 +1041,62 @@ private fun EditEquipmentForm(shop: EquipmentShop, viewModel: ManagerViewModel, 
         OutlinedTextField(value = address, onValueChange = { address = it }, label = { Text("Address") }, modifier = Modifier.fillMaxWidth())
         Spacer(Modifier.height(8.dp))
         OutlinedTextField(value = phone, onValueChange = { phone = it }, label = { Text("Phone") }, modifier = Modifier.fillMaxWidth())
+        Spacer(Modifier.height(12.dp))
+
+        if (shop.images?.isNotEmpty() == true && newImageUris.isEmpty()) {
+            Text("Current Images", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold, color = PrimaryTealDark)
+            Spacer(Modifier.height(4.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                shop.images.take(5).forEach { url ->
+                    AsyncImage(
+                        model = url,
+                        contentDescription = null,
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(60.dp)
+                            .clip(RoundedCornerShape(8.dp)),
+                        contentScale = ContentScale.Crop
+                    )
+                }
+            }
+            Spacer(Modifier.height(8.dp))
+        }
+
+        OutlinedButton(onClick = { imagePicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) }, modifier = Modifier.fillMaxWidth()) {
+            Icon(Icons.Default.Image, contentDescription = null, modifier = Modifier.size(18.dp))
+            Spacer(Modifier.width(6.dp))
+            Text("Change Images (up to 5)")
+        }
+        if (newImageUris.isNotEmpty()) {
+            Spacer(Modifier.height(4.dp))
+            Text("${newImageUris.size} new image(s) selected", style = MaterialTheme.typography.bodySmall, color = PrimaryTeal)
+            Spacer(Modifier.height(4.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                newImageUris.take(5).forEach { uri ->
+                    AsyncImage(
+                        model = uri,
+                        contentDescription = null,
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(60.dp)
+                            .clip(RoundedCornerShape(8.dp)),
+                        contentScale = ContentScale.Crop
+                    )
+                }
+            }
+        }
         Spacer(Modifier.height(16.dp))
         Button(onClick = {
-            viewModel.updateEquipmentShop(shop.copy(name = name, city = city, type = type, description = description, address = address, phoneNumber = phone))
+            viewModel.updateEquipmentShop(
+                shop.copy(name = name, city = city, type = type, description = description, address = address, phoneNumber = phone),
+                newImageBytesList = newImageBytesList
+            )
             onDismiss()
         }, modifier = Modifier.fillMaxWidth()) { Text("Save") }
         Spacer(Modifier.height(32.dp))

@@ -60,51 +60,185 @@ class ManagerViewModel @Inject constructor(
         }
     }
 
-    fun updateRestaurant(restaurant: Restaurant) {
+    fun updateRestaurant(restaurant: Restaurant, newImageBytesList: List<ByteArray> = emptyList()) {
         viewModelScope.launch {
-            dashboardRepository.updateRestaurant(restaurant).fold(
-                onSuccess = {
-                    _submitMessage.value = "Restaurant updated successfully!"
-                    loadMyApprovedPlaces()
-                },
-                onFailure = { _submitMessage.value = "Update failed: ${it.message}" }
+            val user = FirebaseAuth.getInstance().currentUser ?: run {
+                _submitMessage.value = "Not logged in"
+                return@launch
+            }
+            _isSubmitting.value = true
+
+            val placeImageUrls = mutableListOf<String>()
+            restaurant.images?.let { placeImageUrls.addAll(it) }
+
+            newImageBytesList.forEach { bytes ->
+                submissionRepository.uploadPlaceImage(user.uid, bytes).fold(
+                    onSuccess = { placeImageUrls.add(it) },
+                    onFailure = { /* Skip failed uploads */ }
+                )
+            }
+
+            val submission = PlaceSubmission(
+                ownerId = user.uid,
+                ownerEmail = user.email ?: "",
+                placeType = PlaceType.RESTAURANT,
+                name = restaurant.name,
+                city = restaurant.city ?: "",
+                type = restaurant.type,
+                description = restaurant.description ?: "",
+                address = restaurant.address ?: "",
+                phoneNumber = restaurant.phoneNumber ?: "",
+                websiteUrl = restaurant.websiteUrl ?: "",
+                placeImages = placeImageUrls,
+                status = SubmissionStatus.PENDING,
+                submittedAt = System.currentTimeMillis(),
+                existingPlaceId = restaurant.id
             )
+
+            submissionRepository.submitPlace(submission).fold(
+                onSuccess = {
+                    _submitMessage.value = "Update submitted! Awaiting admin approval."
+                    loadMySubmissions()
+                },
+                onFailure = { _submitMessage.value = "Submit failed: ${it.message}" }
+            )
+            _isSubmitting.value = false
         }
     }
 
-    fun updateHotel(hotel: Hotel) {
+    fun updateHotel(hotel: Hotel, newImageBytesList: List<ByteArray> = emptyList()) {
         viewModelScope.launch {
-            dashboardRepository.updateHotel(hotel).fold(
-                onSuccess = {
-                    _submitMessage.value = "Hotel updated successfully!"
-                    loadMyApprovedPlaces()
-                },
-                onFailure = { _submitMessage.value = "Update failed: ${it.message}" }
+            val user = FirebaseAuth.getInstance().currentUser ?: run {
+                _submitMessage.value = "Not logged in"
+                return@launch
+            }
+            _isSubmitting.value = true
+
+            val placeImageUrls = mutableListOf<String>()
+            hotel.images?.let { placeImageUrls.addAll(it) }
+
+            newImageBytesList.forEach { bytes ->
+                submissionRepository.uploadPlaceImage(user.uid, bytes).fold(
+                    onSuccess = { placeImageUrls.add(it) },
+                    onFailure = { /* Skip failed uploads */ }
+                )
+            }
+
+            val submission = PlaceSubmission(
+                ownerId = user.uid,
+                ownerEmail = user.email ?: "",
+                placeType = PlaceType.HOTEL,
+                name = hotel.name,
+                city = hotel.city ?: "",
+                type = hotel.type,
+                description = hotel.description ?: "",
+                address = hotel.address ?: "",
+                phoneNumber = hotel.phoneNumber ?: "",
+                websiteUrl = hotel.websiteUrl ?: "",
+                placeImages = placeImageUrls,
+                status = SubmissionStatus.PENDING,
+                submittedAt = System.currentTimeMillis(),
+                existingPlaceId = hotel.id
             )
+
+            submissionRepository.submitPlace(submission).fold(
+                onSuccess = {
+                    _submitMessage.value = "Update submitted! Awaiting admin approval."
+                    loadMySubmissions()
+                },
+                onFailure = { _submitMessage.value = "Submit failed: ${it.message}" }
+            )
+            _isSubmitting.value = false
         }
     }
 
-    fun updatePlace(place: PlaceToVisit) {
+    fun updatePlace(place: PlaceToVisit, newImageBytesList: List<ByteArray> = emptyList()) {
         viewModelScope.launch {
-            dashboardRepository.updatePlace(place).fold(
-                onSuccess = {
-                    _submitMessage.value = "Place updated successfully!"
-                    loadMyApprovedPlaces()
-                },
-                onFailure = { _submitMessage.value = "Update failed: ${it.message}" }
+            val user = FirebaseAuth.getInstance().currentUser ?: run {
+                _submitMessage.value = "Not logged in"
+                return@launch
+            }
+            _isSubmitting.value = true
+
+            val placeImageUrls = mutableListOf<String>()
+            place.images?.let { placeImageUrls.addAll(it) }
+
+            newImageBytesList.forEach { bytes ->
+                submissionRepository.uploadPlaceImage(user.uid, bytes).fold(
+                    onSuccess = { placeImageUrls.add(it) },
+                    onFailure = { /* Skip failed uploads */ }
+                )
+            }
+
+            val submission = PlaceSubmission(
+                ownerId = user.uid,
+                ownerEmail = user.email ?: "",
+                placeType = PlaceType.PLACE_TO_VISIT,
+                name = place.name,
+                city = place.city ?: "",
+                description = place.description ?: "",
+                address = place.address ?: "",
+                websiteUrl = place.websiteUrl ?: "",
+                placeImages = placeImageUrls,
+                status = SubmissionStatus.PENDING,
+                submittedAt = System.currentTimeMillis(),
+                existingPlaceId = place.id
             )
+
+            submissionRepository.submitPlace(submission).fold(
+                onSuccess = {
+                    _submitMessage.value = "Update submitted! Awaiting admin approval."
+                    loadMySubmissions()
+                },
+                onFailure = { _submitMessage.value = "Submit failed: ${it.message}" }
+            )
+            _isSubmitting.value = false
         }
     }
 
-    fun updateEquipmentShop(shop: EquipmentShop) {
+    fun updateEquipmentShop(shop: EquipmentShop, newImageBytesList: List<ByteArray> = emptyList()) {
         viewModelScope.launch {
-            dashboardRepository.updateEquipmentShop(shop).fold(
-                onSuccess = {
-                    _submitMessage.value = "Shop updated successfully!"
-                    loadMyApprovedPlaces()
-                },
-                onFailure = { _submitMessage.value = "Update failed: ${it.message}" }
+            val user = FirebaseAuth.getInstance().currentUser ?: run {
+                _submitMessage.value = "Not logged in"
+                return@launch
+            }
+            _isSubmitting.value = true
+
+            val placeImageUrls = mutableListOf<String>()
+            shop.images?.let { placeImageUrls.addAll(it) }
+
+            newImageBytesList.forEach { bytes ->
+                submissionRepository.uploadPlaceImage(user.uid, bytes).fold(
+                    onSuccess = { placeImageUrls.add(it) },
+                    onFailure = { /* Skip failed uploads */ }
+                )
+            }
+
+            val submission = PlaceSubmission(
+                ownerId = user.uid,
+                ownerEmail = user.email ?: "",
+                placeType = PlaceType.EQUIPMENT_SHOP,
+                name = shop.name,
+                city = shop.city ?: "",
+                type = shop.type,
+                description = shop.description ?: "",
+                address = shop.address ?: "",
+                phoneNumber = shop.phoneNumber ?: "",
+                websiteUrl = shop.websiteUrl ?: "",
+                placeImages = placeImageUrls,
+                status = SubmissionStatus.PENDING,
+                submittedAt = System.currentTimeMillis(),
+                existingPlaceId = shop.id
             )
+
+            submissionRepository.submitPlace(submission).fold(
+                onSuccess = {
+                    _submitMessage.value = "Update submitted! Awaiting admin approval."
+                    loadMySubmissions()
+                },
+                onFailure = { _submitMessage.value = "Submit failed: ${it.message}" }
+            )
+            _isSubmitting.value = false
         }
     }
 

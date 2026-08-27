@@ -6,11 +6,13 @@ import com.aroundly.aroundly.data.remote.FirebaseAuthService
 import com.aroundly.aroundly.data.remote.FirebaseSubmissionService
 import com.aroundly.aroundly.data.repository.AuthRepositoryImpl
 import com.aroundly.aroundly.data.repository.DashboardRepositoryImpl
+import com.aroundly.aroundly.data.repository.MenuRepositoryImpl
 import com.aroundly.aroundly.data.repository.ReviewRepositoryImpl
 import com.aroundly.aroundly.data.repository.SubmissionRepositoryImpl
 import com.aroundly.aroundly.data.repository.UserRepositoryImpl
 import com.aroundly.aroundly.domain.repository.AuthRepository
 import com.aroundly.aroundly.domain.repository.DashboardRepository
+import com.aroundly.aroundly.domain.repository.MenuRepository
 import com.aroundly.aroundly.domain.repository.ReviewRepository
 import com.aroundly.aroundly.domain.repository.SubmissionRepository
 import com.aroundly.aroundly.domain.repository.UserRepository
@@ -48,6 +50,10 @@ abstract class AppModule {
     @Binds
     @Singleton
     abstract fun bindReviewRepository(impl: ReviewRepositoryImpl): ReviewRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindMenuRepository(impl: MenuRepositoryImpl): MenuRepository
 
     companion object {
         @Provides

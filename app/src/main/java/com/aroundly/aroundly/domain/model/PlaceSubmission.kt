@@ -17,7 +17,8 @@ data class PlaceSubmission(
     val status: SubmissionStatus = SubmissionStatus.PENDING,
     val submittedAt: Long = 0L,
     val reviewedAt: Long = 0L,
-    val adminNotes: String = ""
+    val adminNotes: String = "",
+    val existingPlaceId: String = ""
 ) {
     fun toRestaurant(): Restaurant = Restaurant(
         id = "",

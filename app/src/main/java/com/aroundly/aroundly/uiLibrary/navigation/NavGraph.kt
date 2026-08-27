@@ -25,6 +25,7 @@ import com.aroundly.aroundly.uiLibrary.dashboard.DashboardScreen
 import com.aroundly.aroundly.uiLibrary.manager.ManagerDashboardScreen
 import com.aroundly.aroundly.uiLibrary.manager.ManagerSignupScreen
 import com.aroundly.aroundly.uiLibrary.map.MapScreen
+import com.aroundly.aroundly.uiLibrary.viewModel.MenuViewModel
 import com.aroundly.aroundly.uiLibrary.viewModel.RestaurantDetailsViewModel
 import com.aroundly.aroundly.uiLibrary.viewModel.HotelDetailsViewModel
 import com.aroundly.aroundly.uiLibrary.viewModel.PlaceDetailsViewModel
@@ -166,11 +167,13 @@ fun NavGraph() {
         ) {
             val viewModel: RestaurantDetailsViewModel = hiltViewModel()
             val reviewViewModel: ReviewViewModel = hiltViewModel()
+            val menuViewModel: MenuViewModel = hiltViewModel()
             val restaurant by viewModel.restaurant.collectAsState()
             restaurant?.let { r ->
                 RestaurantDetailsScreen(
                     restaurant = r,
                     reviewViewModel = reviewViewModel,
+                    menuViewModel = menuViewModel,
                     onBack = { navController.popBackStack() }
                 )
             } ?: run {
@@ -186,11 +189,13 @@ fun NavGraph() {
         ) {
             val viewModel: HotelDetailsViewModel = hiltViewModel()
             val reviewViewModel: ReviewViewModel = hiltViewModel()
+            val menuViewModel: MenuViewModel = hiltViewModel()
             val hotel by viewModel.hotel.collectAsState()
             hotel?.let { h ->
                 HotelDetailsScreen(
                     hotel = h,
                     reviewViewModel = reviewViewModel,
+                    menuViewModel = menuViewModel,
                     onBack = { navController.popBackStack() }
                 )
             } ?: run {
@@ -206,11 +211,13 @@ fun NavGraph() {
         ) {
             val viewModel: PlaceDetailsViewModel = hiltViewModel()
             val reviewViewModel: ReviewViewModel = hiltViewModel()
+            val menuViewModel: MenuViewModel = hiltViewModel()
             val place by viewModel.place.collectAsState()
             place?.let { p ->
                 PlaceToVisitDetailsScreen(
                     place = p,
                     reviewViewModel = reviewViewModel,
+                    menuViewModel = menuViewModel,
                     onBack = { navController.popBackStack() }
                 )
             } ?: run {
@@ -226,11 +233,13 @@ fun NavGraph() {
         ) {
             val viewModel: EquipmentDetailsViewModel = hiltViewModel()
             val reviewViewModel: ReviewViewModel = hiltViewModel()
+            val menuViewModel: MenuViewModel = hiltViewModel()
             val equipment by viewModel.equipment.collectAsState()
             equipment?.let { e ->
                 EquipmentShopDetailsScreen(
                     shop = e,
                     reviewViewModel = reviewViewModel,
+                    menuViewModel = menuViewModel,
                     onBack = { navController.popBackStack() }
                 )
             } ?: run {

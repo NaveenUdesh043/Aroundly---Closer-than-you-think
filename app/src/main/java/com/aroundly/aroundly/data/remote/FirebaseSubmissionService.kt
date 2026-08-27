@@ -41,7 +41,8 @@ class FirebaseSubmissionService(
             "receiptImageUrl" to submission.receiptImageUrl,
             "placeImages" to submission.placeImages,
             "status" to submission.status.name,
-            "submittedAt" to System.currentTimeMillis()
+            "submittedAt" to System.currentTimeMillis(),
+            "existingPlaceId" to submission.existingPlaceId
         )
         val doc = firestore.collection("place_submissions").add(data).await()
         return doc.id
@@ -84,69 +85,76 @@ class FirebaseSubmissionService(
             .await()
 
         if (status == SubmissionStatus.APPROVED) {
-            when (submission.placeType) {
+            val collectionName = when (submission.placeType) {
+                com.aroundly.aroundly.domain.model.PlaceType.RESTAURANT -> "restaurants"
+                com.aroundly.aroundly.domain.model.PlaceType.HOTEL -> "hotels"
+                com.aroundly.aroundly.domain.model.PlaceType.PLACE_TO_VISIT -> "places"
+                com.aroundly.aroundly.domain.model.PlaceType.EQUIPMENT_SHOP -> "equipmentShops"
+            }
+
+            val placeData = when (submission.placeType) {
                 com.aroundly.aroundly.domain.model.PlaceType.RESTAURANT -> {
                     val r = submission.toRestaurant()
-                    firestore.collection("restaurants").add(
-                        hashMapOf(
-                            "ownerId" to submission.ownerId,
-                            "name" to r.name,
-                            "city" to r.city,
-                            "type" to r.type,
-                            "description" to r.description,
-                            "address" to r.address,
-                            "phoneNumber" to r.phoneNumber,
-                            "websiteUrl" to r.websiteUrl,
-                            "images" to (r.images ?: emptyList())
-                        )
-                    ).await()
+                    hashMapOf(
+                        "ownerId" to submission.ownerId,
+                        "name" to r.name,
+                        "city" to r.city,
+                        "type" to r.type,
+                        "description" to r.description,
+                        "address" to r.address,
+                        "phoneNumber" to r.phoneNumber,
+                        "websiteUrl" to r.websiteUrl,
+                        "images" to (r.images ?: emptyList())
+                    )
                 }
                 com.aroundly.aroundly.domain.model.PlaceType.HOTEL -> {
                     val h = submission.toHotel()
-                    firestore.collection("hotels").add(
-                        hashMapOf(
-                            "ownerId" to submission.ownerId,
-                            "name" to h.name,
-                            "city" to h.city,
-                            "type" to h.type,
-                            "description" to h.description,
-                            "address" to h.address,
-                            "phoneNumber" to h.phoneNumber,
-                            "websiteUrl" to h.websiteUrl,
-                            "images" to (h.images ?: emptyList())
-                        )
-                    ).await()
+                    hashMapOf(
+                        "ownerId" to submission.ownerId,
+                        "name" to h.name,
+                        "city" to h.city,
+                        "type" to h.type,
+                        "description" to h.description,
+                        "address" to h.address,
+                        "phoneNumber" to h.phoneNumber,
+                        "websiteUrl" to h.websiteUrl,
+                        "images" to (h.images ?: emptyList())
+                    )
                 }
                 com.aroundly.aroundly.domain.model.PlaceType.PLACE_TO_VISIT -> {
                     val p = submission.toPlaceToVisit()
-                    firestore.collection("places").add(
-                        hashMapOf(
-                            "ownerId" to submission.ownerId,
-                            "name" to p.name,
-                            "city" to p.city,
-                            "description" to p.description,
-                            "address" to p.address,
-                            "websiteUrl" to p.websiteUrl,
-                            "images" to (p.images ?: emptyList())
-                        )
-                    ).await()
+                    hashMapOf(
+                        "ownerId" to submission.ownerId,
+                        "name" to p.name,
+                        "city" to p.city,
+                        "description" to p.description,
+                        "address" to p.address,
+                        "websiteUrl" to p.websiteUrl,
+                        "images" to (p.images ?: emptyList())
+                    )
                 }
                 com.aroundly.aroundly.domain.model.PlaceType.EQUIPMENT_SHOP -> {
                     val e = submission.toEquipmentShop()
-                    firestore.collection("equipmentShops").add(
-                        hashMapOf(
-                            "ownerId" to submission.ownerId,
-                            "name" to e.name,
-                            "city" to e.city,
-                            "type" to e.type,
-                            "description" to e.description,
-                            "address" to e.address,
-                            "phoneNumber" to e.phoneNumber,
-                            "websiteUrl" to e.websiteUrl,
-                            "images" to (e.images ?: emptyList())
-                        )
-                    ).await()
+                    hashMapOf(
+                        "ownerId" to submission.ownerId,
+                        "name" to e.name,
+                        "city" to e.city,
+                        "type" to e.type,
+                        "description" to e.description,
+                        "address" to e.address,
+                        "phoneNumber" to e.phoneNumber,
+                        "websiteUrl" to e.websiteUrl,
+                        "images" to (e.images ?: emptyList())
+                    )
                 }
+            }
+
+            if (submission.existingPlaceId.isNotBlank()) {
+                firestore.collection(collectionName).document(submission.existingPlaceId)
+                    .update(placeData as Map<String, Any>)
+                    .await()
+            } else {
+                firestore.collection(collectionName).add(placeData).await()
             }
         }
     }
@@ -176,7 +184,8 @@ class FirebaseSubmissionService(
             status = SubmissionStatus.valueOf(getString("status") ?: "PENDING"),
             submittedAt = (get("submittedAt") as? Number)?.toLong() ?: 0L,
             reviewedAt = (get("reviewedAt") as? Number)?.toLong() ?: 0L,
-            adminNotes = getString("adminNotes") ?: ""
+            adminNotes = getString("adminNotes") ?: "",
+            existingPlaceId = getString("existingPlaceId") ?: ""
         )
     }
 }

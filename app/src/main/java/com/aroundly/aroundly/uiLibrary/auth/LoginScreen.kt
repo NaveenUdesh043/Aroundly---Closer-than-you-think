@@ -234,6 +234,7 @@ fun LoginScreen(
                         cursorColor = TextPrimary
                     ),
                     singleLine = true,
+                    textStyle = TextStyle(color = TextPrimary),
                     visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                     trailingIcon = {
                         val icon =
@@ -363,4 +364,5 @@ fun LoginScreen(
         }
     }
 }
+
 

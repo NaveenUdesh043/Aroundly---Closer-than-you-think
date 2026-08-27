@@ -32,14 +32,24 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
+import androidx.compose.material3.TabRowDefaults
+import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
@@ -47,10 +57,10 @@ import com.aroundly.aroundly.domain.model.EquipmentShop
 import com.aroundly.aroundly.domain.model.Hotel
 import com.aroundly.aroundly.domain.model.PlaceToVisit
 import com.aroundly.aroundly.domain.model.Restaurant
+import com.aroundly.aroundly.ui.theme.Amber
+import com.aroundly.aroundly.ui.theme.BgDark
 import com.aroundly.aroundly.ui.theme.PrimaryTealDark
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import com.aroundly.aroundly.uiLibrary.viewModel.MenuViewModel
 import com.aroundly.aroundly.uiLibrary.viewModel.ReviewViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -58,10 +68,13 @@ import com.aroundly.aroundly.uiLibrary.viewModel.ReviewViewModel
 fun RestaurantDetailsScreen(
     restaurant: Restaurant,
     reviewViewModel: ReviewViewModel,
+    menuViewModel: MenuViewModel,
     onBack: () -> Unit
 ) {
     val avgRating by reviewViewModel.averageRating.collectAsState()
     val reviewCount by reviewViewModel.reviewCount.collectAsState()
+    var selectedTab by remember { mutableIntStateOf(0) }
+    val tabs = listOf("Overview", "Menu")
 
     PlaceDetailsScaffold(
         title = restaurant.name,
@@ -71,41 +84,76 @@ fun RestaurantDetailsScreen(
         StatRow(rating = avgRating, reviewCount = reviewCount)
         Spacer(Modifier.height(16.dp))
 
-        TagChipsRow(
-            tags = buildList {
-                add(restaurant.type.ifBlank { "Restaurant" })
-                add("Cozy")
-                add("Free WiFi")
-                add("Outdoor")
+        TabRow(
+            selectedTabIndex = selectedTab,
+            containerColor = Color.Transparent,
+            contentColor = Amber,
+            indicator = { tabPositions ->
+                TabRowDefaults.SecondaryIndicator(
+                    modifier = Modifier.tabIndicatorOffset(tabPositions[selectedTab]),
+                    color = Amber
+                )
             }
-        )
+        ) {
+            tabs.forEachIndexed { index, title ->
+                Tab(
+                    selected = selectedTab == index,
+                    onClick = { selectedTab = index },
+                    text = {
+                        Text(
+                            title,
+                            fontWeight = if (selectedTab == index) FontWeight.Bold else FontWeight.Normal,
+                            color = if (selectedTab == index) Amber else Color.Gray
+                        )
+                    }
+                )
+            }
+        }
 
-        Spacer(Modifier.height(20.dp))
+        Spacer(Modifier.height(12.dp))
 
-        Text("About", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-        Spacer(Modifier.height(8.dp))
-        Text(
-            text = restaurant.description.takeUnless { it.isNullOrBlank() }
-                ?: "Discover tasty meals and a warm atmosphere at this restaurant.",
-            style = MaterialTheme.typography.bodyMedium
-        )
+        when (selectedTab) {
+            0 -> {
+                TagChipsRow(
+                    tags = buildList {
+                        add(restaurant.type.ifBlank { "Restaurant" })
+                        add("Cozy")
+                        add("Free WiFi")
+                        add("Outdoor")
+                    }
+                )
 
-        Spacer(Modifier.height(20.dp))
-        OpeningHoursCard()
+                Spacer(Modifier.height(20.dp))
 
-        Spacer(Modifier.height(20.dp))
-        ReviewsSection(viewModel = reviewViewModel)
+                Text("About", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    text = restaurant.description.takeUnless { it.isNullOrBlank() }
+                        ?: "Discover tasty meals and a warm atmosphere at this restaurant.",
+                    style = MaterialTheme.typography.bodyMedium
+                )
 
-        Spacer(Modifier.height(24.dp))
+                Spacer(Modifier.height(20.dp))
+                OpeningHoursCard()
 
-        BottomActionsRow(
-            phone = restaurant.phoneNumber,
-            address = restaurant.address
-        )
+                Spacer(Modifier.height(20.dp))
+                ReviewsSection(viewModel = reviewViewModel)
 
-        restaurant.websiteUrl?.takeIf { it.isNotBlank() }?.let {
-            Spacer(Modifier.height(12.dp))
-            WebsiteRow(websiteUrl = it)
+                Spacer(Modifier.height(24.dp))
+
+                BottomActionsRow(
+                    phone = restaurant.phoneNumber,
+                    address = restaurant.address
+                )
+
+                restaurant.websiteUrl?.takeIf { it.isNotBlank() }?.let {
+                    Spacer(Modifier.height(12.dp))
+                    WebsiteRow(websiteUrl = it)
+                }
+            }
+            1 -> {
+                MenuTabContent(shopId = restaurant.id, menuViewModel = menuViewModel)
+            }
         }
     }
 }
@@ -115,10 +163,13 @@ fun RestaurantDetailsScreen(
 fun HotelDetailsScreen(
     hotel: Hotel,
     reviewViewModel: ReviewViewModel,
+    menuViewModel: MenuViewModel,
     onBack: () -> Unit
 ) {
     val avgRating by reviewViewModel.averageRating.collectAsState()
     val reviewCount by reviewViewModel.reviewCount.collectAsState()
+    var selectedTab by remember { mutableIntStateOf(0) }
+    val tabs = listOf("Overview", "Menu")
 
     PlaceDetailsScaffold(
         title = hotel.name,
@@ -128,36 +179,71 @@ fun HotelDetailsScreen(
         StatRow(rating = avgRating, reviewCount = reviewCount)
         Spacer(Modifier.height(16.dp))
 
-        TagChipsRow(
-            tags = listOf("Hotel", hotel.type.ifBlank { "Comfort" }, "Family friendly")
-        )
+        TabRow(
+            selectedTabIndex = selectedTab,
+            containerColor = Color.Transparent,
+            contentColor = Amber,
+            indicator = { tabPositions ->
+                TabRowDefaults.SecondaryIndicator(
+                    modifier = Modifier.tabIndicatorOffset(tabPositions[selectedTab]),
+                    color = Amber
+                )
+            }
+        ) {
+            tabs.forEachIndexed { index, title ->
+                Tab(
+                    selected = selectedTab == index,
+                    onClick = { selectedTab = index },
+                    text = {
+                        Text(
+                            title,
+                            fontWeight = if (selectedTab == index) FontWeight.Bold else FontWeight.Normal,
+                            color = if (selectedTab == index) Amber else Color.Gray
+                        )
+                    }
+                )
+            }
+        }
 
-        Spacer(Modifier.height(20.dp))
+        Spacer(Modifier.height(12.dp))
 
-        Text("About", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-        Spacer(Modifier.height(8.dp))
-        Text(
-            text = hotel.description.takeUnless { it.isNullOrBlank() }
-                ?: "Stay comfortably with modern rooms and great service.",
-            style = MaterialTheme.typography.bodyMedium
-        )
+        when (selectedTab) {
+            0 -> {
+                TagChipsRow(
+                    tags = listOf("Hotel", hotel.type.ifBlank { "Comfort" }, "Family friendly")
+                )
 
-        Spacer(Modifier.height(20.dp))
-        OpeningHoursCard(title = "Check-in / Check-out")
+                Spacer(Modifier.height(20.dp))
 
-        Spacer(Modifier.height(20.dp))
-        ReviewsSection(viewModel = reviewViewModel)
+                Text("About", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    text = hotel.description.takeUnless { it.isNullOrBlank() }
+                        ?: "Stay comfortably with modern rooms and great service.",
+                    style = MaterialTheme.typography.bodyMedium
+                )
 
-        Spacer(Modifier.height(24.dp))
+                Spacer(Modifier.height(20.dp))
+                OpeningHoursCard(title = "Check-in / Check-out")
 
-        BottomActionsRow(
-            phone = hotel.phoneNumber,
-            address = hotel.address
-        )
+                Spacer(Modifier.height(20.dp))
+                ReviewsSection(viewModel = reviewViewModel)
 
-        hotel.websiteUrl?.takeIf { it.isNotBlank() }?.let {
-            Spacer(Modifier.height(12.dp))
-            WebsiteRow(websiteUrl = it)
+                Spacer(Modifier.height(24.dp))
+
+                BottomActionsRow(
+                    phone = hotel.phoneNumber,
+                    address = hotel.address
+                )
+
+                hotel.websiteUrl?.takeIf { it.isNotBlank() }?.let {
+                    Spacer(Modifier.height(12.dp))
+                    WebsiteRow(websiteUrl = it)
+                }
+            }
+            1 -> {
+                MenuTabContent(shopId = hotel.id, menuViewModel = menuViewModel)
+            }
         }
     }
 }
@@ -167,10 +253,13 @@ fun HotelDetailsScreen(
 fun PlaceToVisitDetailsScreen(
     place: PlaceToVisit,
     reviewViewModel: ReviewViewModel,
+    menuViewModel: MenuViewModel,
     onBack: () -> Unit
 ) {
     val avgRating by reviewViewModel.averageRating.collectAsState()
     val reviewCount by reviewViewModel.reviewCount.collectAsState()
+    var selectedTab by remember { mutableIntStateOf(0) }
+    val tabs = listOf("Overview", "Menu")
 
     PlaceDetailsScaffold(
         title = place.name,
@@ -180,36 +269,71 @@ fun PlaceToVisitDetailsScreen(
         StatRow(rating = avgRating, reviewCount = reviewCount)
         Spacer(Modifier.height(16.dp))
 
-        TagChipsRow(
-            tags = listOf("Attraction", "Outdoor")
-        )
+        TabRow(
+            selectedTabIndex = selectedTab,
+            containerColor = Color.Transparent,
+            contentColor = Amber,
+            indicator = { tabPositions ->
+                TabRowDefaults.SecondaryIndicator(
+                    modifier = Modifier.tabIndicatorOffset(tabPositions[selectedTab]),
+                    color = Amber
+                )
+            }
+        ) {
+            tabs.forEachIndexed { index, title ->
+                Tab(
+                    selected = selectedTab == index,
+                    onClick = { selectedTab = index },
+                    text = {
+                        Text(
+                            title,
+                            fontWeight = if (selectedTab == index) FontWeight.Bold else FontWeight.Normal,
+                            color = if (selectedTab == index) Amber else Color.Gray
+                        )
+                    }
+                )
+            }
+        }
 
-        Spacer(Modifier.height(20.dp))
+        Spacer(Modifier.height(12.dp))
 
-        Text("About", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-        Spacer(Modifier.height(8.dp))
-        Text(
-            text = place.description.takeUnless { it.isNullOrBlank() }
-                ?: "A great place to experience the local atmosphere.",
-            style = MaterialTheme.typography.bodyMedium
-        )
+        when (selectedTab) {
+            0 -> {
+                TagChipsRow(
+                    tags = listOf("Attraction", "Outdoor")
+                )
 
-        Spacer(Modifier.height(20.dp))
-        OpeningHoursCard()
+                Spacer(Modifier.height(20.dp))
 
-        Spacer(Modifier.height(20.dp))
-        ReviewsSection(viewModel = reviewViewModel)
+                Text("About", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    text = place.description.takeUnless { it.isNullOrBlank() }
+                        ?: "A great place to experience the local atmosphere.",
+                    style = MaterialTheme.typography.bodyMedium
+                )
 
-        Spacer(Modifier.height(24.dp))
+                Spacer(Modifier.height(20.dp))
+                OpeningHoursCard()
 
-        BottomActionsRow(
-            phone = null,
-            address = place.address
-        )
+                Spacer(Modifier.height(20.dp))
+                ReviewsSection(viewModel = reviewViewModel)
 
-        place.websiteUrl?.takeIf { it.isNotBlank() }?.let {
-            Spacer(Modifier.height(12.dp))
-            WebsiteRow(websiteUrl = it)
+                Spacer(Modifier.height(24.dp))
+
+                BottomActionsRow(
+                    phone = null,
+                    address = place.address
+                )
+
+                place.websiteUrl?.takeIf { it.isNotBlank() }?.let {
+                    Spacer(Modifier.height(12.dp))
+                    WebsiteRow(websiteUrl = it)
+                }
+            }
+            1 -> {
+                MenuTabContent(shopId = place.id, menuViewModel = menuViewModel)
+            }
         }
     }
 }
@@ -219,10 +343,13 @@ fun PlaceToVisitDetailsScreen(
 fun EquipmentShopDetailsScreen(
     shop: EquipmentShop,
     reviewViewModel: ReviewViewModel,
+    menuViewModel: MenuViewModel,
     onBack: () -> Unit
 ) {
     val avgRating by reviewViewModel.averageRating.collectAsState()
     val reviewCount by reviewViewModel.reviewCount.collectAsState()
+    var selectedTab by remember { mutableIntStateOf(0) }
+    val tabs = listOf("Overview", "Menu")
 
     PlaceDetailsScaffold(
         title = shop.name,
@@ -232,36 +359,71 @@ fun EquipmentShopDetailsScreen(
         StatRow(rating = avgRating, reviewCount = reviewCount)
         Spacer(Modifier.height(16.dp))
 
-        TagChipsRow(
-            tags = listOf("Rental", shop.type.ifBlank { "Equipment" })
-        )
+        TabRow(
+            selectedTabIndex = selectedTab,
+            containerColor = Color.Transparent,
+            contentColor = Amber,
+            indicator = { tabPositions ->
+                TabRowDefaults.SecondaryIndicator(
+                    modifier = Modifier.tabIndicatorOffset(tabPositions[selectedTab]),
+                    color = Amber
+                )
+            }
+        ) {
+            tabs.forEachIndexed { index, title ->
+                Tab(
+                    selected = selectedTab == index,
+                    onClick = { selectedTab = index },
+                    text = {
+                        Text(
+                            title,
+                            fontWeight = if (selectedTab == index) FontWeight.Bold else FontWeight.Normal,
+                            color = if (selectedTab == index) Amber else Color.Gray
+                        )
+                    }
+                )
+            }
+        }
 
-        Spacer(Modifier.height(20.dp))
+        Spacer(Modifier.height(12.dp))
 
-        Text("About", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-        Spacer(Modifier.height(8.dp))
-        Text(
-            text = shop.description.takeUnless { it.isNullOrBlank() }
-                ?: "Find the equipment you need for your next adventure.",
-            style = MaterialTheme.typography.bodyMedium
-        )
+        when (selectedTab) {
+            0 -> {
+                TagChipsRow(
+                    tags = listOf("Rental", shop.type.ifBlank { "Equipment" })
+                )
 
-        Spacer(Modifier.height(20.dp))
-        OpeningHoursCard()
+                Spacer(Modifier.height(20.dp))
 
-        Spacer(Modifier.height(20.dp))
-        ReviewsSection(viewModel = reviewViewModel)
+                Text("About", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    text = shop.description.takeUnless { it.isNullOrBlank() }
+                        ?: "Find the equipment you need for your next adventure.",
+                    style = MaterialTheme.typography.bodyMedium
+                )
 
-        Spacer(Modifier.height(24.dp))
+                Spacer(Modifier.height(20.dp))
+                OpeningHoursCard()
 
-        BottomActionsRow(
-            phone = shop.phoneNumber,
-            address = shop.address
-        )
+                Spacer(Modifier.height(20.dp))
+                ReviewsSection(viewModel = reviewViewModel)
 
-        shop.websiteUrl?.takeIf { it.isNotBlank() }?.let {
-            Spacer(Modifier.height(12.dp))
-            WebsiteRow(websiteUrl = it)
+                Spacer(Modifier.height(24.dp))
+
+                BottomActionsRow(
+                    phone = shop.phoneNumber,
+                    address = shop.address
+                )
+
+                shop.websiteUrl?.takeIf { it.isNotBlank() }?.let {
+                    Spacer(Modifier.height(12.dp))
+                    WebsiteRow(websiteUrl = it)
+                }
+            }
+            1 -> {
+                MenuTabContent(shopId = shop.id, menuViewModel = menuViewModel)
+            }
         }
     }
 }
