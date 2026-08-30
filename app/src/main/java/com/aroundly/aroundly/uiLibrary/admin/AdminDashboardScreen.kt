@@ -63,6 +63,7 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.aroundly.aroundly.domain.model.PlaceSubmission
 import com.aroundly.aroundly.ui.theme.PrimaryTeal
+import com.aroundly.aroundly.uiLibrary.common.LogoutConfirmBottomSheet
 import com.aroundly.aroundly.uiLibrary.viewModel.AdminViewModel
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.aroundly.aroundly.ui.theme.Amber
@@ -99,6 +100,8 @@ fun AdminDashboardScreen(
 
     var itemToDelete by remember { mutableStateOf<PlaceSubmission?>(null) }
 
+    var showLogoutSheet by remember { mutableStateOf(false) }
+
     fun approve(item: PlaceSubmission, notes: String) {
         viewModel.approveSubmission(item, notes)
     }
@@ -123,7 +126,7 @@ fun AdminDashboardScreen(
             pendingCount = pendingSubmissions.size,
             approvedCount = approvedSubmissions.size,
             rejectedCount = rejectedSubmissions.size,
-            onLogout = onLogout
+            onLogout = { showLogoutSheet = true }
         )
 
         AdminTabRow(
@@ -207,6 +210,16 @@ fun AdminDashboardScreen(
                 }
             )
         }
+    }
+
+    if (showLogoutSheet) {
+        LogoutConfirmBottomSheet(
+            onConfirm = {
+                showLogoutSheet = false
+                onLogout()
+            },
+            onDismiss = { showLogoutSheet = false }
+        )
     }
 }
 

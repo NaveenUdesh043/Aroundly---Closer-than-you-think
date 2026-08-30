@@ -103,6 +103,7 @@ import com.aroundly.aroundly.ui.theme.StatusPending
 import com.aroundly.aroundly.ui.theme.StatusApproved
 import com.aroundly.aroundly.ui.theme.StatusRejected
 import com.aroundly.aroundly.uiLibrary.common.GenericDropdown
+import com.aroundly.aroundly.uiLibrary.common.LogoutConfirmBottomSheet
 import com.aroundly.aroundly.uiLibrary.viewModel.DashboardViewModel
 import androidx.hilt.navigation.compose.hiltViewModel
 
@@ -142,6 +143,8 @@ fun DashboardScreen(
         }
     }
 
+    var showLogoutSheet by remember { mutableStateOf(false) }
+
     var selectedTab by remember { mutableIntStateOf(0) }
     val tabs = listOf("All", "Restaurants", "Hotels", "Places", "Rentals")
 
@@ -169,7 +172,7 @@ fun DashboardScreen(
                     DashboardHeader(
                         city = selectedCity,
                         isLoadingLocation = isLoadingLocation,
-                        onLogout = onLogout,
+                        onLogout = { showLogoutSheet = true },
                         onLocationClick = {
                             if (viewModel.hasLocationPermission()) {
                                 viewModel.detectLocation()
@@ -420,6 +423,16 @@ fun DashboardScreen(
                 }
             }
         }
+    }
+
+    if (showLogoutSheet) {
+        LogoutConfirmBottomSheet(
+            onConfirm = {
+                showLogoutSheet = false
+                onLogout()
+            },
+            onDismiss = { showLogoutSheet = false }
+        )
     }
 }
 

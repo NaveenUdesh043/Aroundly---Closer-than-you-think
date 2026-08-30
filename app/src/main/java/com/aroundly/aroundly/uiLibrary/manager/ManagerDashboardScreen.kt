@@ -70,6 +70,7 @@ import com.aroundly.aroundly.domain.model.SubmissionStatus
 import com.aroundly.aroundly.ui.theme.PrimaryTeal
 import com.aroundly.aroundly.ui.theme.PrimaryTealDark
 import com.aroundly.aroundly.uiLibrary.common.GenericDropdown
+import com.aroundly.aroundly.uiLibrary.common.LogoutConfirmBottomSheet
 import com.aroundly.aroundly.uiLibrary.common.MenuTabContent
 import com.aroundly.aroundly.uiLibrary.viewModel.ManagerViewModel
 import com.aroundly.aroundly.uiLibrary.viewModel.MenuViewModel
@@ -131,6 +132,8 @@ fun ManagerDashboardScreen(
         viewModel.loadMyApprovedPlaces()
     }
 
+    var showLogoutSheet by remember { mutableStateOf(false) }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -140,7 +143,7 @@ fun ManagerDashboardScreen(
                     titleContentColor = Color.White
                 ),
                 actions = {
-                    IconButton(onClick = onLogout) {
+                    IconButton(onClick = { showLogoutSheet = true }) {
                         Icon(Icons.AutoMirrored.Filled.Logout, contentDescription = "Logout", tint = Color.White)
                     }
                 }
@@ -433,6 +436,16 @@ fun ManagerDashboardScreen(
                 Spacer(Modifier.height(8.dp))
             }
         }
+    }
+
+    if (showLogoutSheet) {
+        LogoutConfirmBottomSheet(
+            onConfirm = {
+                showLogoutSheet = false
+                onLogout()
+            },
+            onDismiss = { showLogoutSheet = false }
+        )
     }
 }
 
