@@ -139,7 +139,8 @@ fun MapScreen(
                 )
             ) {
                 if (currentLocation != null) {
-                    val userMarkerState = remember(userLatLng) { MarkerState(position = userLatLng) }
+                    val userMarkerState =
+                        remember(userLatLng) { MarkerState(position = userLatLng) }
                     Marker(
                         state = userMarkerState,
                         title = "You are here",
@@ -158,7 +159,8 @@ fun MapScreen(
 
                 filteredPlaces.forEach { place ->
                     place.latLng?.let { pos ->
-                        val hue = CategoryMarkerColors[place.category] ?: BitmapDescriptorFactory.HUE_RED
+                        val hue =
+                            CategoryMarkerColors[place.category] ?: BitmapDescriptorFactory.HUE_RED
                         Marker(
                             state = MarkerState(position = pos),
                             title = place.name,
@@ -370,10 +372,13 @@ private fun MapHeader(onBack: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .height(125.dp)
-            .shadow(8.dp,
+            .shadow(
+                8.dp,
                 RoundedCornerShape(
                     bottomStart = 28.dp,
-                    bottomEnd = 28.dp))
+                    bottomEnd = 28.dp
+                )
+            )
             .clip(RoundedCornerShape(bottomStart = 28.dp, bottomEnd = 28.dp))
             .background(
                 Brush.linearGradient(

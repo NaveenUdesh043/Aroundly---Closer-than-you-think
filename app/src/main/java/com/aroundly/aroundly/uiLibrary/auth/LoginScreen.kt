@@ -235,14 +235,19 @@ fun LoginScreen(
                     ),
                     singleLine = true,
                     textStyle = TextStyle(color = TextPrimary),
-                    visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                    visualTransformation = if (passwordVisible) VisualTransformation.None
+                    else
+                        PasswordVisualTransformation(),
                     trailingIcon = {
                         val icon =
-                            if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff
+                            if (passwordVisible) Icons.Default.Visibility
+                            else
+                                Icons.Default.VisibilityOff
                         IconButton(onClick = { passwordVisible = !passwordVisible }) {
                             Icon(
                                 imageVector = icon,
-                                contentDescription = if (passwordVisible) "Hide password" else "Show password",
+                                contentDescription = if (passwordVisible) "Hide password"
+                                else "Show password",
                                 tint = Color(0xFF3D3025)
                             )
                         }
@@ -260,7 +265,7 @@ fun LoginScreen(
                 ) {
                     Text(
                         text = "Forgot password?",
-                        color =  Color(0xFF3D3025),
+                        color = Color(0xFF3D3025),
                         style = MaterialTheme.typography.labelMedium
                     )
                 }

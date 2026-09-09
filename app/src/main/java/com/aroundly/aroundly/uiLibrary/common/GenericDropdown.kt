@@ -141,7 +141,9 @@ fun GenericDropdown(
                                 text = option,
                                 color = if (isSelected) Amber else White70,
                                 fontSize = 15.sp,
-                                fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
+                                fontWeight = if (isSelected) FontWeight.SemiBold
+                                else
+                                    FontWeight.Normal
                             )
                         }
                     }

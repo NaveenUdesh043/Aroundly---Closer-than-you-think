@@ -115,10 +115,11 @@ fun WelcomeScreen(
                 .align(Alignment.TopEnd)
                 .padding(top = 30.dp, end = 20.dp)
         ) {
-            Column (modifier = Modifier
-                .width(32.dp)
-                .height(32.dp)
-            ){
+            Column(
+                modifier = Modifier
+                    .width(32.dp)
+                    .height(32.dp)
+            ) {
                 Icon(
                     imageVector = Icons.Default.Language,
                     contentDescription = "Change Language",
@@ -126,7 +127,8 @@ fun WelcomeScreen(
                 )
                 Text(
                     text = "Language",
-                    fontSize = 8.sp)
+                    fontSize = 8.sp
+                )
             }
         }
         Column(
@@ -310,8 +312,10 @@ fun LogoSection(visible: Boolean) {
 }
 
 private val featurePills =
-    listOf("☕ Cafés", "🍽️ Food", "🏛️ Visit",
-        "🏨 Stay", "🚲 Rent")
+    listOf(
+        "☕ Cafés", "🍽️ Food", "🏛️ Visit",
+        "🏨 Stay", "🚲 Rent"
+    )
 
 @Composable
 fun FeaturePillsRow(
@@ -481,8 +485,10 @@ fun BottomSignInRow(
 
         Spacer(Modifier.height(20.dp))
 
-        Row(horizontalArrangement = Arrangement.Center,
-            modifier = Modifier.fillMaxWidth()) {
+        Row(
+            horizontalArrangement = Arrangement.Center,
+            modifier = Modifier.fillMaxWidth()
+        ) {
 
             Text(
                 "Already have an account? ",

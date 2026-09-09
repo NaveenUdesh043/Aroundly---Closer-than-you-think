@@ -110,7 +110,10 @@ fun ManagerSignupScreen(
         // Header card
         Card(
             modifier = Modifier.fillMaxWidth(),
-            shape = androidx.compose.foundation.shape.RoundedCornerShape(bottomStart = 32.dp, bottomEnd = 32.dp),
+            shape = androidx.compose.foundation.shape.RoundedCornerShape(
+                bottomStart = 32.dp,
+                bottomEnd = 32.dp
+            ),
             colors = CardDefaults.cardColors(containerColor = Color.Transparent)
         ) {
             Box(
@@ -357,7 +360,8 @@ fun ManagerSignupScreen(
                     singleLine = true,
                     visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                     trailingIcon = {
-                        val icon = if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff
+                        val icon =
+                            if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff
                         IconButton(onClick = { passwordVisible = !passwordVisible }) {
                             Icon(
                                 imageVector = icon,
@@ -394,7 +398,8 @@ fun ManagerSignupScreen(
                     singleLine = true,
                     visualTransformation = if (confirmPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                     trailingIcon = {
-                        val icon = if (confirmPasswordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff
+                        val icon =
+                            if (confirmPasswordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff
                         IconButton(onClick = { confirmPasswordVisible = !confirmPasswordVisible }) {
                             Icon(
                                 imageVector = icon,
@@ -448,24 +453,24 @@ fun ManagerSignupScreen(
             }
         }
 
-            Box(
-                modifier = Modifier.fillMaxWidth(),
-                contentAlignment = Alignment.Center
+        Box(
+            modifier = Modifier.fillMaxWidth(),
+            contentAlignment = Alignment.Center
+        ) {
+            TextButton(
+                onClick = { showTermsDialog = true },
             ) {
-                TextButton(
-                    onClick = { showTermsDialog = true },
-                ) {
-                    Text(
-                        text = "View Terms and Conditions",
-                        style = MaterialTheme.typography.bodyMedium.copy(
-                            textDecoration = TextDecoration.Underline,
-                            fontWeight = FontWeight.Bold
-                        ),
-                        textAlign = TextAlign.Center,
-                        color = SurfaceWarm
-                    )
-                }
+                Text(
+                    text = "View Terms and Conditions",
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        textDecoration = TextDecoration.Underline,
+                        fontWeight = FontWeight.Bold
+                    ),
+                    textAlign = TextAlign.Center,
+                    color = SurfaceWarm
+                )
             }
+        }
 
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -485,6 +490,7 @@ fun ManagerSignupScreen(
                     email.isBlank() -> errorMessage = "Email is required"
                     !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches() ->
                         errorMessage = "Invalid email format"
+
                     password.length < 6 -> errorMessage = "Password must be at least 6 characters"
                     password != confirmPassword -> errorMessage = "Passwords do not match"
                     !termsAccepted -> errorMessage = "You must accept the Terms and Conditions"
@@ -510,9 +516,11 @@ fun ManagerSignupScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(52.dp)
-                .background(color = Color(0xFFFFB02C),
-                    shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp)),
-            enabled = !isLoading && termsAccepted ,
+                .background(
+                    color = Color(0xFFFFB02C),
+                    shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp)
+                ),
+            enabled = !isLoading && termsAccepted,
             colors = ButtonDefaults.buttonColors(
                 containerColor = Color.Transparent,
                 disabledContainerColor = Color.Gray.copy(alpha = 0.1f)
@@ -558,7 +566,7 @@ fun ManagerSignupScreen(
                             .verticalScroll(rememberScrollState())
                     ) {
                         Text(
-                                    "Effective Date: 01/03/2030 \n\n\n" +
+                            "Effective Date: 01/03/2030 \n\n\n" +
                                     "Welcome to Aroundly,\n\n A mobile application that helps users discover nearby cafés, restaurants, and dining experiences. \n\n" +
                                     "By downloading, accessing, or using the Aroundly application, you agree to comply with and be bound by the following Terms and Conditions. " +
                                     "If you do not agree with these terms, please do not use the application.\n\n" +

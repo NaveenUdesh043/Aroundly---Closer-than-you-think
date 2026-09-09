@@ -144,7 +144,11 @@ fun ManagerDashboardScreen(
                 ),
                 actions = {
                     IconButton(onClick = { showLogoutSheet = true }) {
-                        Icon(Icons.AutoMirrored.Filled.Logout, contentDescription = "Logout", tint = Color.White)
+                        Icon(
+                            Icons.AutoMirrored.Filled.Logout,
+                            contentDescription = "Logout",
+                            tint = Color.White
+                        )
                     }
                 }
             )
@@ -162,16 +166,24 @@ fun ManagerDashboardScreen(
                 Spacer(Modifier.height(8.dp))
             }
 
-            Text("Add New Place", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            Text(
+                "Add New Place",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
+            )
             Spacer(Modifier.height(12.dp))
 
             GenericDropdown(
                 label = "Place Type",
-                options = PlaceType.entries.map { it.name.replace("_", " ").lowercase().replaceFirstChar { c -> c.uppercase() } },
-                selectedOption = placeType.name.replace("_", " ").lowercase().replaceFirstChar { c -> c.uppercase() },
+                options = PlaceType.entries.map {
+                    it.name.replace("_", " ").lowercase().replaceFirstChar { c -> c.uppercase() }
+                },
+                selectedOption = placeType.name.replace("_", " ").lowercase()
+                    .replaceFirstChar { c -> c.uppercase() },
                 onOptionSelected = { opt ->
                     placeType = PlaceType.entries.find {
-                        it.name.replace("_", " ").lowercase().replaceFirstChar { c -> c.uppercase() } == opt
+                        it.name.replace("_", " ").lowercase()
+                            .replaceFirstChar { c -> c.uppercase() } == opt
                     } ?: PlaceType.RESTAURANT
                 }
             )
@@ -195,12 +207,16 @@ fun ManagerDashboardScreen(
             OutlinedTextField(
                 value = type,
                 onValueChange = { type = it },
-                label = { Text(when (placeType) {
-                    PlaceType.RESTAURANT -> "Type (e.g. BYOB, Fine Dining)"
-                    PlaceType.HOTEL -> "Type (e.g. Budget, Luxury)"
-                    PlaceType.PLACE_TO_VISIT -> "Type (e.g. Museum, Park)"
-                    PlaceType.EQUIPMENT_SHOP -> "Type (e.g. Bikes, Cars)"
-                }) },
+                label = {
+                    Text(
+                        when (placeType) {
+                            PlaceType.RESTAURANT -> "Type (e.g. BYOB, Fine Dining)"
+                            PlaceType.HOTEL -> "Type (e.g. Budget, Luxury)"
+                            PlaceType.PLACE_TO_VISIT -> "Type (e.g. Museum, Park)"
+                            PlaceType.EQUIPMENT_SHOP -> "Type (e.g. Bikes, Cars)"
+                        }
+                    )
+                },
                 modifier = Modifier.fillMaxWidth()
             )
             Spacer(Modifier.height(8.dp))
@@ -254,15 +270,26 @@ fun ManagerDashboardScreen(
                     )
                 } else {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Icon(Icons.Default.Image, contentDescription = null, modifier = Modifier.size(40.dp))
+                        Icon(
+                            Icons.Default.Image,
+                            contentDescription = null,
+                            modifier = Modifier.size(40.dp)
+                        )
                         Text("Tap to upload receipt")
                     }
                 }
             }
 
             Spacer(Modifier.height(16.dp))
-            Text("Restaurant/Place Images", style = MaterialTheme.typography.labelMedium)
-            Text("Add up to 5 images (optional)", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+            Text(
+                "Restaurant/Place Images",
+                style = MaterialTheme.typography.labelMedium
+            )
+            Text(
+                "Add up to 5 images (optional)",
+                style = MaterialTheme.typography.bodySmall,
+                color = Color.Gray
+            )
             Spacer(Modifier.height(8.dp))
             Row(
                 modifier = Modifier
@@ -275,7 +302,10 @@ fun ManagerDashboardScreen(
                         modifier = Modifier
                             .size(80.dp)
                             .clip(RoundedCornerShape(8.dp))
-                            .border(1.dp, Color.Gray, RoundedCornerShape(8.dp))
+                            .border(
+                                1.dp, Color.Gray,
+                                RoundedCornerShape(8.dp)
+                            )
                     ) {
                         AsyncImage(
                             model = uri,
@@ -289,17 +319,26 @@ fun ManagerDashboardScreen(
                         modifier = Modifier
                             .size(80.dp)
                             .clip(RoundedCornerShape(8.dp))
-                            .border(2.dp, Color.Gray, RoundedCornerShape(8.dp))
+                            .border(
+                                2.dp, Color.Gray, RoundedCornerShape(
+                                    8.dp
+                                )
+                            )
                             .clickable {
                                 placeImagesPicker.launch(
                                     PickVisualMediaRequest.Builder()
-                                        .setMediaType(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                                        .setMediaType(
+                                            ActivityResultContracts.PickVisualMedia.ImageOnly
+                                        )
                                         .build()
                                 )
                             },
                         contentAlignment = Alignment.Center
                     ) {
-                        Icon(Icons.Default.Add, contentDescription = "Add image", modifier = Modifier.size(32.dp))
+                        Icon(
+                            Icons.Default.Add,
+                            contentDescription = "Add image", modifier = Modifier.size(32.dp)
+                        )
                     }
                 }
             }
@@ -325,13 +364,17 @@ fun ManagerDashboardScreen(
                     }
                 },
                 modifier = Modifier.fillMaxWidth(),
-                enabled = !isSubmitting && name.isNotBlank() && city.isNotBlank() && receiptBytes != null
+                enabled = !isSubmitting && name.isNotBlank() && city.isNotBlank()
+                        && receiptBytes != null
             ) {
                 Text(if (isSubmitting) "Submitting..." else "Submit for Approval")
             }
 
             Spacer(Modifier.height(32.dp))
-            Text("My Approved Places", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            Text(
+                "My Approved Places", style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
+            )
             Spacer(Modifier.height(8.dp))
 
             menuMessage?.let { msg ->
@@ -355,7 +398,8 @@ fun ManagerDashboardScreen(
                     if (bytes != null && bytes.isNotEmpty()) {
                         menuViewModel.uploadMenuImage(shopId, bytes)
                     }
-                } catch (_: Exception) {}
+                } catch (_: Exception) {
+                }
             }
 
             myRestaurants.forEach { r ->
@@ -366,7 +410,11 @@ fun ManagerDashboardScreen(
                     onEdit = { showEditSheet = r },
                     onUploadImage = {
                         activeMenuShopId = r.id
-                        menuImagePicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+                        menuImagePicker.launch(
+                            PickVisualMediaRequest(
+                                ActivityResultContracts.PickVisualMedia.ImageOnly
+                            )
+                        )
                     },
                     menuViewModel = menuViewModel
                 )
@@ -408,14 +456,23 @@ fun ManagerDashboardScreen(
                     onEdit = { showEditSheet = e },
                     onUploadImage = {
                         activeMenuShopId = e.id
-                        menuImagePicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+                        menuImagePicker.launch(
+                            PickVisualMediaRequest(
+                                ActivityResultContracts.PickVisualMedia.ImageOnly
+                            )
+                        )
                     },
                     menuViewModel = menuViewModel
                 )
                 Spacer(Modifier.height(8.dp))
             }
-            if (myRestaurants.isEmpty() && myHotels.isEmpty() && myPlaces.isEmpty() && myEquipmentShops.isEmpty()) {
-                Text("No approved places yet. Submit a new place and wait for admin approval.", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+            if (myRestaurants.isEmpty() && myHotels.isEmpty() && myPlaces.isEmpty()
+                && myEquipmentShops.isEmpty()
+            ) {
+                Text(
+                    "No approved places yet. Submit a new place and wait for admin approval.",
+                    style = MaterialTheme.typography.bodySmall, color = Color.Gray
+                )
                 Spacer(Modifier.height(8.dp))
             }
 
@@ -428,7 +485,10 @@ fun ManagerDashboardScreen(
             }
 
             Spacer(Modifier.height(24.dp))
-            Text("My Submissions (Pending/Approved/Rejected)", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            Text(
+                "My Submissions (Pending/Approved/Rejected)",
+                style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold
+            )
             Spacer(Modifier.height(8.dp))
 
             mySubmissions.forEach { sub ->
@@ -585,7 +645,10 @@ private fun ApprovedPlaceCard(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+        colors = CardDefaults.cardColors(
+            containerColor =
+                MaterialTheme.colorScheme.surfaceVariant
+        ),
         shape = RoundedCornerShape(12.dp)
     ) {
         Row(
@@ -636,7 +699,10 @@ private fun ApprovedPlaceCardWithMenu(
                 }
                 Row {
                     IconButton(onClick = onEdit) {
-                        Icon(Icons.Default.Edit, contentDescription = "Edit", tint = PrimaryTeal)
+                        Icon(
+                            Icons.Default.Edit, contentDescription = "Edit",
+                            tint = PrimaryTeal
+                        )
                     }
                 }
             }
@@ -649,7 +715,11 @@ private fun ApprovedPlaceCardWithMenu(
                 colors = ButtonDefaults.buttonColors(containerColor = PrimaryTeal),
                 shape = RoundedCornerShape(8.dp)
             ) {
-                Icon(Icons.Default.Image, contentDescription = null, modifier = Modifier.size(18.dp))
+                Icon(
+                    Icons.Default.Image, contentDescription = null,
+
+                    modifier = Modifier.size(18.dp)
+                )
                 Spacer(Modifier.width(6.dp))
                 Text("Upload Menu Image")
             }
@@ -701,17 +771,42 @@ private fun EditPlaceBottomSheet(
 ) {
     ModalBottomSheet(onDismissRequest = onDismiss) {
         when (place) {
-            is Restaurant -> EditRestaurantForm(restaurant = place, viewModel = viewModel, onDismiss = onDismiss)
-            is Hotel -> EditHotelForm(hotel = place, viewModel = viewModel, onDismiss = onDismiss)
-            is PlaceToVisit -> EditPlaceForm(place = place, viewModel = viewModel, onDismiss = onDismiss)
-            is EquipmentShop -> EditEquipmentForm(shop = place, viewModel = viewModel, onDismiss = onDismiss)
+            is Restaurant -> EditRestaurantForm(
+                restaurant = place,
+                viewModel = viewModel,
+                onDismiss = onDismiss
+            )
+
+            is Hotel -> EditHotelForm(
+                hotel = place,
+                viewModel = viewModel,
+                onDismiss = onDismiss
+            )
+
+            is PlaceToVisit -> EditPlaceForm(
+                place = place,
+                viewModel = viewModel,
+                onDismiss = onDismiss
+            )
+
+            is EquipmentShop -> EditEquipmentForm(
+                shop = place,
+                viewModel = viewModel,
+                onDismiss = onDismiss
+            )
+
             else -> {}
         }
     }
 }
 
 @Composable
-private fun EditRestaurantForm(restaurant: Restaurant, viewModel: ManagerViewModel, onDismiss: () -> Unit) {
+private fun EditRestaurantForm(
+    restaurant: Restaurant,
+    viewModel: ManagerViewModel,
+    onDismiss: () -> Unit
+) {
+
     var name by remember { mutableStateOf(restaurant.name) }
     var city by remember { mutableStateOf(restaurant.city ?: "") }
     var type by remember { mutableStateOf(restaurant.type) }
@@ -738,23 +833,63 @@ private fun EditRestaurantForm(restaurant: Restaurant, viewModel: ManagerViewMod
             .padding(16.dp)
             .verticalScroll(rememberScrollState())
     ) {
-        Text("Edit Restaurant", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+        Text(
+            "Edit Restaurant",
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold
+        )
         Spacer(Modifier.height(16.dp))
-        OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Name") }, modifier = Modifier.fillMaxWidth())
+        OutlinedTextField(
+            value = name,
+            onValueChange = { name = it },
+            label = { Text("Name") },
+            modifier = Modifier.fillMaxWidth()
+        )
         Spacer(Modifier.height(8.dp))
-        OutlinedTextField(value = city, onValueChange = { city = it }, label = { Text("City") }, modifier = Modifier.fillMaxWidth())
+        OutlinedTextField(
+            value = city,
+            onValueChange = { city = it },
+            label = { Text("City") },
+            modifier = Modifier.fillMaxWidth()
+        )
         Spacer(Modifier.height(8.dp))
-        OutlinedTextField(value = type, onValueChange = { type = it }, label = { Text("Type") }, modifier = Modifier.fillMaxWidth())
+        OutlinedTextField(
+            value = type,
+            onValueChange = { type = it },
+            label = { Text("Type") },
+            modifier = Modifier.fillMaxWidth()
+        )
         Spacer(Modifier.height(8.dp))
-        OutlinedTextField(value = description, onValueChange = { description = it }, label = { Text("Description") }, modifier = Modifier.fillMaxWidth(), minLines = 2)
+        OutlinedTextField(
+            value = description,
+            onValueChange = { description = it },
+            label = { Text("Description") },
+            modifier = Modifier.fillMaxWidth(),
+            minLines = 2
+        )
         Spacer(Modifier.height(8.dp))
-        OutlinedTextField(value = address, onValueChange = { address = it }, label = { Text("Address") }, modifier = Modifier.fillMaxWidth())
+        OutlinedTextField(
+            value = address,
+            onValueChange = { address = it },
+            label = { Text("Address") },
+            modifier = Modifier.fillMaxWidth()
+        )
         Spacer(Modifier.height(8.dp))
-        OutlinedTextField(value = phone, onValueChange = { phone = it }, label = { Text("Phone") }, modifier = Modifier.fillMaxWidth())
+        OutlinedTextField(
+            value = phone,
+            onValueChange = { phone = it },
+            label = { Text("Phone") },
+            modifier = Modifier.fillMaxWidth()
+        )
         Spacer(Modifier.height(12.dp))
 
         if (restaurant.images?.isNotEmpty() == true && newImageUris.isEmpty()) {
-            Text("Current Images", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold, color = PrimaryTealDark)
+            Text(
+                "Current Images",
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = PrimaryTealDark
+            )
             Spacer(Modifier.height(4.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -775,14 +910,26 @@ private fun EditRestaurantForm(restaurant: Restaurant, viewModel: ManagerViewMod
             Spacer(Modifier.height(8.dp))
         }
 
-        OutlinedButton(onClick = { imagePicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) }, modifier = Modifier.fillMaxWidth()) {
-            Icon(Icons.Default.Image, contentDescription = null, modifier = Modifier.size(18.dp))
+        OutlinedButton(
+            onClick = {
+                imagePicker.launch(
+                    PickVisualMediaRequest(
+                        ActivityResultContracts.PickVisualMedia.ImageOnly)) },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Icon(Icons.Default.Image,
+                contentDescription = null,
+                modifier = Modifier.size(18.dp))
             Spacer(Modifier.width(6.dp))
             Text("Change Images (up to 5)")
         }
         if (newImageUris.isNotEmpty()) {
             Spacer(Modifier.height(4.dp))
-            Text("${newImageUris.size} new image(s) selected", style = MaterialTheme.typography.bodySmall, color = PrimaryTeal)
+            Text(
+                "${newImageUris.size} new image(s) selected",
+                style = MaterialTheme.typography.bodySmall,
+                color = PrimaryTeal
+            )
             Spacer(Modifier.height(4.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -804,7 +951,14 @@ private fun EditRestaurantForm(restaurant: Restaurant, viewModel: ManagerViewMod
         Spacer(Modifier.height(16.dp))
         Button(onClick = {
             viewModel.updateRestaurant(
-                restaurant.copy(name = name, city = city, type = type, description = description, address = address, phoneNumber = phone),
+                restaurant.copy(
+                    name = name,
+                    city = city,
+                    type = type,
+                    description = description,
+                    address = address,
+                    phoneNumber = phone
+                ),
                 newImageBytesList = newImageBytesList
             )
             onDismiss()
@@ -814,7 +968,11 @@ private fun EditRestaurantForm(restaurant: Restaurant, viewModel: ManagerViewMod
 }
 
 @Composable
-private fun EditHotelForm(hotel: Hotel, viewModel: ManagerViewModel, onDismiss: () -> Unit) {
+private fun EditHotelForm(
+    hotel: Hotel,
+    viewModel: ManagerViewModel,
+    onDismiss: () -> Unit) {
+
     var name by remember { mutableStateOf(hotel.name) }
     var city by remember { mutableStateOf(hotel.city ?: "") }
     var type by remember { mutableStateOf(hotel.type) }
@@ -824,6 +982,7 @@ private fun EditHotelForm(hotel: Hotel, viewModel: ManagerViewModel, onDismiss: 
     var newImageBytesList by remember { mutableStateOf<List<ByteArray>>(emptyList()) }
     var newImageUris by remember { mutableStateOf<List<Uri>>(emptyList()) }
     val context = LocalContext.current
+
     val imagePicker = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickMultipleVisualMedia(maxItems = 5)
     ) { uris ->
@@ -841,23 +1000,63 @@ private fun EditHotelForm(hotel: Hotel, viewModel: ManagerViewModel, onDismiss: 
             .padding(16.dp)
             .verticalScroll(rememberScrollState())
     ) {
-        Text("Edit Hotel", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+        Text(
+            "Edit Hotel",
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold
+        )
         Spacer(Modifier.height(16.dp))
-        OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Name") }, modifier = Modifier.fillMaxWidth())
+        OutlinedTextField(
+            value = name,
+            onValueChange = { name = it },
+            label = { Text("Name") },
+            modifier = Modifier.fillMaxWidth()
+        )
         Spacer(Modifier.height(8.dp))
-        OutlinedTextField(value = city, onValueChange = { city = it }, label = { Text("City") }, modifier = Modifier.fillMaxWidth())
+        OutlinedTextField(
+            value = city,
+            onValueChange = { city = it },
+            label = { Text("City") },
+            modifier = Modifier.fillMaxWidth()
+        )
         Spacer(Modifier.height(8.dp))
-        OutlinedTextField(value = type, onValueChange = { type = it }, label = { Text("Type") }, modifier = Modifier.fillMaxWidth())
+        OutlinedTextField(
+            value = type,
+            onValueChange = { type = it },
+            label = { Text("Type") },
+            modifier = Modifier.fillMaxWidth()
+        )
         Spacer(Modifier.height(8.dp))
-        OutlinedTextField(value = description, onValueChange = { description = it }, label = { Text("Description") }, modifier = Modifier.fillMaxWidth(), minLines = 2)
+        OutlinedTextField(
+            value = description,
+            onValueChange = { description = it },
+            label = { Text("Description") },
+            modifier = Modifier.fillMaxWidth(),
+            minLines = 2
+        )
         Spacer(Modifier.height(8.dp))
-        OutlinedTextField(value = address, onValueChange = { address = it }, label = { Text("Address") }, modifier = Modifier.fillMaxWidth())
+        OutlinedTextField(
+            value = address,
+            onValueChange = { address = it },
+            label = { Text("Address") },
+            modifier = Modifier.fillMaxWidth()
+        )
         Spacer(Modifier.height(8.dp))
-        OutlinedTextField(value = phone, onValueChange = { phone = it }, label = { Text("Phone") }, modifier = Modifier.fillMaxWidth())
+        OutlinedTextField(
+            value = phone,
+            onValueChange = { phone = it },
+            label = { Text("Phone") },
+            modifier = Modifier.fillMaxWidth()
+        )
         Spacer(Modifier.height(12.dp))
 
         if (hotel.images?.isNotEmpty() == true && newImageUris.isEmpty()) {
-            Text("Current Images", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold, color = PrimaryTealDark)
+            Text(
+                "Current Images",
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = PrimaryTealDark
+            )
             Spacer(Modifier.height(4.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -878,14 +1077,21 @@ private fun EditHotelForm(hotel: Hotel, viewModel: ManagerViewModel, onDismiss: 
             Spacer(Modifier.height(8.dp))
         }
 
-        OutlinedButton(onClick = { imagePicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) }, modifier = Modifier.fillMaxWidth()) {
+        OutlinedButton(
+            onClick = { imagePicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) },
+            modifier = Modifier.fillMaxWidth()
+        ) {
             Icon(Icons.Default.Image, contentDescription = null, modifier = Modifier.size(18.dp))
             Spacer(Modifier.width(6.dp))
             Text("Change Images (up to 5)")
         }
         if (newImageUris.isNotEmpty()) {
             Spacer(Modifier.height(4.dp))
-            Text("${newImageUris.size} new image(s) selected", style = MaterialTheme.typography.bodySmall, color = PrimaryTeal)
+            Text(
+                "${newImageUris.size} new image(s) selected",
+                style = MaterialTheme.typography.bodySmall,
+                color = PrimaryTeal
+            )
             Spacer(Modifier.height(4.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -907,7 +1113,14 @@ private fun EditHotelForm(hotel: Hotel, viewModel: ManagerViewModel, onDismiss: 
         Spacer(Modifier.height(16.dp))
         Button(onClick = {
             viewModel.updateHotel(
-                hotel.copy(name = name, city = city, type = type, description = description, address = address, phoneNumber = phone),
+                hotel.copy(
+                    name = name,
+                    city = city,
+                    type = type,
+                    description = description,
+                    address = address,
+                    phoneNumber = phone
+                ),
                 newImageBytesList = newImageBytesList
             )
             onDismiss()
@@ -917,7 +1130,11 @@ private fun EditHotelForm(hotel: Hotel, viewModel: ManagerViewModel, onDismiss: 
 }
 
 @Composable
-private fun EditPlaceForm(place: PlaceToVisit, viewModel: ManagerViewModel, onDismiss: () -> Unit) {
+private fun EditPlaceForm(
+    place: PlaceToVisit,
+    viewModel: ManagerViewModel,
+    onDismiss: () -> Unit) {
+
     var name by remember { mutableStateOf(place.name) }
     var city by remember { mutableStateOf(place.city ?: "") }
     var description by remember { mutableStateOf(place.description ?: "") }
@@ -942,19 +1159,49 @@ private fun EditPlaceForm(place: PlaceToVisit, viewModel: ManagerViewModel, onDi
             .padding(16.dp)
             .verticalScroll(rememberScrollState())
     ) {
-        Text("Edit Place", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+        Text(
+            "Edit Place",
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold
+        )
         Spacer(Modifier.height(16.dp))
-        OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Name") }, modifier = Modifier.fillMaxWidth())
+        OutlinedTextField(
+            value = name,
+            onValueChange = { name = it },
+            label = { Text("Name") },
+            modifier = Modifier.fillMaxWidth()
+        )
         Spacer(Modifier.height(8.dp))
-        OutlinedTextField(value = city, onValueChange = { city = it }, label = { Text("City") }, modifier = Modifier.fillMaxWidth())
+        OutlinedTextField(
+            value = city,
+            onValueChange = { city = it },
+            label = { Text("City") },
+            modifier = Modifier.fillMaxWidth()
+        )
         Spacer(Modifier.height(8.dp))
-        OutlinedTextField(value = description, onValueChange = { description = it }, label = { Text("Description") }, modifier = Modifier.fillMaxWidth(), minLines = 2)
+        OutlinedTextField(
+            value = description,
+            onValueChange = { description = it },
+            label = { Text("Description") },
+            modifier = Modifier.fillMaxWidth(),
+            minLines = 2
+        )
         Spacer(Modifier.height(8.dp))
-        OutlinedTextField(value = address, onValueChange = { address = it }, label = { Text("Address") }, modifier = Modifier.fillMaxWidth())
+        OutlinedTextField(
+            value = address,
+            onValueChange = { address = it },
+            label = { Text("Address") },
+            modifier = Modifier.fillMaxWidth()
+        )
         Spacer(Modifier.height(12.dp))
 
         if (place.images?.isNotEmpty() == true && newImageUris.isEmpty()) {
-            Text("Current Images", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold, color = PrimaryTealDark)
+            Text(
+                "Current Images",
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = PrimaryTealDark
+            )
             Spacer(Modifier.height(4.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -975,14 +1222,27 @@ private fun EditPlaceForm(place: PlaceToVisit, viewModel: ManagerViewModel, onDi
             Spacer(Modifier.height(8.dp))
         }
 
-        OutlinedButton(onClick = { imagePicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) }, modifier = Modifier.fillMaxWidth()) {
-            Icon(Icons.Default.Image, contentDescription = null, modifier = Modifier.size(18.dp))
+        OutlinedButton(
+            onClick = {
+                imagePicker.launch(
+                    PickVisualMediaRequest(
+                        ActivityResultContracts.PickVisualMedia.ImageOnly)) },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Icon(
+                Icons.Default.Image,
+                contentDescription = null,
+                modifier = Modifier.size(18.dp))
             Spacer(Modifier.width(6.dp))
             Text("Change Images (up to 5)")
         }
         if (newImageUris.isNotEmpty()) {
             Spacer(Modifier.height(4.dp))
-            Text("${newImageUris.size} new image(s) selected", style = MaterialTheme.typography.bodySmall, color = PrimaryTeal)
+            Text(
+                "${newImageUris.size} new image(s) selected",
+                style = MaterialTheme.typography.bodySmall,
+                color = PrimaryTeal
+            )
             Spacer(Modifier.height(4.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -1014,7 +1274,11 @@ private fun EditPlaceForm(place: PlaceToVisit, viewModel: ManagerViewModel, onDi
 }
 
 @Composable
-private fun EditEquipmentForm(shop: EquipmentShop, viewModel: ManagerViewModel, onDismiss: () -> Unit) {
+private fun EditEquipmentForm(
+    shop: EquipmentShop,
+    viewModel: ManagerViewModel,
+    onDismiss: () -> Unit
+) {
     var name by remember { mutableStateOf(shop.name) }
     var city by remember { mutableStateOf(shop.city ?: "") }
     var type by remember { mutableStateOf(shop.type) }
@@ -1041,23 +1305,63 @@ private fun EditEquipmentForm(shop: EquipmentShop, viewModel: ManagerViewModel, 
             .padding(16.dp)
             .verticalScroll(rememberScrollState())
     ) {
-        Text("Edit Equipment Shop", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+        Text(
+            "Edit Equipment Shop",
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold
+        )
         Spacer(Modifier.height(16.dp))
-        OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Name") }, modifier = Modifier.fillMaxWidth())
+        OutlinedTextField(
+            value = name,
+            onValueChange = { name = it },
+            label = { Text("Name") },
+            modifier = Modifier.fillMaxWidth()
+        )
         Spacer(Modifier.height(8.dp))
-        OutlinedTextField(value = city, onValueChange = { city = it }, label = { Text("City") }, modifier = Modifier.fillMaxWidth())
+        OutlinedTextField(
+            value = city,
+            onValueChange = { city = it },
+            label = { Text("City") },
+            modifier = Modifier.fillMaxWidth()
+        )
         Spacer(Modifier.height(8.dp))
-        OutlinedTextField(value = type, onValueChange = { type = it }, label = { Text("Type") }, modifier = Modifier.fillMaxWidth())
+        OutlinedTextField(
+            value = type,
+            onValueChange = { type = it },
+            label = { Text("Type") },
+            modifier = Modifier.fillMaxWidth()
+        )
         Spacer(Modifier.height(8.dp))
-        OutlinedTextField(value = description, onValueChange = { description = it }, label = { Text("Description") }, modifier = Modifier.fillMaxWidth(), minLines = 2)
+        OutlinedTextField(
+            value = description,
+            onValueChange = { description = it },
+            label = { Text("Description") },
+            modifier = Modifier.fillMaxWidth(),
+            minLines = 2
+        )
         Spacer(Modifier.height(8.dp))
-        OutlinedTextField(value = address, onValueChange = { address = it }, label = { Text("Address") }, modifier = Modifier.fillMaxWidth())
+        OutlinedTextField(
+            value = address,
+            onValueChange = { address = it },
+            label = { Text("Address") },
+            modifier = Modifier.fillMaxWidth()
+        )
         Spacer(Modifier.height(8.dp))
-        OutlinedTextField(value = phone, onValueChange = { phone = it }, label = { Text("Phone") }, modifier = Modifier.fillMaxWidth())
+        OutlinedTextField(
+            value = phone,
+            onValueChange = { phone = it },
+            label = { Text("Phone") },
+            modifier = Modifier.fillMaxWidth()
+        )
         Spacer(Modifier.height(12.dp))
 
         if (shop.images?.isNotEmpty() == true && newImageUris.isEmpty()) {
-            Text("Current Images", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold, color = PrimaryTealDark)
+            Text(
+                "Current Images",
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = PrimaryTealDark
+            )
             Spacer(Modifier.height(4.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -1078,14 +1382,25 @@ private fun EditEquipmentForm(shop: EquipmentShop, viewModel: ManagerViewModel, 
             Spacer(Modifier.height(8.dp))
         }
 
-        OutlinedButton(onClick = { imagePicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) }, modifier = Modifier.fillMaxWidth()) {
-            Icon(Icons.Default.Image, contentDescription = null, modifier = Modifier.size(18.dp))
+        OutlinedButton(
+            onClick = { imagePicker.launch(
+                PickVisualMediaRequest(
+                    ActivityResultContracts.PickVisualMedia.ImageOnly)) },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Icon(Icons.Default.Image,
+                contentDescription = null,
+                modifier = Modifier.size(18.dp))
             Spacer(Modifier.width(6.dp))
             Text("Change Images (up to 5)")
         }
         if (newImageUris.isNotEmpty()) {
             Spacer(Modifier.height(4.dp))
-            Text("${newImageUris.size} new image(s) selected", style = MaterialTheme.typography.bodySmall, color = PrimaryTeal)
+            Text(
+                "${newImageUris.size} new image(s) selected",
+                style = MaterialTheme.typography.bodySmall,
+                color = PrimaryTeal
+            )
             Spacer(Modifier.height(4.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -1107,7 +1422,14 @@ private fun EditEquipmentForm(shop: EquipmentShop, viewModel: ManagerViewModel, 
         Spacer(Modifier.height(16.dp))
         Button(onClick = {
             viewModel.updateEquipmentShop(
-                shop.copy(name = name, city = city, type = type, description = description, address = address, phoneNumber = phone),
+                shop.copy(
+                    name = name,
+                    city = city,
+                    type = type,
+                    description = description,
+                    address = address,
+                    phoneNumber = phone
+                ),
                 newImageBytesList = newImageBytesList
             )
             onDismiss()
@@ -1120,7 +1442,8 @@ private fun EditEquipmentForm(shop: EquipmentShop, viewModel: ManagerViewModel, 
 private fun SubmissionCard(submission: PlaceSubmission) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant),
         shape = RoundedCornerShape(12.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
@@ -1138,7 +1461,10 @@ private fun SubmissionCard(submission: PlaceSubmission) {
                     }
                 )
             }
-            Text("${submission.placeType.name} • ${submission.city}", style = MaterialTheme.typography.bodySmall)
+            Text(
+                "${submission.placeType.name} • ${submission.city}",
+                style = MaterialTheme.typography.bodySmall
+            )
         }
     }
 }

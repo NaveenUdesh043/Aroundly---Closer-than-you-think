@@ -380,7 +380,8 @@ fun SignupScreen(
                     singleLine = true,
                     visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                     trailingIcon = {
-                        val image = if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff
+                        val image =
+                            if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff
                         IconButton(onClick = { passwordVisible = !passwordVisible }) {
                             Icon(
                                 imageVector = image,
@@ -418,7 +419,8 @@ fun SignupScreen(
                     singleLine = true,
                     visualTransformation = if (confirmPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                     trailingIcon = {
-                        val image = if (confirmPasswordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff
+                        val image =
+                            if (confirmPasswordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff
                         IconButton(onClick = { confirmPasswordVisible = !confirmPasswordVisible }) {
                             Icon(
                                 imageVector = image,
@@ -485,10 +487,13 @@ fun SignupScreen(
                             email.isBlank() -> errorMessage = "Email is required"
                             !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches() ->
                                 errorMessage = "Invalid email format"
+
                             password.length < 6 ->
                                 errorMessage = "Password must be at least 6 characters"
+
                             password != confirmPassword ->
                                 errorMessage = "Passwords do not match"
+
                             else -> {
                                 isLoading = true
                                 viewModel.signup(

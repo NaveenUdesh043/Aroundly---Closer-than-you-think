@@ -264,7 +264,7 @@ fun DashboardScreen(
                                 .fillMaxWidth()
                                 .padding(horizontal = 20.dp, vertical = 4.dp)
                                 .clip(RoundedCornerShape(16.dp))
-                                .background( BgMid)
+                                .background(BgMid)
                                 .padding(horizontal = 16.dp, vertical = 12.dp)
                         ) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -474,7 +474,9 @@ private fun DashboardHeader(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .shadow(8.dp, RoundedCornerShape(bottomStart = 28.dp, bottomEnd = 28.dp))
+            .shadow(8.dp,
+                RoundedCornerShape(bottomStart = 28.dp,
+                bottomEnd = 28.dp))
             .clip(RoundedCornerShape(bottomStart = 28.dp, bottomEnd = 28.dp))
             .background(
                 Brush.linearGradient(
@@ -511,16 +513,26 @@ private fun DashboardHeader(
                                 contentDescription = "App Icon",
                                 modifier = Modifier
                                     .size(34.dp)
-                                .clip(CircleShape),
+                                    .clip(CircleShape),
                             )
                         }
                         Spacer(Modifier.width(12.dp))
                         Text(
                             buildAnnotatedString {
-                                withStyle(androidx.compose.ui.text.SpanStyle(color = White, fontWeight = FontWeight.Bold)) {
+                                withStyle(
+                                    androidx.compose.ui.text.SpanStyle(
+                                        color = White,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                ) {
                                     append("Around")
                                 }
-                                withStyle(androidx.compose.ui.text.SpanStyle(color = Amber, fontWeight = FontWeight.Bold)) {
+                                withStyle(
+                                    androidx.compose.ui.text.SpanStyle(
+                                        color = Amber,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                ) {
                                     append("ly")
                                 }
                             },
@@ -863,11 +875,11 @@ private fun RestaurantHeroCard(
                             .background(Color(0x33FFFFFF))
                             .padding(horizontal = 8.dp, vertical = 3.dp)
                     ) {
-                Text(
-                    restaurant.type,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = White
-                )
+                        Text(
+                            restaurant.type,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = White
+                        )
                     }
                     if (restaurant.city != null) {
                         Spacer(Modifier.width(8.dp))
@@ -976,20 +988,20 @@ private fun PlaceCard(
                 verticalArrangement = Arrangement.Center
             ) {
                 // Type badge
-            Box(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(6.dp))
-                    .background(badgeColor.copy(alpha = 0.15f))
-                    .padding(horizontal = 8.dp, vertical = 3.dp)
-            ) {
-                Text(
-                    type,
-                    style = MaterialTheme.typography.labelSmall,
-                    fontWeight = FontWeight.SemiBold,
-                    color = badgeColor,
-                    fontSize = 10.sp
-                )
-            }
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(6.dp))
+                        .background(badgeColor.copy(alpha = 0.15f))
+                        .padding(horizontal = 8.dp, vertical = 3.dp)
+                ) {
+                    Text(
+                        type,
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.SemiBold,
+                        color = badgeColor,
+                        fontSize = 10.sp
+                    )
+                }
                 Spacer(Modifier.height(6.dp))
                 Text(
                     name,
