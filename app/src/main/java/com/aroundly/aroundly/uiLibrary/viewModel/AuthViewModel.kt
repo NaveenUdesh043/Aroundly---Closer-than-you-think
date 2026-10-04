@@ -3,13 +3,19 @@ package com.aroundly.aroundly.uiLibrary.viewModel
 import android.util.Patterns
 import androidx.lifecycle.ViewModel
 import com.aroundly.aroundly.domain.model.UserRole
+import com.aroundly.aroundly.domain.repository.UserRepository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 
 
-class AuthViewModel : ViewModel() {
+@HiltViewModel
+class AuthViewModel @Inject constructor(
+    private val userRepository: UserRepository
+) : ViewModel() {
 
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
     private val firestore: FirebaseFirestore = FirebaseFirestore.getInstance()
@@ -38,6 +44,9 @@ class AuthViewModel : ViewModel() {
                 firestore.collection("users").document(uid).get()
                     .addOnSuccessListener { document ->
                         if (document.exists()) {
+                            // The document is already here, so seed the role
+                            // cache and let the role router skip its own read.
+                            userRepository.cacheUserRole(uid, roleOf(document.getString("role")))
                             callback(true, "Google sign-in successful")
                             return@addOnSuccessListener
                         }
@@ -59,6 +68,7 @@ class AuthViewModel : ViewModel() {
 
                         firestore.collection("users").document(uid).set(user)
                             .addOnSuccessListener {
+                                userRepository.cacheUserRole(uid, UserRole.USER)
                                 callback(true, "Google sign-in successful")
                             }
                             .addOnFailureListener { e ->
@@ -80,11 +90,22 @@ class AuthViewModel : ViewModel() {
         auth.signInWithEmailAndPassword(email.trim(), password.trim())
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
+                    // Email/password sign-in does not touch Firestore at all, so
+                    // the role is still unknown here. Clearing any role cached
+                    // for a previous account keeps the router from routing on a
+                    // stale role when a different user signs in.
+                    auth.currentUser?.uid?.let { userRepository.invalidateUserCache(it) }
                     callback(true, "Login successful")
                 } else {
                     callback(false, task.exception?.localizedMessage ?: "Login failed")
                 }
             }
+    }
+
+    private fun roleOf(raw: String?): UserRole = try {
+        UserRole.valueOf(raw ?: UserRole.USER.name)
+    } catch (e: Exception) {
+        UserRole.USER
     }
 
     fun signup(
@@ -164,9 +185,16 @@ class AuthViewModel : ViewModel() {
                         .document(uid)
                         .set(user)
                         .addOnSuccessListener {
+                            // Newly created, so the role is known without a read.
+                            userRepository.cacheUserRole(uid, role)
                             callback(true, "Signup successful")
                         }
                         .addOnFailureListener { e ->
+                            // The auth account exists but the profile does not.
+                            // Leaving a half-registered user behind makes every
+                            // later sign-in take the "create missing profile"
+                            // path, so roll the account back.
+                            auth.currentUser?.delete()
                             callback(false, e.localizedMessage ?: "Failed to save user data")
                         }
 

@@ -2,6 +2,7 @@ package com.aroundly.aroundly.uiLibrary.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -168,7 +169,7 @@ fun NavGraph() {
             val viewModel: RestaurantDetailsViewModel = hiltViewModel()
             val reviewViewModel: ReviewViewModel = hiltViewModel()
             val menuViewModel: MenuViewModel = hiltViewModel()
-            val restaurant by viewModel.restaurant.collectAsState()
+            val restaurant by viewModel.restaurant.collectAsStateWithLifecycle()
             restaurant?.let { r ->
                 RestaurantDetailsScreen(
                     restaurant = r,
@@ -190,7 +191,7 @@ fun NavGraph() {
             val viewModel: HotelDetailsViewModel = hiltViewModel()
             val reviewViewModel: ReviewViewModel = hiltViewModel()
             val menuViewModel: MenuViewModel = hiltViewModel()
-            val hotel by viewModel.hotel.collectAsState()
+            val hotel by viewModel.hotel.collectAsStateWithLifecycle()
             hotel?.let { h ->
                 HotelDetailsScreen(
                     hotel = h,
@@ -212,7 +213,7 @@ fun NavGraph() {
             val viewModel: PlaceDetailsViewModel = hiltViewModel()
             val reviewViewModel: ReviewViewModel = hiltViewModel()
             val menuViewModel: MenuViewModel = hiltViewModel()
-            val place by viewModel.place.collectAsState()
+            val place by viewModel.place.collectAsStateWithLifecycle()
             place?.let { p ->
                 PlaceToVisitDetailsScreen(
                     place = p,
@@ -234,7 +235,7 @@ fun NavGraph() {
             val viewModel: EquipmentDetailsViewModel = hiltViewModel()
             val reviewViewModel: ReviewViewModel = hiltViewModel()
             val menuViewModel: MenuViewModel = hiltViewModel()
-            val equipment by viewModel.equipment.collectAsState()
+            val equipment by viewModel.equipment.collectAsStateWithLifecycle()
             equipment?.let { e ->
                 EquipmentShopDetailsScreen(
                     shop = e,

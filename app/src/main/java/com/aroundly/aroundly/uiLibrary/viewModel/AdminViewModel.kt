@@ -6,6 +6,7 @@ import com.aroundly.aroundly.domain.model.PlaceSubmission
 import com.aroundly.aroundly.domain.model.SubmissionStatus
 import com.aroundly.aroundly.domain.repository.SubmissionRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -32,28 +33,43 @@ class AdminViewModel @Inject constructor(
     private val _message = MutableStateFlow<String?>(null)
     val message: StateFlow<String?> = _message.asStateFlow()
 
-    fun loadPendingSubmissions() {
+    /**
+     * The three tab loads are launched together, so a single boolean would be
+     * cleared by whichever returned first while the others were still running.
+     * A counter keeps the spinner up until the last one lands.
+     */
+    private var inFlight = 0
+
+    private fun <T> tracked(block: suspend () -> T, onResult: (T) -> Unit) {
         viewModelScope.launch {
-            _isLoading.value = true
-            _pendingSubmissions.value = submissionRepository.getPendingSubmissions()
-            _isLoading.value = false
+            if (inFlight++ == 0) _isLoading.value = true
+            try {
+                onResult(block())
+            } finally {
+                if (--inFlight == 0) _isLoading.value = false
+            }
         }
+    }
+
+    fun loadPendingSubmissions() {
+        tracked(
+            block = { submissionRepository.getPendingSubmissions() },
+            onResult = { _pendingSubmissions.value = it }
+        )
     }
 
     fun loadApprovedSubmissions() {
-        viewModelScope.launch {
-            _isLoading.value = true
-            _approvedSubmissions.value = submissionRepository.getSubmissionsByStatus(SubmissionStatus.APPROVED)
-            _isLoading.value = false
-        }
+        tracked(
+            block = { submissionRepository.getSubmissionsByStatus(SubmissionStatus.APPROVED) },
+            onResult = { _approvedSubmissions.value = it }
+        )
     }
 
     fun loadRejectedSubmissions() {
-        viewModelScope.launch {
-            _isLoading.value = true
-            _rejectedSubmissions.value = submissionRepository.getSubmissionsByStatus(SubmissionStatus.REJECTED)
-            _isLoading.value = false
-        }
+        tracked(
+            block = { submissionRepository.getSubmissionsByStatus(SubmissionStatus.REJECTED) },
+            onResult = { _rejectedSubmissions.value = it }
+        )
     }
 
     fun approveSubmission(submission: PlaceSubmission, adminNotes: String = "") {
@@ -120,9 +136,17 @@ class AdminViewModel @Inject constructor(
 
     private fun loadAll() {
         viewModelScope.launch {
-            _pendingSubmissions.value = submissionRepository.getPendingSubmissions()
-            _approvedSubmissions.value = submissionRepository.getSubmissionsByStatus(SubmissionStatus.APPROVED)
-            _rejectedSubmissions.value = submissionRepository.getSubmissionsByStatus(SubmissionStatus.REJECTED)
+            coroutineScope {
+                launch { _pendingSubmissions.value = submissionRepository.getPendingSubmissions() }
+                launch {
+                    _approvedSubmissions.value =
+                        submissionRepository.getSubmissionsByStatus(SubmissionStatus.APPROVED)
+                }
+                launch {
+                    _rejectedSubmissions.value =
+                        submissionRepository.getSubmissionsByStatus(SubmissionStatus.REJECTED)
+                }
+            }
         }
     }
 }

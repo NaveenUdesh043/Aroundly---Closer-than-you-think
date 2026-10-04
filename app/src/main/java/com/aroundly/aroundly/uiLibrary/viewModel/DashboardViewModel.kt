@@ -10,6 +10,7 @@ import com.aroundly.aroundly.domain.model.PlaceToVisit
 import com.aroundly.aroundly.domain.model.Restaurant
 import com.aroundly.aroundly.domain.repository.DashboardRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -80,10 +81,25 @@ class DashboardViewModel @Inject constructor(
 
     fun loadDropdownOptions() {
         viewModelScope.launch {
-            _availableCities.value = listOf("All") + dashboardRepository.getAvailableCities()
-            _availableRestaurantTypes.value = listOf("All") + dashboardRepository.getAvailableRestaurantTypes()
-            _availableHotelTypes.value = listOf("All") + dashboardRepository.getAvailableHotelTypes()
-            _availableEquipmentTypes.value = listOf("All") + dashboardRepository.getAvailableEquipmentTypes()
+            // Four independent facet reads; running them concurrently turns the
+            // sum of four round trips into the slowest one.
+            coroutineScope {
+                launch {
+                    _availableCities.value = listOf("All") + dashboardRepository.getAvailableCities()
+                }
+                launch {
+                    _availableRestaurantTypes.value =
+                        listOf("All") + dashboardRepository.getAvailableRestaurantTypes()
+                }
+                launch {
+                    _availableHotelTypes.value =
+                        listOf("All") + dashboardRepository.getAvailableHotelTypes()
+                }
+                launch {
+                    _availableEquipmentTypes.value =
+                        listOf("All") + dashboardRepository.getAvailableEquipmentTypes()
+                }
+            }
         }
     }
 
@@ -95,10 +111,14 @@ class DashboardViewModel @Inject constructor(
             val hotelType = _selectedHotelType.value.takeIf { it.isNotEmpty() && it != "All" }
             val eqType = _selectedEquipmentType.value.takeIf { it.isNotEmpty() && it != "All" }
 
-            _restaurants.value = dashboardRepository.getRestaurants(city, restType)
-            _hotels.value = dashboardRepository.getHotels(city, hotelType)
-            _places.value = dashboardRepository.getPlacesToVisit(city)
-            _equipmentShops.value = dashboardRepository.getEquipmentShops(city, eqType)
+            coroutineScope {
+                launch { _restaurants.value = dashboardRepository.getRestaurants(city, restType) }
+                launch { _hotels.value = dashboardRepository.getHotels(city, hotelType) }
+                launch { _places.value = dashboardRepository.getPlacesToVisit(city) }
+                launch {
+                    _equipmentShops.value = dashboardRepository.getEquipmentShops(city, eqType)
+                }
+            }
             _isLoading.value = false
         }
     }

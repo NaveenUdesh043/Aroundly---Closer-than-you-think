@@ -1,5 +1,6 @@
 package com.aroundly.aroundly.data.repository
 
+import android.util.Log
 import com.aroundly.aroundly.domain.model.EquipmentShop
 import com.aroundly.aroundly.domain.model.Hotel
 import com.aroundly.aroundly.domain.model.PlaceToVisit
@@ -7,12 +8,28 @@ import com.aroundly.aroundly.domain.model.Restaurant
 import com.aroundly.aroundly.domain.repository.DashboardRepository
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
+import com.google.firebase.firestore.QuerySnapshot
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.tasks.await
+import java.util.concurrent.atomic.AtomicReference
 import javax.inject.Inject
 
 class DashboardRepositoryImpl @Inject constructor(
     private val firestore: FirebaseFirestore
 ) : DashboardRepository {
+
+    private val facetsCache = AtomicReference<CachedFacets?>(null)
+    private val facetLock = Mutex()
+
+    private companion object {
+        const val TAG = "DashboardRepository"
+        /** Filter options only change when a place is approved. */
+        const val FACET_TTL_MILLIS = 10 * 60 * 1000L
+    }
 
     override suspend fun getRestaurants(city: String?, type: String?): List<Restaurant> {
         var query: Query = firestore.collection("restaurants")
@@ -213,42 +230,82 @@ class DashboardRepositoryImpl @Inject constructor(
         )
     }
 
-    override suspend fun getAvailableCities(): List<String> {
-        val collections = listOf("restaurants", "hotels", "places", "equipmentShops")
-        val cities = mutableSetOf<String>()
+    /**
+     * Filter options are derived from one pass over the four place collections.
+     *
+     * The Android Firestore SDK has no `select()` projection, so distinct
+     * values cannot be pushed server-side. It can still be cut from seven
+     * collection downloads to four: `restaurants` and `hotels` each used to be
+     * downloaded twice (once for cities, once for their own type list). The
+     * result is cached, because filter options change only when a place is
+     * approved and do not justify a re-read on every dashboard load.
+     */
+    private suspend fun loadFacets(): Facets {
+        facetsCache.get()?.takeIf { !it.isStale() }?.let { return it.value }
 
-        collections.forEach { col ->
-            val snapshot = firestore.collection(col).get().await()
-            snapshot.documents.forEach { doc ->
-                doc.getString("city")?.let { cities.add(it) }
+        return facetLock.withLock {
+            // Another caller may have populated the cache while we waited.
+            facetsCache.get()?.takeIf { !it.isStale() }?.let { return@withLock it.value }
+
+            val cities = mutableListOf<String>()
+            val restaurantTypes = mutableListOf<String>()
+            val hotelTypes = mutableListOf<String>()
+            val equipmentTypes = mutableListOf<String>()
+
+            coroutineScope {
+                listOf("restaurants", "hotels", "places", "equipmentShops")
+                    .map { name -> async { name to readCollection(name) } }
+                    .awaitAll()
+                    .forEach { (name, snapshot) ->
+                        snapshot.documents.forEach { doc ->
+                            doc.getString("city")?.takeIf { it.isNotEmpty() }?.let { cities.add(it) }
+                            doc.getString("type")?.takeIf { it.isNotEmpty() }?.let { type ->
+                                when (name) {
+                                    "restaurants" -> restaurantTypes.add(type)
+                                    "hotels" -> hotelTypes.add(type)
+                                    "equipmentShops" -> equipmentTypes.add(type)
+                                }
+                            }
+                        }
+                    }
             }
+
+            Facets(
+                cities = cities.normalise(),
+                restaurantTypes = restaurantTypes.normalise(),
+                hotelTypes = hotelTypes.normalise(),
+                equipmentTypes = equipmentTypes.normalise()
+            ).also { facetsCache.set(CachedFacets(it)) }
         }
-
-        return cities.filter { it.isNotEmpty() }.distinct().sorted()
     }
 
-    override suspend fun getAvailableRestaurantTypes(): List<String> {
-        val snapshot = firestore.collection("restaurants").get().await()
-        return snapshot.documents.mapNotNull { it.getString("type") }
-            .filter { it.isNotEmpty() }
-            .distinct()
-            .sorted()
+    private suspend fun readCollection(name: String): QuerySnapshot = try {
+        firestore.collection(name).get().await()
+    } catch (e: Exception) {
+        // An empty filter list is better than failing the whole dashboard.
+        Log.w(TAG, "Could not read $name for filter options", e)
+        throw e
     }
 
-    override suspend fun getAvailableHotelTypes(): List<String> {
-        val snapshot = firestore.collection("hotels").get().await()
-        return snapshot.documents.mapNotNull { it.getString("type") }
-            .filter { it.isNotEmpty() }
-            .distinct()
-            .sorted()
-    }
+    private fun List<String>.normalise(): List<String> = distinct().sorted()
 
-    override suspend fun getAvailableEquipmentTypes(): List<String> {
-        val snapshot = firestore.collection("equipmentShops").get().await()
-        return snapshot.documents.mapNotNull { it.getString("type") }
-            .filter { it.isNotEmpty() }
-            .distinct()
-            .sorted()
+    override suspend fun getAvailableCities(): List<String> = loadFacets().cities
+
+    override suspend fun getAvailableRestaurantTypes(): List<String> = loadFacets().restaurantTypes
+
+    override suspend fun getAvailableHotelTypes(): List<String> = loadFacets().hotelTypes
+
+    override suspend fun getAvailableEquipmentTypes(): List<String> = loadFacets().equipmentTypes
+
+    private data class Facets(
+        val cities: List<String> = emptyList(),
+        val restaurantTypes: List<String> = emptyList(),
+        val hotelTypes: List<String> = emptyList(),
+        val equipmentTypes: List<String> = emptyList()
+    )
+
+    private class CachedFacets(val value: Facets, val loadedAt: Long = System.currentTimeMillis()) {
+        fun isStale(): Boolean = System.currentTimeMillis() - loadedAt > FACET_TTL_MILLIS
     }
 
     override suspend fun getRestaurantsByOwner(ownerId: String): List<Restaurant> {

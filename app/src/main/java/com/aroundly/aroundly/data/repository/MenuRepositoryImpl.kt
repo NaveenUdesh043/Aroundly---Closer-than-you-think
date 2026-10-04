@@ -3,7 +3,6 @@ package com.aroundly.aroundly.data.repository
 import com.aroundly.aroundly.domain.model.MenuItem
 import com.aroundly.aroundly.domain.repository.MenuRepository
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.Query
 import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.tasks.await
 import java.util.UUID
@@ -18,18 +17,23 @@ class MenuRepositoryImpl @Inject constructor(
 
     private val menuCollection = firestore.collection("menuImages")
 
-    override suspend fun getMenuImages(shopId: String): List<MenuItem> {
+    override suspend fun getMenuImages(shopId: String): Result<List<MenuItem>> {
         return try {
+            // Deliberately no orderBy on the server: an equality filter plus a
+            // sort needs a composite index on (shopId, createdAt), and without
+            // one the query fails at runtime. A shop holds a handful of images,
+            // so ordering the already-filtered result locally is cheaper than
+            // depending on an index that has to be deployed alongside the app.
             val snapshot = menuCollection
                 .whereEqualTo("shopId", shopId)
-                .orderBy("createdAt", Query.Direction.DESCENDING)
                 .get()
                 .await()
-            snapshot.documents.mapNotNull { doc ->
+            val items = snapshot.documents.mapNotNull { doc ->
                 doc.toObject(MenuItem::class.java)?.copy(id = doc.id)
             }
+            Result.success(items.sortedByDescending { it.createdAt })
         } catch (e: Exception) {
-            emptyList()
+            Result.failure(e)
         }
     }
 

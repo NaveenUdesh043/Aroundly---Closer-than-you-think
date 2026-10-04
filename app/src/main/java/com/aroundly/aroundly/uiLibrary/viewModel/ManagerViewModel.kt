@@ -15,6 +15,9 @@ import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -53,10 +56,24 @@ class ManagerViewModel @Inject constructor(
     fun loadMyApprovedPlaces() {
         viewModelScope.launch {
             val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return@launch
-            _myRestaurants.value = dashboardRepository.getRestaurantsByOwner(uid)
-            _myHotels.value = dashboardRepository.getHotelsByOwner(uid)
-            _myPlaces.value = dashboardRepository.getPlacesByOwner(uid)
-            _myEquipmentShops.value = dashboardRepository.getEquipmentShopsByOwner(uid)
+            coroutineScope {
+                launch {
+                    _myRestaurants.value =
+                        dashboardRepository.getRestaurantsByOwner(uid)
+                }
+                launch {
+                    _myHotels.value =
+                        dashboardRepository.getHotelsByOwner(uid)
+                }
+                launch {
+                    _myPlaces.value =
+                        dashboardRepository.getPlacesByOwner(uid)
+                }
+                launch {
+                    _myEquipmentShops.value =
+                        dashboardRepository.getEquipmentShopsByOwner(uid)
+                }
+            }
         }
     }
 
@@ -71,11 +88,15 @@ class ManagerViewModel @Inject constructor(
             val placeImageUrls = mutableListOf<String>()
             restaurant.images?.let { placeImageUrls.addAll(it) }
 
-            newImageBytesList.forEach { bytes ->
-                submissionRepository.uploadPlaceImage(user.uid, bytes).fold(
-                    onSuccess = { placeImageUrls.add(it) },
-                    onFailure = { /* Skip failed uploads */ }
-                )
+            val uploaded = coroutineScope { 
+                newImageBytesList.map { bytes ->
+                    async { submissionRepository.uploadPlaceImage(user.uid, bytes) }
+                }.awaitAll()
+            }
+
+
+            uploaded.forEach { result ->
+                result.getOrNull()?.let { placeImageUrls.add(it) }
             }
 
             val submission = PlaceSubmission(
@@ -117,11 +138,15 @@ class ManagerViewModel @Inject constructor(
             val placeImageUrls = mutableListOf<String>()
             hotel.images?.let { placeImageUrls.addAll(it) }
 
-            newImageBytesList.forEach { bytes ->
-                submissionRepository.uploadPlaceImage(user.uid, bytes).fold(
-                    onSuccess = { placeImageUrls.add(it) },
-                    onFailure = { /* Skip failed uploads */ }
-                )
+            val uploaded = coroutineScope {
+                newImageBytesList.map { bytes ->
+                    async { submissionRepository.uploadPlaceImage(user.uid, bytes) }
+                }.awaitAll()
+            }
+            // Order follows the picker selection; failed uploads are skipped so a
+            // single bad image cannot block the whole update.
+            uploaded.forEach { result ->
+                result.getOrNull()?.let { placeImageUrls.add(it) }
             }
 
             val submission = PlaceSubmission(
@@ -163,11 +188,15 @@ class ManagerViewModel @Inject constructor(
             val placeImageUrls = mutableListOf<String>()
             place.images?.let { placeImageUrls.addAll(it) }
 
-            newImageBytesList.forEach { bytes ->
-                submissionRepository.uploadPlaceImage(user.uid, bytes).fold(
-                    onSuccess = { placeImageUrls.add(it) },
-                    onFailure = { /* Skip failed uploads */ }
-                )
+            val uploaded = coroutineScope {
+                newImageBytesList.map { bytes ->
+                    async { submissionRepository.uploadPlaceImage(user.uid, bytes) }
+                }.awaitAll()
+            }
+            // Order follows the picker selection; failed uploads are skipped so a
+            // single bad image cannot block the whole update.
+            uploaded.forEach { result ->
+                result.getOrNull()?.let { placeImageUrls.add(it) }
             }
 
             val submission = PlaceSubmission(
@@ -207,11 +236,15 @@ class ManagerViewModel @Inject constructor(
             val placeImageUrls = mutableListOf<String>()
             shop.images?.let { placeImageUrls.addAll(it) }
 
-            newImageBytesList.forEach { bytes ->
-                submissionRepository.uploadPlaceImage(user.uid, bytes).fold(
-                    onSuccess = { placeImageUrls.add(it) },
-                    onFailure = { /* Skip failed uploads */ }
-                )
+            val uploaded = coroutineScope {
+                newImageBytesList.map { bytes ->
+                    async { submissionRepository.uploadPlaceImage(user.uid, bytes) }
+                }.awaitAll()
+            }
+            // Order follows the picker selection; failed uploads are skipped so a
+            // single bad image cannot block the whole update.
+            uploaded.forEach { result ->
+                result.getOrNull()?.let { placeImageUrls.add(it) }
             }
 
             val submission = PlaceSubmission(
@@ -262,25 +295,30 @@ class ManagerViewModel @Inject constructor(
             _isSubmitting.value = true
             _submitMessage.value = null
 
-            var receiptUrl = ""
-            receiptImageBytes?.let { bytes ->
-                submissionRepository.uploadReceipt(user.uid, bytes).fold(
-                    onSuccess = { receiptUrl = it },
-                    onFailure = {
-                        _isSubmitting.value = false
-                        _submitMessage.value = "Failed to upload receipt: ${it.message}"
-                        return@launch
-                    }
-                )
+            // The receipt and the place images are independent, and the place
+            // images are independent of each other. Uploading them concurrently
+            // turns N sequential round trips into one.
+            val receiptUrlDeferred = receiptImageBytes?.let { bytes ->
+                async { submissionRepository.uploadReceipt(user.uid, bytes) }
+            }
+            val placeImageUrlsDeferred = coroutineScope {
+                placeImageBytesList.map { bytes ->
+                    async { submissionRepository.uploadPlaceImage(user.uid, bytes) }
+                }
             }
 
-            val placeImageUrls = mutableListOf<String>()
-            placeImageBytesList.forEach { bytes ->
-                submissionRepository.uploadPlaceImage(user.uid, bytes).fold(
-                    onSuccess = { placeImageUrls.add(it) },
-                    onFailure = { /* Skip failed uploads, continue with others */ }
-                )
-            }
+            var receiptUrl = ""
+            receiptUrlDeferred?.await()?.fold(
+                onSuccess = { receiptUrl = it },
+                onFailure = {
+                    _isSubmitting.value = false
+                    _submitMessage.value = "Failed to upload receipt: ${it.message}"
+                    return@launch
+                }
+            )
+
+            val placeImageUrls = placeImageUrlsDeferred.awaitAll()
+                .mapNotNull { it.getOrNull() }
 
             val submission = PlaceSubmission(
                 ownerId = user.uid,

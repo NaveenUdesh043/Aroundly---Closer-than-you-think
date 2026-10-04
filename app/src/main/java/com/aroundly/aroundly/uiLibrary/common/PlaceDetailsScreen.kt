@@ -39,6 +39,7 @@ import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
@@ -71,8 +72,8 @@ fun RestaurantDetailsScreen(
     menuViewModel: MenuViewModel,
     onBack: () -> Unit
 ) {
-    val avgRating by reviewViewModel.averageRating.collectAsState()
-    val reviewCount by reviewViewModel.reviewCount.collectAsState()
+    val avgRating by reviewViewModel.averageRating.collectAsStateWithLifecycle()
+    val reviewCount by reviewViewModel.reviewCount.collectAsStateWithLifecycle()
     var selectedTab by remember { mutableIntStateOf(0) }
     val tabs = listOf("Overview", "Menu")
 
@@ -166,8 +167,8 @@ fun HotelDetailsScreen(
     menuViewModel: MenuViewModel,
     onBack: () -> Unit
 ) {
-    val avgRating by reviewViewModel.averageRating.collectAsState()
-    val reviewCount by reviewViewModel.reviewCount.collectAsState()
+    val avgRating by reviewViewModel.averageRating.collectAsStateWithLifecycle()
+    val reviewCount by reviewViewModel.reviewCount.collectAsStateWithLifecycle()
     var selectedTab by remember { mutableIntStateOf(0) }
     val tabs = listOf("Overview", "Menu")
 
@@ -256,8 +257,8 @@ fun PlaceToVisitDetailsScreen(
     menuViewModel: MenuViewModel,
     onBack: () -> Unit
 ) {
-    val avgRating by reviewViewModel.averageRating.collectAsState()
-    val reviewCount by reviewViewModel.reviewCount.collectAsState()
+    val avgRating by reviewViewModel.averageRating.collectAsStateWithLifecycle()
+    val reviewCount by reviewViewModel.reviewCount.collectAsStateWithLifecycle()
     var selectedTab by remember { mutableIntStateOf(0) }
     val tabs = listOf("Overview", "Menu")
 
@@ -346,8 +347,8 @@ fun EquipmentShopDetailsScreen(
     menuViewModel: MenuViewModel,
     onBack: () -> Unit
 ) {
-    val avgRating by reviewViewModel.averageRating.collectAsState()
-    val reviewCount by reviewViewModel.reviewCount.collectAsState()
+    val avgRating by reviewViewModel.averageRating.collectAsStateWithLifecycle()
+    val reviewCount by reviewViewModel.reviewCount.collectAsStateWithLifecycle()
     var selectedTab by remember { mutableIntStateOf(0) }
     val tabs = listOf("Overview", "Menu")
 

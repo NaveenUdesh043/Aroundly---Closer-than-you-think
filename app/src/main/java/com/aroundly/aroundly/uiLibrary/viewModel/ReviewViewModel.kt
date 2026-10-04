@@ -51,14 +51,13 @@ class ReviewViewModel @Inject constructor(
         if (placeId.isBlank()) return
         viewModelScope.launch {
             _isLoading.value = true
-            _reviews.value = reviewRepository.getReviews(placeId)
-            _averageRating.value = reviewRepository.getAverageRating(placeId)
-            _reviewCount.value = reviewRepository.getReviewCount(placeId)
-
-            val userId = auth.currentUser?.uid
-            if (userId != null) {
-                _userReview.value = reviewRepository.getUserReviewForPlace(userId, placeId)
-            }
+            // List, average, count and the user's own review all come from one
+            // read instead of four scans of the same filtered collection.
+            val data = reviewRepository.getReviewData(placeId, auth.currentUser?.uid)
+            _reviews.value = data.reviews
+            _averageRating.value = data.averageRating
+            _reviewCount.value = data.reviewCount
+            _userReview.value = data.userReview
             _isLoading.value = false
         }
     }

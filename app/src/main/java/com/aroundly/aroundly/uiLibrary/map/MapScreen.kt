@@ -31,6 +31,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -87,11 +88,11 @@ fun MapScreen(
     onBack: () -> Unit,
     viewModel: MapViewModel = hiltViewModel()
 ) {
-    val currentLocation by viewModel.currentLocation.collectAsState()
-    val isLoadingLocation by viewModel.isLoadingLocation.collectAsState()
-    val mapPlaces by viewModel.mapPlaces.collectAsState()
-    val isLoadingPlaces by viewModel.isLoadingPlaces.collectAsState()
-    val selectedCategory by viewModel.selectedCategory.collectAsState()
+    val currentLocation by viewModel.currentLocation.collectAsStateWithLifecycle()
+    val isLoadingLocation by viewModel.isLoadingLocation.collectAsStateWithLifecycle()
+    val mapPlaces by viewModel.mapPlaces.collectAsStateWithLifecycle()
+    val isLoadingPlaces by viewModel.isLoadingPlaces.collectAsStateWithLifecycle()
+    val selectedCategory by viewModel.selectedCategory.collectAsStateWithLifecycle()
 
     val defaultLocation = remember { LatLng(28.6139, 77.2090) }
     val cameraPositionState = rememberCameraPositionState()
@@ -285,7 +286,7 @@ private fun CategoryFilterBar(
             .padding(horizontal = 16.dp, vertical = 8.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        items(PlaceCategory.entries) { category ->
+        items(PlaceCategory.entries, key = { it.name }) { category ->
             val isSelected = selectedCategory == category
             val chipColor = CategoryColors[category] ?: Amber
 

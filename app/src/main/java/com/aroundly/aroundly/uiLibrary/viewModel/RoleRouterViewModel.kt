@@ -26,10 +26,13 @@ class RoleRouterViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             val uid = FirebaseAuth.getInstance().currentUser?.uid
-            if (uid == null) {
-                _userRole.value = null
+            _userRole.value = if (uid == null) {
+                null
             } else {
-                _userRole.value = userRepository.getUserRole(uid) ?: UserRole.USER
+                // A read failure must not strand the user on the loading
+                // screen, and USER is the safe default for an unknown role.
+                runCatching { userRepository.getUserRole(uid) }
+                    .getOrNull() ?: UserRole.USER
             }
             _isLoading.value = false
         }

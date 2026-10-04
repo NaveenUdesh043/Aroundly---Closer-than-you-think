@@ -30,14 +30,22 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Logout
+import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Explore
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Hotel
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Restaurant
-import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.Card
+import androidx.compose.material3.DrawerValue
+import androidx.compose.material3.DrawerState
+import androidx.compose.material3.ModalNavigationDrawer
+import androidx.compose.material3.rememberDrawerState
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -48,15 +56,16 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -89,6 +98,7 @@ import com.aroundly.aroundly.ui.theme.AmberGlow
 import com.aroundly.aroundly.ui.theme.BgDark
 import com.aroundly.aroundly.ui.theme.BgMid
 import com.aroundly.aroundly.ui.theme.BgWarm
+import com.aroundly.aroundly.ui.theme.Rose
 import com.aroundly.aroundly.ui.theme.SageGreen
 import com.aroundly.aroundly.ui.theme.White
 import com.aroundly.aroundly.ui.theme.White50
@@ -102,10 +112,14 @@ import com.aroundly.aroundly.ui.theme.TextSecondary
 import com.aroundly.aroundly.ui.theme.StatusPending
 import com.aroundly.aroundly.ui.theme.StatusApproved
 import com.aroundly.aroundly.ui.theme.StatusRejected
+import com.aroundly.aroundly.uiLibrary.common.AppSidemenu
 import com.aroundly.aroundly.uiLibrary.common.GenericDropdown
 import com.aroundly.aroundly.uiLibrary.common.LogoutConfirmBottomSheet
+import com.aroundly.aroundly.uiLibrary.common.SidemenuHeader
+import com.aroundly.aroundly.uiLibrary.common.SidemenuItem
 import com.aroundly.aroundly.uiLibrary.viewModel.DashboardViewModel
 import androidx.hilt.navigation.compose.hiltViewModel
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -118,22 +132,22 @@ fun DashboardScreen(
     onEquipmentClick: (EquipmentShop) -> Unit,
     onMapClick: () -> Unit = {}
 ) {
-    val restaurants by viewModel.filteredRestaurants.collectAsState(initial = emptyList())
-    val hotels by viewModel.filteredHotels.collectAsState(initial = emptyList())
-    val places by viewModel.filteredPlaces.collectAsState(initial = emptyList())
-    val equipment by viewModel.filteredEquipmentShops.collectAsState(initial = emptyList())
-    val cities by viewModel.availableCities.collectAsState(initial = emptyList())
-    val restTypes by viewModel.availableRestaurantTypes.collectAsState(initial = emptyList())
-    val hotelTypes by viewModel.availableHotelTypes.collectAsState(initial = emptyList())
-    val eqTypes by viewModel.availableEquipmentTypes.collectAsState(initial = emptyList())
-    val selectedCity by viewModel.selectedCity.collectAsState()
-    val selectedRestType by viewModel.selectedRestaurantType.collectAsState()
-    val selectedHotelType by viewModel.selectedHotelType.collectAsState()
-    val selectedEqType by viewModel.selectedEquipmentType.collectAsState()
-    val searchQuery by viewModel.searchQuery.collectAsState()
-    val isLoading by viewModel.isLoading.collectAsState()
-    val isLoadingLocation by viewModel.isLoadingLocation.collectAsState()
-    val currentLocation by viewModel.currentLocation.collectAsState()
+    val restaurants by viewModel.filteredRestaurants.collectAsStateWithLifecycle(initialValue = emptyList())
+    val hotels by viewModel.filteredHotels.collectAsStateWithLifecycle(initialValue = emptyList())
+    val places by viewModel.filteredPlaces.collectAsStateWithLifecycle(initialValue = emptyList())
+    val equipment by viewModel.filteredEquipmentShops.collectAsStateWithLifecycle(initialValue = emptyList())
+    val cities by viewModel.availableCities.collectAsStateWithLifecycle(initialValue = emptyList())
+    val restTypes by viewModel.availableRestaurantTypes.collectAsStateWithLifecycle(initialValue = emptyList())
+    val hotelTypes by viewModel.availableHotelTypes.collectAsStateWithLifecycle(initialValue = emptyList())
+    val eqTypes by viewModel.availableEquipmentTypes.collectAsStateWithLifecycle(initialValue = emptyList())
+    val selectedCity by viewModel.selectedCity.collectAsStateWithLifecycle()
+    val selectedRestType by viewModel.selectedRestaurantType.collectAsStateWithLifecycle()
+    val selectedHotelType by viewModel.selectedHotelType.collectAsStateWithLifecycle()
+    val selectedEqType by viewModel.selectedEquipmentType.collectAsStateWithLifecycle()
+    val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
+    val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
+    val isLoadingLocation by viewModel.isLoadingLocation.collectAsStateWithLifecycle()
+    val currentLocation by viewModel.currentLocation.collectAsStateWithLifecycle()
 
     val locationPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
@@ -155,6 +169,59 @@ fun DashboardScreen(
         Triple("Travel Rentals", Icons.Default.ShoppingCart, Color(0xFF1565C0))
     )
 
+    val drawerState = rememberDrawerState(DrawerValue.Closed)
+    val scope = rememberCoroutineScope()
+
+    // Without this, system back would pop the whole dashboard while the drawer
+    // is open instead of just dismissing the drawer.
+    BackHandler(enabled = drawerState.isOpen) {
+        scope.launch { drawerState.close() }
+    }
+
+    ModalNavigationDrawer(
+        drawerState = drawerState,
+        drawerContent = {
+            AppSidemenu(
+                drawerState = drawerState,
+                scope = scope,
+                header = {
+                    SidemenuHeader(
+                        icon = Icons.Default.Explore,
+                        title = "Aroundly",
+                        subtitle = "Discover amazing places",
+                        iconBackground = Amber,
+                        iconTint = BgDark,
+                        titleColor = White,
+                        subtitleColor = White70
+                    )
+                },
+                items = listOf(
+                    SidemenuItem(
+                        label = "Home",
+                        icon = Icons.Default.Home,
+                        selected = true,
+                        onClick = {}
+                    ),
+                    SidemenuItem(
+                        label = "Map",
+                        icon = Icons.Default.Map,
+                        onClick = onMapClick
+                    ),
+                    SidemenuItem(
+                        label = "Logout",
+                        icon = Icons.Default.Logout,
+                        isDestructive = true,
+                        onClick = { showLogoutSheet = true }
+                    )
+                ),
+                containerColor = BgMid,
+                selectedContainerColor = Color(0x1AFFFFFF),
+                selectedContentColor = Amber,
+                unselectedContentColor = White70,
+                destructiveContentColor = Rose
+            )
+        }
+    ) {
     Scaffold(
         containerColor = BgDark
     ) { padding ->
@@ -185,7 +252,8 @@ fun DashboardScreen(
                                 )
                             }
                         },
-                        onMapClick = onMapClick
+                        onMapClick = onMapClick,
+                        onMenuClick = { scope.launch { drawerState.open() } }
                     )
                 }
 
@@ -334,7 +402,7 @@ fun DashboardScreen(
                             }
                         }
                         if (restaurants.size > 1) {
-                            items(restaurants.drop(1)) { r ->
+                            items(restaurants.drop(1), key = { it.id }) { r ->
                                 itemCount++
                                 AnimatedCardAppear(index = itemCount) {
                                     PlaceCard(
@@ -424,6 +492,7 @@ fun DashboardScreen(
             }
         }
     }
+    }
 
     if (showLogoutSheet) {
         LogoutConfirmBottomSheet(
@@ -469,12 +538,15 @@ private fun DashboardHeader(
     isLoadingLocation: Boolean,
     onLogout: () -> Unit,
     onLocationClick: () -> Unit,
-    onMapClick: () -> Unit = {}
+    onMapClick: () -> Unit = {},
+    onMenuClick: () -> Unit = {}
 ) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .shadow(8.dp,
+
+
                 RoundedCornerShape(bottomStart = 28.dp,
                 bottomEnd = 28.dp))
             .clip(RoundedCornerShape(bottomStart = 28.dp, bottomEnd = 28.dp))
@@ -499,6 +571,21 @@ private fun DashboardHeader(
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
+                        IconButton(
+                            onClick = onMenuClick,
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(CircleShape)
+                                .background(Color(0x1AFFFFFF))
+                        ) {
+                            Icon(
+                                Icons.Default.Menu,
+                                contentDescription = "Open menu",
+                                tint = White70,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                        Spacer(Modifier.width(12.dp))
                         Box(
                             modifier = Modifier
                                 .size(44.dp)
@@ -702,7 +789,7 @@ private fun FilterChipRow(
         modifier = Modifier.padding(horizontal = 20.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        items(tabs.size) { index ->
+        items(tabs.size, key = { tabs[it] }) { index ->
             FilterChip(
                 selected = selectedTab == index,
                 onClick = { onTabSelected(index) },

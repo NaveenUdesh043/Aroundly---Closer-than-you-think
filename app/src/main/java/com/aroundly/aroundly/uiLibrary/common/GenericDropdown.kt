@@ -108,7 +108,7 @@ fun GenericDropdown(
                     modifier = Modifier.height(320.dp),
                     verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    items(options) { option ->
+                    items(options, key = { it }) { option ->
                         val isSelected = option == selectedOption
 
                         Row(

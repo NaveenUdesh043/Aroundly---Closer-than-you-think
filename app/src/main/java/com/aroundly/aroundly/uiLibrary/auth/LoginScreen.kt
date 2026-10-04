@@ -34,6 +34,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -61,6 +62,7 @@ import com.aroundly.aroundly.ui.theme.SurfaceDivider
 import com.aroundly.aroundly.ui.theme.SurfaceInput
 import com.aroundly.aroundly.ui.theme.SurfaceWarm
 import com.aroundly.aroundly.ui.theme.TextLink
+import com.aroundly.aroundly.ui.theme.SurfaceWarm
 import com.aroundly.aroundly.ui.theme.TextMuted
 import com.aroundly.aroundly.ui.theme.TextOnDarkMuted
 import com.aroundly.aroundly.ui.theme.TextPrimary
@@ -75,7 +77,7 @@ fun LoginScreen(
     onAdminLoginSuccess: () -> Unit = {},
     onBack: () -> Unit = {}
 ) {
-    val viewModel = remember { AuthViewModel() }
+    val viewModel: AuthViewModel = hiltViewModel()
     var passwordVisible by remember { mutableStateOf(false) }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -247,6 +249,9 @@ fun LoginScreen(
                             Icon(
                                 imageVector = icon,
                                 contentDescription = if (passwordVisible) "Hide password"
+
+
+
                                 else "Show password",
                                 tint = Color(0xFF3D3025)
                             )

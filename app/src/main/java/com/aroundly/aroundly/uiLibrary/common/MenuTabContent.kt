@@ -25,6 +25,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -40,6 +41,7 @@ import com.aroundly.aroundly.ui.theme.BgMid
 import com.aroundly.aroundly.ui.theme.White
 import com.aroundly.aroundly.ui.theme.White70
 import com.aroundly.aroundly.uiLibrary.viewModel.MenuViewModel
+import com.aroundly.aroundly.uiLibrary.viewModel.ShopMenuState
 
 @Composable
 fun MenuTabContent(
@@ -47,14 +49,37 @@ fun MenuTabContent(
     menuViewModel: MenuViewModel,
     showDelete: Boolean = false
 ) {
-    val menuImages by menuViewModel.menuImages.collectAsState()
-    val isLoading by menuViewModel.isLoading.collectAsState()
+    val shopMenus by menuViewModel.shopMenus.collectAsStateWithLifecycle()
+    val menuState = shopMenus[shopId] ?: ShopMenuState()
+    val menuImages = menuState.images
 
     LaunchedEffect(shopId) {
         menuViewModel.loadMenuImages(shopId)
     }
 
-    if (isLoading && menuImages.isEmpty()) {
+    if (menuState.error != null && menuImages.isEmpty()) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(200.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    "Couldn't load menu images",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = White
+                )
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    menuState.error,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = White70
+                )
+            }
+        }
+    } else if (menuState.isLoading && menuImages.isEmpty()) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()

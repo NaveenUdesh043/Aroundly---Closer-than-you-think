@@ -47,6 +47,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -84,11 +85,11 @@ fun AdminDashboardScreen(
     onLogout: () -> Unit
 ) {
 
-    val pendingSubmissions by viewModel.pendingSubmissions.collectAsState(initial = emptyList())
-    val approvedSubmissions by viewModel.approvedSubmissions.collectAsState(initial = emptyList())
-    val rejectedSubmissions by viewModel.rejectedSubmissions.collectAsState(initial = emptyList())
-    val isLoading by viewModel.isLoading.collectAsState()
-    val message by viewModel.message.collectAsState()
+    val pendingSubmissions by viewModel.pendingSubmissions.collectAsStateWithLifecycle(initialValue = emptyList())
+    val approvedSubmissions by viewModel.approvedSubmissions.collectAsStateWithLifecycle(initialValue = emptyList())
+    val rejectedSubmissions by viewModel.rejectedSubmissions.collectAsStateWithLifecycle(initialValue = emptyList())
+    val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
+    val message by viewModel.message.collectAsStateWithLifecycle()
 
     LaunchedEffect(Unit) {
         viewModel.loadPendingSubmissions()
@@ -169,7 +170,7 @@ fun AdminDashboardScreen(
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
 
-                    items(currentList) { submission ->
+                    items(currentList, key = { it.id }) { submission ->
 
                         SubmissionCard(
                             item = submission,

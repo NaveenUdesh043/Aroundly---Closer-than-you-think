@@ -6,6 +6,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -22,8 +23,8 @@ fun RoleRouterScreen(
     onNavigateToAdminDashboard: () -> Unit,
     onNavigateToLogin: () -> Unit
 ) {
-    val role by viewModel.userRole.collectAsState(initial = null)
-    val isLoading by viewModel.isLoading.collectAsState(initial = true)
+    val role by viewModel.userRole.collectAsStateWithLifecycle(initialValue = null)
+    val isLoading by viewModel.isLoading.collectAsStateWithLifecycle(initialValue = true)
 
     LaunchedEffect(role, isLoading) {
         if (!isLoading) {

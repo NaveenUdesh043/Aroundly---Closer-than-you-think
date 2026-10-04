@@ -33,6 +33,7 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -302,12 +303,12 @@ fun ReviewsSection(
     viewModel: ReviewViewModel,
     modifier: Modifier = Modifier
 ) {
-    val reviews by viewModel.reviews.collectAsState()
-    val averageRating by viewModel.averageRating.collectAsState()
-    val reviewCount by viewModel.reviewCount.collectAsState()
-    val isLoading by viewModel.isLoading.collectAsState()
-    val submitResult by viewModel.submitResult.collectAsState()
-    val userReview by viewModel.userReview.collectAsState()
+    val reviews by viewModel.reviews.collectAsStateWithLifecycle()
+    val averageRating by viewModel.averageRating.collectAsStateWithLifecycle()
+    val reviewCount by viewModel.reviewCount.collectAsStateWithLifecycle()
+    val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
+    val submitResult by viewModel.submitResult.collectAsStateWithLifecycle()
+    val userReview by viewModel.userReview.collectAsStateWithLifecycle()
 
     val currentUserId = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid
 

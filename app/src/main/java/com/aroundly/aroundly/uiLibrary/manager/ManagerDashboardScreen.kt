@@ -9,6 +9,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -27,6 +28,9 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Storefront
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material3.Card
@@ -42,14 +46,19 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.DrawerValue
+import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -68,10 +77,20 @@ import com.aroundly.aroundly.domain.model.PlaceType
 import com.aroundly.aroundly.domain.model.Restaurant
 import com.aroundly.aroundly.domain.model.SubmissionStatus
 import com.aroundly.aroundly.ui.theme.PrimaryTeal
+import com.aroundly.aroundly.ui.theme.Rose
+import com.aroundly.aroundly.ui.theme.SurfaceWhite
+import com.aroundly.aroundly.ui.theme.TextMuted
+import com.aroundly.aroundly.ui.theme.TextPrimary
 import com.aroundly.aroundly.ui.theme.PrimaryTealDark
 import com.aroundly.aroundly.uiLibrary.common.GenericDropdown
 import com.aroundly.aroundly.uiLibrary.common.LogoutConfirmBottomSheet
+import kotlinx.coroutines.launch
 import com.aroundly.aroundly.uiLibrary.common.MenuTabContent
+import com.aroundly.aroundly.uiLibrary.common.AppSidemenu
+import com.aroundly.aroundly.uiLibrary.common.SidemenuHeader
+import com.aroundly.aroundly.uiLibrary.common.SidemenuItem
+import com.aroundly.aroundly.uiLibrary.common.rememberImagePicker
+import com.aroundly.aroundly.uiLibrary.common.rememberMultiImagePicker
 import com.aroundly.aroundly.uiLibrary.viewModel.ManagerViewModel
 import com.aroundly.aroundly.uiLibrary.viewModel.MenuViewModel
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -83,13 +102,13 @@ fun ManagerDashboardScreen(
     menuViewModel: MenuViewModel = hiltViewModel(),
     onLogout: () -> Unit
 ) {
-    val mySubmissions by viewModel.mySubmissions.collectAsState(initial = emptyList())
-    val myRestaurants by viewModel.myRestaurants.collectAsState(initial = emptyList())
-    val myHotels by viewModel.myHotels.collectAsState(initial = emptyList())
-    val myPlaces by viewModel.myPlaces.collectAsState(initial = emptyList())
-    val myEquipmentShops by viewModel.myEquipmentShops.collectAsState(initial = emptyList())
-    val isSubmitting by viewModel.isSubmitting.collectAsState()
-    val submitMessage by viewModel.submitMessage.collectAsState()
+    val mySubmissions by viewModel.mySubmissions.collectAsStateWithLifecycle(initialValue = emptyList())
+    val myRestaurants by viewModel.myRestaurants.collectAsStateWithLifecycle(initialValue = emptyList())
+    val myHotels by viewModel.myHotels.collectAsStateWithLifecycle(initialValue = emptyList())
+    val myPlaces by viewModel.myPlaces.collectAsStateWithLifecycle(initialValue = emptyList())
+    val myEquipmentShops by viewModel.myEquipmentShops.collectAsStateWithLifecycle(initialValue = emptyList())
+    val isSubmitting by viewModel.isSubmitting.collectAsStateWithLifecycle()
+    val submitMessage by viewModel.submitMessage.collectAsStateWithLifecycle()
 
     var placeType by remember { mutableStateOf(PlaceType.RESTAURANT) }
     var name by remember { mutableStateOf("") }
@@ -104,27 +123,19 @@ fun ManagerDashboardScreen(
     var placeImageUris by remember { mutableStateOf<List<Uri>>(emptyList()) }
     var placeImageBytesList by remember { mutableStateOf<List<ByteArray>>(emptyList()) }
 
-    val menuMessage by menuViewModel.message.collectAsState()
+    val menuMessage by menuViewModel.message.collectAsStateWithLifecycle()
 
     val context = LocalContext.current
-    val receiptPicker = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.PickVisualMedia()
-    ) { uri ->
-        uri?.let {
-            receiptUri = it
-            receiptBytes = context.contentResolver.openInputStream(it)?.use { stream ->
-                stream.readBytes()
-            }
-        }
+    val launchReceiptPicker = rememberImagePicker { uri, bytes ->
+        receiptUri = uri
+        receiptBytes = bytes
     }
-    val placeImagesPicker = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.PickMultipleVisualMedia(5)
-    ) { uris ->
+    val launchPlaceImagesPicker = rememberMultiImagePicker(maxItems = 5) { uris, bytes ->
+        val slots = 5 - placeImageUris.size
+        if (slots <= 0) return@rememberMultiImagePicker
         val newUris = (placeImageUris + uris).take(5)
         placeImageUris = newUris
-        placeImageBytesList = newUris.mapNotNull { uri ->
-            context.contentResolver.openInputStream(uri)?.use { it.readBytes() }
-        }
+        placeImageBytesList = placeImageBytesList + bytes.take(slots)
     }
 
     LaunchedEffect(Unit) {
@@ -134,6 +145,54 @@ fun ManagerDashboardScreen(
 
     var showLogoutSheet by remember { mutableStateOf(false) }
 
+    val drawerState = rememberDrawerState(DrawerValue.Closed)
+    val scope = rememberCoroutineScope()
+
+    // Without this, system back would pop the whole dashboard while the drawer
+    // is open instead of just dismissing the drawer.
+    BackHandler(enabled = drawerState.isOpen) {
+        scope.launch { drawerState.close() }
+    }
+
+    ModalNavigationDrawer(
+        drawerState = drawerState,
+        drawerContent = {
+            AppSidemenu(
+                drawerState = drawerState,
+                scope = scope,
+                header = {
+                    SidemenuHeader(
+                        icon = Icons.Default.Storefront,
+                        title = "My Business",
+                        subtitle = "Manage your listings",
+                        iconBackground = PrimaryTeal,
+                        iconTint = Color.White,
+                        titleColor = TextPrimary,
+                        subtitleColor = TextMuted
+                    )
+                },
+                items = listOf(
+                    SidemenuItem(
+                        label = "My Business",
+                        icon = Icons.Default.Home,
+                        selected = true,
+                        onClick = {}
+                    ),
+                    SidemenuItem(
+                        label = "Logout",
+                        icon = Icons.AutoMirrored.Filled.Logout,
+                        isDestructive = true,
+                        onClick = { showLogoutSheet = true }
+                    )
+                ),
+                containerColor = SurfaceWhite,
+                selectedContainerColor = PrimaryTeal.copy(alpha = 0.12f),
+                selectedContentColor = PrimaryTeal,
+                unselectedContentColor = Color(0xFF44403C),
+                destructiveContentColor = Rose
+            )
+        }
+    ) {
     Scaffold(
         topBar = {
             TopAppBar(
@@ -142,6 +201,15 @@ fun ManagerDashboardScreen(
                     containerColor = PrimaryTeal,
                     titleContentColor = Color.White
                 ),
+                navigationIcon = {
+                    IconButton(onClick = { scope.launch { drawerState.open() } }) {
+                        Icon(
+                            Icons.Default.Menu,
+                            contentDescription = "Open menu",
+                            tint = Color.White
+                        )
+                    }
+                },
                 actions = {
                     IconButton(onClick = { showLogoutSheet = true }) {
                         Icon(
@@ -253,13 +321,7 @@ fun ManagerDashboardScreen(
                     .height(120.dp)
                     .clip(RoundedCornerShape(12.dp))
                     .border(2.dp, Color.Gray, RoundedCornerShape(12.dp))
-                    .clickable {
-                        receiptPicker.launch(
-                            PickVisualMediaRequest.Builder()
-                                .setMediaType(ActivityResultContracts.PickVisualMedia.ImageOnly)
-                                .build()
-                        )
-                    },
+                    .clickable { launchReceiptPicker() },
                 contentAlignment = Alignment.Center
             ) {
                 if (receiptUri != null) {
@@ -324,15 +386,7 @@ fun ManagerDashboardScreen(
                                     8.dp
                                 )
                             )
-                            .clickable {
-                                placeImagesPicker.launch(
-                                    PickVisualMediaRequest.Builder()
-                                        .setMediaType(
-                                            ActivityResultContracts.PickVisualMedia.ImageOnly
-                                        )
-                                        .build()
-                                )
-                            },
+                            .clickable { launchPlaceImagesPicker() },
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
@@ -385,20 +439,10 @@ fun ManagerDashboardScreen(
             var showEditSheet by remember { mutableStateOf<Any?>(null) }
 
             var activeMenuShopId by remember { mutableStateOf<String?>(null) }
-            val menuImagePicker = rememberLauncherForActivityResult(
-                contract = ActivityResultContracts.PickVisualMedia()
-            ) { uri ->
-                if (uri == null) return@rememberLauncherForActivityResult
-                val shopId = activeMenuShopId
-                if (shopId == null) return@rememberLauncherForActivityResult
-                try {
-                    val bytes = context.contentResolver.openInputStream(uri)?.use { stream ->
-                        stream.readBytes()
-                    }
-                    if (bytes != null && bytes.isNotEmpty()) {
-                        menuViewModel.uploadMenuImage(shopId, bytes)
-                    }
-                } catch (_: Exception) {
+            val launchMenuImagePicker = rememberImagePicker { _, bytes ->
+                val shopId = activeMenuShopId ?: return@rememberImagePicker
+                if (bytes.isNotEmpty()) {
+                    menuViewModel.uploadMenuImage(shopId, bytes)
                 }
             }
 
@@ -410,11 +454,7 @@ fun ManagerDashboardScreen(
                     onEdit = { showEditSheet = r },
                     onUploadImage = {
                         activeMenuShopId = r.id
-                        menuImagePicker.launch(
-                            PickVisualMediaRequest(
-                                ActivityResultContracts.PickVisualMedia.ImageOnly
-                            )
-                        )
+                        launchMenuImagePicker()
                     },
                     menuViewModel = menuViewModel
                 )
@@ -428,7 +468,7 @@ fun ManagerDashboardScreen(
                     onEdit = { showEditSheet = h },
                     onUploadImage = {
                         activeMenuShopId = h.id
-                        menuImagePicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+                        launchMenuImagePicker()
                     },
                     menuViewModel = menuViewModel
                 )
@@ -442,7 +482,7 @@ fun ManagerDashboardScreen(
                     onEdit = { showEditSheet = p },
                     onUploadImage = {
                         activeMenuShopId = p.id
-                        menuImagePicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+                        launchMenuImagePicker()
                     },
                     menuViewModel = menuViewModel
                 )
@@ -456,11 +496,7 @@ fun ManagerDashboardScreen(
                     onEdit = { showEditSheet = e },
                     onUploadImage = {
                         activeMenuShopId = e.id
-                        menuImagePicker.launch(
-                            PickVisualMediaRequest(
-                                ActivityResultContracts.PickVisualMedia.ImageOnly
-                            )
-                        )
+                        launchMenuImagePicker()
                     },
                     menuViewModel = menuViewModel
                 )
@@ -496,6 +532,7 @@ fun ManagerDashboardScreen(
                 Spacer(Modifier.height(8.dp))
             }
         }
+    }
     }
 
     if (showLogoutSheet) {
@@ -676,7 +713,8 @@ private fun ApprovedPlaceCardWithMenu(
     onUploadImage: () -> Unit,
     menuViewModel: MenuViewModel
 ) {
-    val menuImages by menuViewModel.menuImages.collectAsState()
+    val shopMenus by menuViewModel.shopMenus.collectAsStateWithLifecycle()
+    val menuImages = shopMenus[shopId]?.images.orEmpty()
 
     LaunchedEffect(shopId) {
         menuViewModel.loadMenuImages(shopId)
@@ -816,15 +854,7 @@ private fun EditRestaurantForm(
     var newImageBytesList by remember { mutableStateOf<List<ByteArray>>(emptyList()) }
     var newImageUris by remember { mutableStateOf<List<Uri>>(emptyList()) }
     val context = LocalContext.current
-    val imagePicker = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.PickMultipleVisualMedia(maxItems = 5)
-    ) { uris ->
-        val bytesList = mutableListOf<ByteArray>()
-        for (uri in uris) {
-            context.contentResolver.openInputStream(uri)?.use { stream ->
-                bytesList.add(stream.readBytes())
-            }
-        }
+    val launchNewImagePicker = rememberMultiImagePicker(maxItems = 5) { uris, bytesList ->
         newImageUris = uris
         newImageBytesList = bytesList
     }
@@ -911,10 +941,7 @@ private fun EditRestaurantForm(
         }
 
         OutlinedButton(
-            onClick = {
-                imagePicker.launch(
-                    PickVisualMediaRequest(
-                        ActivityResultContracts.PickVisualMedia.ImageOnly)) },
+            onClick = { launchNewImagePicker() },
             modifier = Modifier.fillMaxWidth()
         ) {
             Icon(Icons.Default.Image,
@@ -983,15 +1010,7 @@ private fun EditHotelForm(
     var newImageUris by remember { mutableStateOf<List<Uri>>(emptyList()) }
     val context = LocalContext.current
 
-    val imagePicker = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.PickMultipleVisualMedia(maxItems = 5)
-    ) { uris ->
-        val bytesList = mutableListOf<ByteArray>()
-        for (uri in uris) {
-            context.contentResolver.openInputStream(uri)?.use { stream ->
-                bytesList.add(stream.readBytes())
-            }
-        }
+    val launchNewImagePicker = rememberMultiImagePicker(maxItems = 5) { uris, bytesList ->
         newImageUris = uris
         newImageBytesList = bytesList
     }
@@ -1078,7 +1097,7 @@ private fun EditHotelForm(
         }
 
         OutlinedButton(
-            onClick = { imagePicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) },
+            onClick = { launchNewImagePicker() },
             modifier = Modifier.fillMaxWidth()
         ) {
             Icon(Icons.Default.Image, contentDescription = null, modifier = Modifier.size(18.dp))
@@ -1142,15 +1161,7 @@ private fun EditPlaceForm(
     var newImageBytesList by remember { mutableStateOf<List<ByteArray>>(emptyList()) }
     var newImageUris by remember { mutableStateOf<List<Uri>>(emptyList()) }
     val context = LocalContext.current
-    val imagePicker = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.PickMultipleVisualMedia(maxItems = 5)
-    ) { uris ->
-        val bytesList = mutableListOf<ByteArray>()
-        for (uri in uris) {
-            context.contentResolver.openInputStream(uri)?.use { stream ->
-                bytesList.add(stream.readBytes())
-            }
-        }
+    val launchNewImagePicker = rememberMultiImagePicker(maxItems = 5) { uris, bytesList ->
         newImageUris = uris
         newImageBytesList = bytesList
     }
@@ -1223,10 +1234,7 @@ private fun EditPlaceForm(
         }
 
         OutlinedButton(
-            onClick = {
-                imagePicker.launch(
-                    PickVisualMediaRequest(
-                        ActivityResultContracts.PickVisualMedia.ImageOnly)) },
+            onClick = { launchNewImagePicker() },
             modifier = Modifier.fillMaxWidth()
         ) {
             Icon(
@@ -1288,15 +1296,7 @@ private fun EditEquipmentForm(
     var newImageBytesList by remember { mutableStateOf<List<ByteArray>>(emptyList()) }
     var newImageUris by remember { mutableStateOf<List<Uri>>(emptyList()) }
     val context = LocalContext.current
-    val imagePicker = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.PickMultipleVisualMedia(maxItems = 5)
-    ) { uris ->
-        val bytesList = mutableListOf<ByteArray>()
-        for (uri in uris) {
-            context.contentResolver.openInputStream(uri)?.use { stream ->
-                bytesList.add(stream.readBytes())
-            }
-        }
+    val launchNewImagePicker = rememberMultiImagePicker(maxItems = 5) { uris, bytesList ->
         newImageUris = uris
         newImageBytesList = bytesList
     }
@@ -1381,11 +1381,8 @@ private fun EditEquipmentForm(
             }
             Spacer(Modifier.height(8.dp))
         }
-
         OutlinedButton(
-            onClick = { imagePicker.launch(
-                PickVisualMediaRequest(
-                    ActivityResultContracts.PickVisualMedia.ImageOnly)) },
+            onClick = { launchNewImagePicker() },
             modifier = Modifier.fillMaxWidth()
         ) {
             Icon(Icons.Default.Image,
@@ -1478,6 +1475,7 @@ private fun BusinessTypeChip(
     Card(
         modifier = Modifier
             .height(40.dp)
+            
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
