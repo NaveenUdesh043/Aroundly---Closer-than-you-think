@@ -33,11 +33,6 @@ class AdminViewModel @Inject constructor(
     private val _message = MutableStateFlow<String?>(null)
     val message: StateFlow<String?> = _message.asStateFlow()
 
-    /**
-     * The three tab loads are launched together, so a single boolean would be
-     * cleared by whichever returned first while the others were still running.
-     * A counter keeps the spinner up until the last one lands.
-     */
     private var inFlight = 0
 
     private fun <T> tracked(block: suspend () -> T, onResult: (T) -> Unit) {

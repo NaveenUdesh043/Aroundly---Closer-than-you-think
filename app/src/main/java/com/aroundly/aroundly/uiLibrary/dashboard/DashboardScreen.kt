@@ -172,8 +172,6 @@ fun DashboardScreen(
     val drawerState = rememberDrawerState(DrawerValue.Closed)
     val scope = rememberCoroutineScope()
 
-    // Without this, system back would pop the whole dashboard while the drawer
-    // is open instead of just dismissing the drawer.
     BackHandler(enabled = drawerState.isOpen) {
         scope.launch { drawerState.close() }
     }
@@ -234,7 +232,6 @@ fun DashboardScreen(
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(bottom = 24.dp)
             ) {
-                // ── HEADER ──
                 item {
                     DashboardHeader(
                         city = selectedCity,
@@ -257,7 +254,6 @@ fun DashboardScreen(
                     )
                 }
 
-                // ── SEARCH ──
                 item {
                     SearchBar(
                         query = searchQuery,
@@ -265,7 +261,6 @@ fun DashboardScreen(
                     )
                 }
 
-                // ── FILTER CHIPS ──
                 item {
                     FilterChipRow(
                         tabs = tabs,
@@ -274,7 +269,6 @@ fun DashboardScreen(
                     )
                 }
 
-                // ── DROPDOWN FILTERS ──
                 item {
                     Column(
                         modifier = Modifier
@@ -320,7 +314,6 @@ fun DashboardScreen(
                     }
                 }
 
-                // ── LOCATION BANNER ──
                 item {
                     AnimatedVisibility(
                         visible = currentLocation?.cityHint != null && selectedCity.isNotEmpty(),
@@ -364,7 +357,6 @@ fun DashboardScreen(
                     }
                 }
 
-                // ── CONTENT ──
                 if (isLoading) {
                     item {
                         Box(
@@ -393,7 +385,6 @@ fun DashboardScreen(
                             )
                         }
                         if (restaurants.isNotEmpty()) {
-                            // Hero card for first restaurant
                             item {
                                 RestaurantHeroCard(
                                     restaurant = restaurants.first(),
@@ -667,7 +658,6 @@ private fun DashboardHeader(
 
             Spacer(Modifier.height(16.dp))
 
-            // Location pill
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -908,7 +898,6 @@ private fun RestaurantHeroCard(
                 )
             }
 
-            // Gradient overlay
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -924,7 +913,6 @@ private fun RestaurantHeroCard(
                     )
             )
 
-            // Featured badge
             Box(
                 modifier = Modifier
                     .align(Alignment.TopStart)
@@ -1012,7 +1000,6 @@ private fun PlaceCard(
                 .fillMaxWidth()
                 .height(110.dp)
         ) {
-            // Image
             Box(
                 modifier = Modifier
                     .width(120.dp)
@@ -1067,14 +1054,12 @@ private fun PlaceCard(
                 }
             }
 
-            // Content
             Column(
                 modifier = Modifier
                     .weight(1f)
                     .padding(horizontal = 14.dp, vertical = 12.dp),
                 verticalArrangement = Arrangement.Center
             ) {
-                // Type badge
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(6.dp))

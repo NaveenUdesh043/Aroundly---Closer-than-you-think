@@ -148,8 +148,6 @@ fun ManagerDashboardScreen(
     val drawerState = rememberDrawerState(DrawerValue.Closed)
     val scope = rememberCoroutineScope()
 
-    // Without this, system back would pop the whole dashboard while the drawer
-    // is open instead of just dismissing the drawer.
     BackHandler(enabled = drawerState.isOpen) {
         scope.launch { drawerState.close() }
     }
@@ -566,7 +564,6 @@ private fun PaymentInfoSection() {
 
         Spacer(Modifier.height(12.dp))
 
-        // Listing fee card
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(16.dp),
@@ -1475,7 +1472,7 @@ private fun BusinessTypeChip(
     Card(
         modifier = Modifier
             .height(40.dp)
-            
+
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(

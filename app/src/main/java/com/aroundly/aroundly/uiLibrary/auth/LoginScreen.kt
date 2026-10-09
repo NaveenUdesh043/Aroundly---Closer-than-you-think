@@ -277,7 +277,6 @@ fun LoginScreen(
 
                 Spacer(Modifier.height(24.dp))
 
-                // Login Button with Loading Spinner
                 Button(
                     onClick = {
                         if (email.trim().equals(

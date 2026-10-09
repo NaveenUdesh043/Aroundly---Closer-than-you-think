@@ -14,15 +14,6 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 
-/**
- * Single-image picker that decodes and re-compresses the result off the main
- * thread, invoking [onImageLoaded] with the compressed bytes.
- *
- * Reading a picked photo inline with `InputStream.readBytes()` freezes the UI
- * for the length of a multi-megabyte disk read. Compressing here rather than in
- * the ViewModel keeps both the upload payload and the bytes held in form state
- * small.
- */
 @Composable
 fun rememberImagePicker(onImageLoaded: (Uri, ByteArray) -> Unit): () -> Unit {
     val context = LocalContext.current
@@ -47,11 +38,6 @@ fun rememberImagePicker(onImageLoaded: (Uri, ByteArray) -> Unit): () -> Unit {
     }
 }
 
-/**
- * Multi-image picker capped at [maxItems]. Decoding and compression happen off
- * the main thread; [onImagesLoaded] receives the URIs and their compressed
- * bytes in selection order.
- */
 @Composable
 fun rememberMultiImagePicker(
     maxItems: Int = 5,
@@ -66,8 +52,6 @@ fun rememberMultiImagePicker(
     ) { uris ->
         if (uris.isEmpty()) return@rememberLauncherForActivityResult
         scope.launch {
-            // Each image decodes and re-encodes independently, so a five-image
-            // selection does not cost five times the slowest one.
             val compressed = coroutineScope {
                 uris.map { uri -> async { ImageCompressor.compress(context, uri) } }.awaitAll()
             }

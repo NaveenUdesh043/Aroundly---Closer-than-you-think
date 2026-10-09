@@ -58,7 +58,6 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-// ── Star rating display ──
 @Composable
 fun StarRatingBar(
     rating: Float,
@@ -90,7 +89,6 @@ fun StarRatingBar(
     }
 }
 
-// ── Star rating input ──
 @Composable
 fun StarRatingInput(
     rating: Float,
@@ -113,7 +111,6 @@ fun StarRatingInput(
     }
 }
 
-// ── Single review card ──
 @Composable
 fun ReviewCard(
     review: Review,
@@ -187,7 +184,6 @@ fun ReviewCard(
     }
 }
 
-// ── Review input card ──
 @Composable
 fun ReviewInputCard(
     onSubmit: (Float, String) -> Unit,
@@ -297,7 +293,6 @@ fun ReviewInputCard(
     }
 }
 
-// ── Full reviews section ──
 @Composable
 fun ReviewsSection(
     viewModel: ReviewViewModel,
@@ -313,7 +308,6 @@ fun ReviewsSection(
     val currentUserId = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid
 
     Column(modifier = modifier) {
-        // Header with average rating
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -339,7 +333,6 @@ fun ReviewsSection(
 
         Spacer(Modifier.height(12.dp))
 
-        // Submit result feedback
         submitResult?.let { success ->
             Card(
                 modifier = Modifier
@@ -361,7 +354,6 @@ fun ReviewsSection(
             viewModel.clearSubmitResult()
         }
 
-        // Review input (only if user hasn't reviewed yet)
         if (userReview == null) {
             ReviewInputCard(
                 onSubmit = { rating, text -> viewModel.submitReview(rating, text) },
@@ -370,7 +362,6 @@ fun ReviewsSection(
             Spacer(Modifier.height(16.dp))
         }
 
-        // Reviews list
         if (isLoading && reviews.isEmpty()) {
             Box(
                 modifier = Modifier

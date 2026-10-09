@@ -50,17 +50,6 @@ class ReviewRepositoryImpl @Inject constructor(
         }
     }
 
-    /**
-     * One read serves the list, the average, the count and the signed-in user's
-     * own review. Previously each of those was a separate full scan of the same
-     * filtered set, so a place with reviews cost four round trips.
-     *
-     * Deliberately no server-side `orderBy`: an equality filter plus a sort
-     * requires a composite index on (placeId, timestamp), and with no
-     * `firestore.indexes.json` in the project that query fails at runtime and
-     * was being swallowed into an empty list. Sorting the small in-memory result
-     * keeps the feature working without depending on a deployed index.
-     */
     private suspend fun fetchReviews(placeId: String): List<Review> = try {
         reviewsCollection
             .whereEqualTo("placeId", placeId)
@@ -69,8 +58,6 @@ class ReviewRepositoryImpl @Inject constructor(
             .documents
             .mapNotNull { doc -> doc.toObject(Review::class.java)?.copy(id = doc.id) }
     } catch (e: Exception) {
-        // Logged rather than silently swallowed: a missing index or a rejected
-        // rule used to look exactly like "this place has no reviews".
         Log.w(TAG, "Could not load reviews for place $placeId", e)
         emptyList()
     }

@@ -27,7 +27,6 @@ class DashboardRepositoryImpl @Inject constructor(
 
     private companion object {
         const val TAG = "DashboardRepository"
-        /** Filter options only change when a place is approved. */
         const val FACET_TTL_MILLIS = 10 * 60 * 1000L
     }
 
@@ -230,21 +229,10 @@ class DashboardRepositoryImpl @Inject constructor(
         )
     }
 
-    /**
-     * Filter options are derived from one pass over the four place collections.
-     *
-     * The Android Firestore SDK has no `select()` projection, so distinct
-     * values cannot be pushed server-side. It can still be cut from seven
-     * collection downloads to four: `restaurants` and `hotels` each used to be
-     * downloaded twice (once for cities, once for their own type list). The
-     * result is cached, because filter options change only when a place is
-     * approved and do not justify a re-read on every dashboard load.
-     */
     private suspend fun loadFacets(): Facets {
         facetsCache.get()?.takeIf { !it.isStale() }?.let { return it.value }
 
         return facetLock.withLock {
-            // Another caller may have populated the cache while we waited.
             facetsCache.get()?.takeIf { !it.isStale() }?.let { return@withLock it.value }
 
             val cities = mutableListOf<String>()
@@ -282,7 +270,6 @@ class DashboardRepositoryImpl @Inject constructor(
     private suspend fun readCollection(name: String): QuerySnapshot = try {
         firestore.collection(name).get().await()
     } catch (e: Exception) {
-        // An empty filter list is better than failing the whole dashboard.
         Log.w(TAG, "Could not read $name for filter options", e)
         throw e
     }

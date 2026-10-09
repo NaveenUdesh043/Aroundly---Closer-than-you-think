@@ -29,8 +29,6 @@ class RoleRouterViewModel @Inject constructor(
             _userRole.value = if (uid == null) {
                 null
             } else {
-                // A read failure must not strand the user on the loading
-                // screen, and USER is the safe default for an unknown role.
                 runCatching { userRepository.getUserRole(uid) }
                     .getOrNull() ?: UserRole.USER
             }

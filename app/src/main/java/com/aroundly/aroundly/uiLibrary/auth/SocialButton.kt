@@ -66,7 +66,6 @@ fun SocialButton(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Google logo image
             Box(
                 modifier = Modifier
                     .size(24.dp)
@@ -84,7 +83,6 @@ fun SocialButton(
                 )
             }
             Spacer(Modifier.weight(1f))
-            // Centered text
             Text(
                 text = "Continue with $label",
                 style = MaterialTheme.typography.bodyLarge,
@@ -92,7 +90,6 @@ fun SocialButton(
                 color = TextPrimary
             )
             Spacer(Modifier.weight(1f))
-            // Balance left spacer so text stays centered
             Spacer(Modifier.width(24.dp))
         }
     }

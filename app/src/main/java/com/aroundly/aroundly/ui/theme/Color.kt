@@ -2,67 +2,43 @@ package com.aroundly.aroundly.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// ═══════════════════════════════════════════
-//  TEXT COLORS — Light backgrounds
-// ═══════════════════════════════════════════
-val TextPrimary = Color(0xFF1C1C1C)         // Headings, titles, card names
-val TextSecondary = Color(0xFF5D4037)       // Subtitles, body, descriptions
-val TextMuted = Color(0xFF9A9183)           // Placeholders, labels, helper text
-val TextDisabled = Color(0xFFBDBDBD)        // Disabled / placeholder hints
-val TextLink = Color(0xFFD8891E)            // Clickable links
-val TextError = Color(0xFFE53935)           // Error messages
+val TextPrimary = Color(0xFF1C1C1C)
+val TextSecondary = Color(0xFF5D4037)
+val TextMuted = Color(0xFF9A9183)
+val TextDisabled = Color(0xFFBDBDBD)
+val TextLink = Color(0xFFD8891E)
+val TextError = Color(0xFFE53935)
 
-// ═══════════════════════════════════════════
-//  TEXT COLORS — Dark backgrounds
-// ═══════════════════════════════════════════
-val TextOnDark = Color.White                // Primary text on dark surfaces
-val TextOnDarkSecondary = Color(0xB3FFFFFF) // Secondary text on dark (70%)
-val TextOnDarkMuted = Color(0x80FFFFFF)     // Muted text on dark (50%)
-val TextOnDarkSubtle = Color(0x66FFFFFF)    // Subtle text on dark (40%)
+val TextOnDark = Color.White
+val TextOnDarkSecondary = Color(0xB3FFFFFF)
+val TextOnDarkMuted = Color(0x80FFFFFF)
+val TextOnDarkSubtle = Color(0x66FFFFFF)
 
-// ═══════════════════════════════════════════
-//  SURFACE COLORS
-// ═══════════════════════════════════════════
-val SurfaceWarm = Color(0xFFF4F0E9)         // Warm page background
-val SurfaceCard = Color.White               // Card / sheet background
-val SurfaceInput = Color(0xFFF7F1E7)        // Text field fill
-val SurfaceDivider = Color(0xFFE5DED4)      // Divider lines
-val SurfaceAccent = Color(0xFFFFECB3)       // Highlight banner background
+val SurfaceWarm = Color(0xFFF4F0E9)
+val SurfaceCard = Color.White
+val SurfaceInput = Color(0xFFF7F1E7)
+val SurfaceDivider = Color(0xFFE5DED4)
+val SurfaceAccent = Color(0xFFFFECB3)
 
-// ═══════════════════════════════════════════
-//  ACCENT / BRAND
-// ═══════════════════════════════════════════
-val AccentPurple = Color(0xFFAE62ED)        // Password toggle icon
-val AccentAmber = Color(0xFFFFB300)         // Primary accent
-val AccentCoral = Color(0xFFFF7043)         // Secondary accent
+val AccentPurple = Color(0xFFAE62ED)
+val AccentAmber = Color(0xFFFFB300)
+val AccentCoral = Color(0xFFFF7043)
 
-// ═══════════════════════════════════════════
-//  SECTION CATEGORY COLORS
-// ═══════════════════════════════════════════
-val CategoryRestaurant = Color(0xFFFF8F00)  // Restaurants & cafes
-val CategoryHotel = Color(0xFF00897B)       // Hotels / stays
-val CategoryPlace = Color(0xFF7B1FA2)       // Places to visit
-val CategoryRental = Color(0xFF1565C0)      // Travel rentals
+val CategoryRestaurant = Color(0xFFFF8F00)
+val CategoryHotel = Color(0xFF00897B)
+val CategoryPlace = Color(0xFF7B1FA2)
+val CategoryRental = Color(0xFF1565C0)
 
-// ═══════════════════════════════════════════
-//  STATUS COLORS
-// ═══════════════════════════════════════════
 val StatusPending = Color(0xFFFFA000)
 val StatusApproved = Color(0xFF4CAF50)
 val StatusRejected = Color(0xFFE53935)
 
-// ═══════════════════════════════════════════
-//  TRAVEL APP PALETTE (primary / secondary)
-// ═══════════════════════════════════════════
 val PrimaryTeal = Color(0xFF00897B)
 val PrimaryTealLight = Color(0xFF4DB6AC)
 val PrimaryTealDark = Color(0xFF00695C)
 val BackgroundLight = Color(0xFFF5F5F5)
 val SurfaceWhite = Color(0xFFFFFFFF)
 
-// ═══════════════════════════════════════════
-//  LEGACY (Theme.kt compatibility)
-// ═══════════════════════════════════════════
 val Purple80 = Color(0xFF4DB6AC)
 val PurpleGrey80 = Color(0xFFB2DFDB)
 val Pink80 = Color(0xFFFFCC80)

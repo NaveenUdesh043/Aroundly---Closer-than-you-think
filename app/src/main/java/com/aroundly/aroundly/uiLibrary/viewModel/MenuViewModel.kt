@@ -14,11 +14,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-/**
- * Menu state for a single shop. Keyed per shop because the manager dashboard
- * renders one card per place, and a single shared list let whichever query
- * finished last overwrite every other card.
- */
 data class ShopMenuState(
     val images: List<MenuItem> = emptyList(),
     val isLoading: Boolean = false,
@@ -38,7 +33,6 @@ class MenuViewModel @Inject constructor(
     private val _message = MutableStateFlow<String?>(null)
     val message: StateFlow<String?> = _message.asStateFlow()
 
-    /** In-flight loads, so scrolling a card back into view cannot double-fetch. */
     private val inFlight = mutableMapOf<String, Job>()
 
     fun stateFor(shopId: String): ShopMenuState =
@@ -57,8 +51,6 @@ class MenuViewModel @Inject constructor(
                     }
                 },
                 onFailure = { error ->
-                    // Previously swallowed, so a failed read rendered as "no
-                    // images" and looked like the upload had not been saved.
                     update(shopId) {
                         it.copy(
                             isLoading = false,
@@ -76,8 +68,6 @@ class MenuViewModel @Inject constructor(
             menuRepository.uploadMenuImage(shopId, imageBytes).fold(
                 onSuccess = {
                     _message.value = "Image uploaded"
-                    // Read the server result rather than patching the local
-                    // list, so a rejected write cannot show a phantom image.
                     loadMenuImages(shopId, force = true)
                 },
                 onFailure = {

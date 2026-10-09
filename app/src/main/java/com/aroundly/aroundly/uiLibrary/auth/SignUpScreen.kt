@@ -136,7 +136,6 @@ fun SignupScreen(
         horizontalAlignment = Alignment.Start
     ) {
 
-        // Header card
         Card(
             modifier = Modifier
                 .fillMaxWidth()
@@ -172,7 +171,6 @@ fun SignupScreen(
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // Explorer account chip
                     Box(
                         modifier = Modifier
                             .background(
@@ -209,7 +207,6 @@ fun SignupScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // White content sheet
         Card(
             modifier = Modifier
                 .padding(horizontal = 16.dp, vertical = 24.dp)
@@ -245,7 +242,6 @@ fun SignupScreen(
 
                 Spacer(modifier = Modifier.height(20.dp))
 
-                // Full name (first + last)
                 Text(
                     text = "FIRST NAME",
                     style = MaterialTheme.typography.titleSmall,

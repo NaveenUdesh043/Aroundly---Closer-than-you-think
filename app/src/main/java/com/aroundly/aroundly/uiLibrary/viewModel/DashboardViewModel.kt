@@ -81,8 +81,6 @@ class DashboardViewModel @Inject constructor(
 
     fun loadDropdownOptions() {
         viewModelScope.launch {
-            // Four independent facet reads; running them concurrently turns the
-            // sum of four round trips into the slowest one.
             coroutineScope {
                 launch {
                     _availableCities.value = listOf("All") + dashboardRepository.getAvailableCities()

@@ -110,7 +110,7 @@ fun WelcomeScreen(
 
         GlowBlobs()
         IconButton(
-            onClick = { /* open language picker */ },
+            onClick = {  },
             modifier = Modifier
                 .align(Alignment.TopEnd)
                 .padding(top = 30.dp, end = 20.dp)
@@ -262,10 +262,6 @@ fun LogoSection(visible: Boolean) {
             modifier = Modifier
                 .size(72.dp)
                 .shadow(20.dp, RoundedCornerShape(22.dp)),
-//                .background(
-//                    Brush.linearGradient(listOf(Amber, AmberDark)),
-//                    RoundedCornerShape(22.dp)
-//                ),
             contentAlignment = Alignment.Center
         ) {
             Image(

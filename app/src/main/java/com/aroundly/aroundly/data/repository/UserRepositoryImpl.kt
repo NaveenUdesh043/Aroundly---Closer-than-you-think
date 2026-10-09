@@ -12,15 +12,6 @@ import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import javax.inject.Singleton
 
-/**
- * Short-lived cache of user roles.
- *
- * Sign-in, the profile screens and the role router each needed the role, and
- * every one of those was a separate Firestore round trip even though the
- * document cannot change mid-session except on an explicit role update. The
- * cache removes those repeated reads; [fetchLock] collapses concurrent misses
- * so two screens appearing at once still cost a single request.
- */
 @Singleton
 class UserRepositoryImpl @Inject constructor(
     private val auth: FirebaseAuth,
@@ -40,7 +31,6 @@ class UserRepositoryImpl @Inject constructor(
         roleCache[uid]?.takeIf { !it.isExpired() }?.let { return it.value }
 
         return fetchLock.withLock {
-            // Another caller may have filled the cache while we waited.
             roleCache[uid]?.takeIf { !it.isExpired() }?.value
                 ?: fetchAndCache(uid)
         }
@@ -89,8 +79,6 @@ class UserRepositoryImpl @Inject constructor(
     }
 
     private companion object {
-        /** Covers a navigation session, while still picking up a role change
-         *  without needing a reinstall. */
         const val TTL_MILLIS = 5 * 60 * 1000L
     }
 }

@@ -15,23 +15,10 @@ object ImageCompressor {
 
     private const val TAG = "ImageCompressor"
 
-    /** Longest edge, in pixels, of an uploaded image. */
     private const val MAX_DIMENSION = 1600
 
-    /** JPEG quality for the re-encoded upload. */
     private const val JPEG_QUALITY = 82
 
-    /**
-     * Reads [uri] and returns downscaled, EXIF-corrected, JPEG-compressed bytes.
-     *
-     * Runs entirely on [Dispatchers.IO]; decoding and re-encoding a
-     * multi-megabyte camera photo on the main thread froze the UI for as long
-     * as the read took, and a five-image selection did it five times over.
-     *
-     * The result is always JPEG, matching the `.jpg` storage path used by the
-     * upload repositories, so the served Content-Type cannot disagree with the
-     * bytes. Returns null only when the URI cannot be read at all.
-     */
     suspend fun compress(context: Context, uri: Uri): ByteArray? = withContext(Dispatchers.IO) {
         val decoded = decodeScaled(context, uri) ?: return@withContext null
         val oriented = applyExifRotation(context, uri, decoded) ?: decoded
@@ -43,15 +30,6 @@ object ImageCompressor {
         }
     }
 
-    /**
-     * Two-pass decode: read the bounds to pick an [BitmapFactory.Options.inSampleSize]
-     * power of two, then decode straight into a bitmap of roughly the target size.
-     * This avoids ever materialising the full-resolution bitmap.
-     *
-     * RGB_565 halves peak bitmap memory; at a 1600px cap the result is a few
-     * megabytes instead of tens, which is what kept a five-image pick from
-     * risking an OutOfMemoryError.
-     */
     private fun decodeScaled(context: Context, uri: Uri): Bitmap? = runCatching {
         val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
         context.contentResolver.openInputStream(uri)?.use {
@@ -78,11 +56,6 @@ object ImageCompressor {
         return sampleSize
     }
 
-    /**
-     * Camera photos carry their orientation in EXIF rather than in the pixel
-     * data, so without this they display sideways and the user re-picks the
-     * photo, multiplying both storage and upload bandwidth.
-     */
     private fun applyExifRotation(context: Context, uri: Uri, bitmap: Bitmap): Bitmap? =
         runCatching {
             val orientation = context.contentResolver.openInputStream(uri)?.use { stream ->

@@ -32,7 +32,6 @@ fun DottedProgressBar(
 
     Row {
         for (i in 0 until dotCount) {
-            // Animate alpha of each dot
             val alpha by infiniteTransition.animateFloat(
                 initialValue = 0.3f,
                 targetValue = 1f,
@@ -42,7 +41,6 @@ fun DottedProgressBar(
                 )
             )
 
-            // Each dot can have a stagger effect
             val staggeredAlpha = alpha * (1f - i * 0.3f) + (i * 0.3f)
 
             Box(

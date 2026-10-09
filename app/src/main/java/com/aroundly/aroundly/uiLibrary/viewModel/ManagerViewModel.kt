@@ -88,7 +88,7 @@ class ManagerViewModel @Inject constructor(
             val placeImageUrls = mutableListOf<String>()
             restaurant.images?.let { placeImageUrls.addAll(it) }
 
-            val uploaded = coroutineScope { 
+            val uploaded = coroutineScope {
                 newImageBytesList.map { bytes ->
                     async { submissionRepository.uploadPlaceImage(user.uid, bytes) }
                 }.awaitAll()
@@ -143,8 +143,6 @@ class ManagerViewModel @Inject constructor(
                     async { submissionRepository.uploadPlaceImage(user.uid, bytes) }
                 }.awaitAll()
             }
-            // Order follows the picker selection; failed uploads are skipped so a
-            // single bad image cannot block the whole update.
             uploaded.forEach { result ->
                 result.getOrNull()?.let { placeImageUrls.add(it) }
             }
@@ -193,8 +191,6 @@ class ManagerViewModel @Inject constructor(
                     async { submissionRepository.uploadPlaceImage(user.uid, bytes) }
                 }.awaitAll()
             }
-            // Order follows the picker selection; failed uploads are skipped so a
-            // single bad image cannot block the whole update.
             uploaded.forEach { result ->
                 result.getOrNull()?.let { placeImageUrls.add(it) }
             }
@@ -241,8 +237,6 @@ class ManagerViewModel @Inject constructor(
                     async { submissionRepository.uploadPlaceImage(user.uid, bytes) }
                 }.awaitAll()
             }
-            // Order follows the picker selection; failed uploads are skipped so a
-            // single bad image cannot block the whole update.
             uploaded.forEach { result ->
                 result.getOrNull()?.let { placeImageUrls.add(it) }
             }
@@ -295,9 +289,6 @@ class ManagerViewModel @Inject constructor(
             _isSubmitting.value = true
             _submitMessage.value = null
 
-            // The receipt and the place images are independent, and the place
-            // images are independent of each other. Uploading them concurrently
-            // turns N sequential round trips into one.
             val receiptUrlDeferred = receiptImageBytes?.let { bytes ->
                 async { submissionRepository.uploadReceipt(user.uid, bytes) }
             }

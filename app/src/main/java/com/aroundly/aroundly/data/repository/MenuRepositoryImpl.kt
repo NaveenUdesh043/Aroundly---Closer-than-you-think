@@ -19,11 +19,6 @@ class MenuRepositoryImpl @Inject constructor(
 
     override suspend fun getMenuImages(shopId: String): Result<List<MenuItem>> {
         return try {
-            // Deliberately no orderBy on the server: an equality filter plus a
-            // sort needs a composite index on (shopId, createdAt), and without
-            // one the query fails at runtime. A shop holds a handful of images,
-            // so ordering the already-filtered result locally is cheaper than
-            // depending on an index that has to be deployed alongside the app.
             val snapshot = menuCollection
                 .whereEqualTo("shopId", shopId)
                 .get()

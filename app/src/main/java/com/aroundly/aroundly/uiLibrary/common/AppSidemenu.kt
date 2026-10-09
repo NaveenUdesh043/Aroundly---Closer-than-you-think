@@ -30,12 +30,6 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
-/**
- * One row in a [AppSidemenu].
- *
- * The item closes the drawer before running [onClick], so a navigation does not
- * race the dismiss animation.
- */
 data class SidemenuItem(
     val label: String,
     val icon: ImageVector,
@@ -44,14 +38,6 @@ data class SidemenuItem(
     val isDestructive: Boolean = false
 )
 
-/**
- * Shared sidemenu content for both dashboards.
- *
- * The traveler and manager screens run different palettes (dark amber versus
- * teal on white), so the colours are passed in from the caller instead of being
- * read from [MaterialTheme.colorScheme] - that scheme is dynamic on Android 12+
- * and would repaint the drawer in wallpaper colours on every device.
- */
 @Composable
 fun AppSidemenu(
     drawerState: DrawerState,
@@ -119,7 +105,6 @@ fun AppSidemenu(
     }
 }
 
-/** Drawer header row: icon on the left, title and subtitle stacked beside it. */
 @Composable
 fun SidemenuHeader(
     icon: ImageVector,

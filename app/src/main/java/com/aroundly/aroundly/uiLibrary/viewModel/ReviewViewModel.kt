@@ -51,8 +51,6 @@ class ReviewViewModel @Inject constructor(
         if (placeId.isBlank()) return
         viewModelScope.launch {
             _isLoading.value = true
-            // List, average, count and the user's own review all come from one
-            // read instead of four scans of the same filtered collection.
             val data = reviewRepository.getReviewData(placeId, auth.currentUser?.uid)
             _reviews.value = data.reviews
             _averageRating.value = data.averageRating

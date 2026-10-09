@@ -44,8 +44,6 @@ class AuthViewModel @Inject constructor(
                 firestore.collection("users").document(uid).get()
                     .addOnSuccessListener { document ->
                         if (document.exists()) {
-                            // The document is already here, so seed the role
-                            // cache and let the role router skip its own read.
                             userRepository.cacheUserRole(uid, roleOf(document.getString("role")))
                             callback(true, "Google sign-in successful")
                             return@addOnSuccessListener
@@ -90,10 +88,6 @@ class AuthViewModel @Inject constructor(
         auth.signInWithEmailAndPassword(email.trim(), password.trim())
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
-                    // Email/password sign-in does not touch Firestore at all, so
-                    // the role is still unknown here. Clearing any role cached
-                    // for a previous account keeps the router from routing on a
-                    // stale role when a different user signs in.
                     auth.currentUser?.uid?.let { userRepository.invalidateUserCache(it) }
                     callback(true, "Login successful")
                 } else {
@@ -119,7 +113,6 @@ class AuthViewModel @Inject constructor(
         callback: (Boolean, String) -> Unit
     ) {
 
-        // -------- Validation --------
         when {
             firstName.isBlank() -> {
                 callback(false, "First name is required")
@@ -163,7 +156,6 @@ class AuthViewModel @Inject constructor(
             }
         }
 
-        // -------- Firebase Auth --------
         auth.createUserWithEmailAndPassword(email.trim(), password.trim())
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
@@ -185,15 +177,10 @@ class AuthViewModel @Inject constructor(
                         .document(uid)
                         .set(user)
                         .addOnSuccessListener {
-                            // Newly created, so the role is known without a read.
                             userRepository.cacheUserRole(uid, role)
                             callback(true, "Signup successful")
                         }
                         .addOnFailureListener { e ->
-                            // The auth account exists but the profile does not.
-                            // Leaving a half-registered user behind makes every
-                            // later sign-in take the "create missing profile"
-                            // path, so roll the account back.
                             auth.currentUser?.delete()
                             callback(false, e.localizedMessage ?: "Failed to save user data")
                         }

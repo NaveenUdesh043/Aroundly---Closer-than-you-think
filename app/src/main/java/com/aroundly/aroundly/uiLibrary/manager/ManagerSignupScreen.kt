@@ -108,7 +108,6 @@ fun ManagerSignupScreen(
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.Start
     ) {
-        // Header card
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = androidx.compose.foundation.shape.RoundedCornerShape(
@@ -170,7 +169,6 @@ fun ManagerSignupScreen(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Account form sheet
         Card(
             modifier = Modifier
                 .padding(horizontal = 16.dp, vertical = 24.dp)
@@ -429,7 +427,7 @@ fun ManagerSignupScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 8.dp), // optional spacing
+                    .padding(vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Checkbox(
@@ -486,7 +484,6 @@ fun ManagerSignupScreen(
                 errorMessage = ""
                 when {
                     firstName.isBlank() -> errorMessage = "First name is required"
-//                    lastName.isBlank() -> errorMessage = "Last name is required"
                     contactNumber.isBlank() -> errorMessage = "Contact number is required"
                     email.isBlank() -> errorMessage = "Email is required"
                     !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches() ->
