@@ -373,5 +373,3 @@ fun LoginScreen(
         }
     }
 }
-
-

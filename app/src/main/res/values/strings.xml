@@ -7,4 +7,8 @@
     <string name="REJECTED">Rejected</string>
     <string name="REJECT">Reject</string>
     <string name="APPROVE">Approve</string>
+    <string name="connection_lost_message">Connection lost. Please check your internet connection.</string>
+    <string name="poor_connection_message">Poor connection. Things may load slowly.</string>
+    <string name="back_online_message">You\'re back online</string>
+    <string name="dismiss">Dismiss</string>
 </resources>

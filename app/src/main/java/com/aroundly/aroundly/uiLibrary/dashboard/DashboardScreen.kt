@@ -119,6 +119,7 @@ import com.aroundly.aroundly.uiLibrary.common.SidemenuHeader
 import com.aroundly.aroundly.uiLibrary.common.SidemenuItem
 import com.aroundly.aroundly.uiLibrary.viewModel.DashboardViewModel
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.aroundly.aroundly.uiLibrary.common.AnimatedCardAppear
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -395,7 +396,9 @@ fun DashboardScreen(
                         if (restaurants.size > 1) {
                             items(restaurants.drop(1), key = { it.id }) { r ->
                                 itemCount++
-                                AnimatedCardAppear(index = itemCount) {
+                                AnimatedCardAppear(
+                                    index = itemCount
+                                ) {
                                     PlaceCard(
                                         name = r.name,
                                         type = r.type,
@@ -493,33 +496,6 @@ fun DashboardScreen(
             },
             onDismiss = { showLogoutSheet = false }
         )
-    }
-}
-
-@Composable
-private fun AnimatedCardAppear(
-    index: Int,
-    content: @Composable () -> Unit
-) {
-    var visible by remember { mutableStateOf(false) }
-    LaunchedEffect(Unit) { visible = true }
-
-    val alpha by animateFloatAsState(
-        targetValue = if (visible) 1f else 0f,
-        animationSpec = tween(
-            durationMillis = 400,
-            delayMillis = (index * 60).coerceAtMost(300),
-            easing = LinearEasing
-        ),
-        label = "cardAlpha"
-    )
-
-    Box(
-        modifier = Modifier.graphicsLayer {
-            this.alpha = alpha
-        }
-    ) {
-        content()
     }
 }
 
